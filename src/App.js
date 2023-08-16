@@ -3,9 +3,10 @@ import './App.css';
 import GetPorts from './components/getPorts';
 
 function App() {
-  return <div>
-  <h1>Hello World!</h1>
-  <GetPorts />
+  return <div className='main'>
+    <div className='serialPort'>
+    <GetPorts />
+    </div>
   </div>
 }
 

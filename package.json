@@ -22,7 +22,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "electron": "electron .",
-    "start-dev": "start react-scripts start && electron .",
+    "start-dev": "start nodemon src/arduino-api/app.js && start react-scripts start",
     "api": "nodemon src/arduino-api/app.js"
   },
   "eslintConfig": {
