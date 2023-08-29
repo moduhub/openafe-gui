@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'">
+
+
+    <title>Web Serial API</title>
+  <body>
+    
+    <h1>Listar Portas</h1>
+    <button id="listPortsButton">Listar Portas</button>
+    <select id="portSelector"></select>
+    <button id="connectButton">Conectar à Porta Serial</button>
+    <p id="device-name"></p>
+
+
+    <input id="commandInput" type="text">
+    <button id="sendDataButton">Send Data</button>
+    <br>
+
+    <h1>Read Data</h1>
+    <button id="readDataButton">Read Data</button>
+
+
+    <script src="./serial.js"></script>
+    <script src="./writer.js"></script>
+    <script src="./reader.js"></script>
+    
+  </body>
+</html>
+
