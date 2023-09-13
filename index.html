@@ -2,32 +2,35 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'">
-
-
     <title>Web Serial API</title>
   <body>
     
-    <h1>Listar Portas</h1>
-    <button id="listPortsButton">Listar Portas</button>
+    <h1>List Port</h1>
+    <button id="listPortsButton">List Port</button>
     <select id="portSelector"></select>
-    <button id="connectButton">Conectar à Porta Serial</button>
+    <button id="connectButton">Connect Port</button>
     <p id="device-name"></p>
-
-
+    <br>
+    <br>
+    <h1>Send Command</h1>
     <input id="commandInput" type="text">
     <button id="sendDataButton">Send Data</button>
     <br>
-
+    <br>
     <h1>Read Data</h1>
     <button id="readDataButton">Read Data</button>
 
 
+    <canvas id="meuGrafico" width="400" height="400"></canvas>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="./serial.js"></script>
     <script src="./writer.js"></script>
     <script src="./reader.js"></script>
     
+
   </body>
 </html>
+
+ 
+
 

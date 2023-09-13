@@ -10,9 +10,9 @@ function createWindow () {
     webPreferences: {
       // Configuração da CSP para permitir o carregamento de scripts externos
       // Certifique-se de que 'nodeIntegration' está definido como false
-      nodeIntegration: false,
-      contextIsolation: true,
-      worldSafeExecuteJavaScript: true,
+      contextIsolation: true, // Recomendado: habilite o isolamento de contexto
+      sandbox: true, // Recomendado: habilite a área de trabalho segura
+      webSecurity: false, // Recomendado: habilite (não recomendando desabilitar)
       preload: path.join(__dirname, 'preload.js')// O caminho para seu arquivo de pré-carregamento, se você estiver usando um
     }
   });
