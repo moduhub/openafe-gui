@@ -1,43 +1,5 @@
+
 let receivedData = '';
-
-// Inicialize o array de dados para o gráfico
-const chartData = {
-    labels: [], // Valores de x
-    datasets: [
-        {
-            label: 'Valores de y',
-            data: [], // Valores de y
-            borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 1,
-            fill: false
-        }
-    ]
-};
-
-// Obtenha o elemento canvas
-const ctx = document.getElementById('meuGrafico').getContext('2d');
-
-// Crie um gráfico de linha inicial
-const meuGrafico = new Chart(ctx, {
-    type: 'line',
-    data: chartData,
-    options: {
-        scales: {
-            x: {
-                title: {
-                    display: true,
-                    text: 'Valores de x'
-                }
-            },
-            y: {
-                title: {
-                    display: true,
-                    text: 'Valores de y'
-                }
-            }
-        }
-    }
-});
 
 async function readData() {
     try {
@@ -63,16 +25,11 @@ async function readData() {
                         console.log('SGL:' + x);
                         console.log('y:' + y);
 
-                        // Adicione os dados ao gráfico
-                        chartData.labels.push(x);
-                        chartData.datasets[0].data.push(y);
+                        addDataToChart(x, y);
 
-                        // Atualize o gráfico
-                        meuGrafico.update();
                     }
                 }
 
-                // Limpe os dados recebidos
                 receivedData = '';
             }
         }

@@ -1,5 +1,4 @@
 let port;
-let writer;
 
 async function listPorts() {
   try {
@@ -15,10 +14,13 @@ async function listPorts() {
 
     const portSelector = document.getElementById('portSelector');
 
+    while (portSelector.firstChild) {
+      portSelector.removeChild(portSelector.firstChild);
+    }
+
     if (filteredPorts.length === 0) {
       portSelector.innerHTML = '<option value="">Nenhuma porta disponível.</option>';
     } else {
-      portSelector.innerHTML = '<option value="">Selecione uma porta:</option>';
       filteredPorts.forEach((port, index) => {
         const option = document.createElement('option');
         option.value = index;
@@ -26,6 +28,7 @@ async function listPorts() {
         portSelector.appendChild(option);
       });
     }
+
   } catch (error) {
     console.error('Erro ao listar as portas:', error);
   }
@@ -43,7 +46,7 @@ const connectPort = async () => {
       port = await navigator.serial.requestPort({ filters: [{ usbVendorId: 0x2341 }] });
       await port.open({ baudRate: 9600 });
 
-      
+      // Resto do código de conexão...
     } catch (error) {
       console.log(error.message);
     }
@@ -52,5 +55,9 @@ const connectPort = async () => {
   }
 };
 
+// Chame listPorts para iniciar a detecção das portas e a conexão automática
+listPorts();
+
 document.getElementById('listPortsButton').addEventListener('click', listPorts);
 document.getElementById('connectButton').addEventListener('click', connectPort);
+

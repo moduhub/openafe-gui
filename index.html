@@ -3,30 +3,78 @@
   <head>
     <meta charset="UTF-8">
     <title>Web Serial API</title>
-  <body>
+    <body>
+      
+      <div class="tab">
+        <button class="tablinks" id="defaultOpen" onclick="openCity(event, 'CV')">CV</button>
+        <button class="tablinks" onclick="openCity(event, 'DPV')">DPV</button>
+        <button class="tablinks" onclick="openCity(event, 'SWV')">SWV</button>
+      </div>
+      
+      <form id="cvForm">
+
+        <div id="CV" class="tabcontent">
+          <label for="setTime">SetTime</label>
+          <input id="setTime" type="number">
+
+          <input id="startP" type="number">
+          <label for="startP">StartP(mv)</label>
+
+          <input id="endP" type="number">
+          <label for="endP">EndP(mv)</label>
+
+          <input id="step" type="number">
+          <label for="step">Step(mv)</label>
+
+          <input id="scanRate" type="number">
+          <label for="scanRate">ScanRate(mv)</label>
+          
+          <input id="cycle" type="number">
+          <label for="cycle">Cycles</label>
+
+        </div>
+
+        <button id="submitForm" type="submit">Submit</button>
+      </form>    
+        
+        <div id="DPV" class="tabcontent">
+          <h3>Paris</h3>
+          <p>Paris is the capital of France.</p>
+        </div>
+        
+        <div id="SWV" class="tabcontent">
+          <h3>Tokyo</h3>
+          <p>Tokyo is the capital of Japan.</p>
+        </div>
     
+
+
+    <div>
     <h1>List Port</h1>
-    <button id="listPortsButton">List Port</button>
+    <button id="listPortsButton">Refresh Port</button>
     <select id="portSelector"></select>
     <button id="connectButton">Connect Port</button>
     <p id="device-name"></p>
-    <br>
-    <br>
-    <h1>Send Command</h1>
+    
+    <!-- <h1>Send Command</h1>
     <input id="commandInput" type="text">
     <button id="sendDataButton">Send Data</button>
-    <br>
-    <br>
+    
+    
     <h1>Read Data</h1>
     <button id="readDataButton">Read Data</button>
+    </div> -->
 
-
+    <div>
     <canvas id="meuGrafico" width="400" height="400"></canvas>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    </div>
+    
+    <script src="./tabs.js"></script>
     <script src="./serial.js"></script>
     <script src="./writer.js"></script>
     <script src="./reader.js"></script>
-    
+    <script src="node_modules/chart.js/dist/chart.umd.js"></script>
+    <script src="./chart.js"></script>
 
   </body>
 </html>

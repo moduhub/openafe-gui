@@ -1,63 +1,45 @@
-import { Chart } from 'chart.js';
-
-const valoresX = [];
-const valoresY = [];
-
-// Dados para o gráfico
-const data = {
-    datasets: [{
-        label: 'Pontos',
-        data: [], // Começa vazio, será preenchido dinamicamente
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        borderColor: 'rgba(75, 192, 192, 1)',
-        pointRadius: 5,
-        pointHoverRadius: 8,
-        pointBackgroundColor: 'rgba(75, 192, 192, 1)',
-    }]
+// Defina as variáveis do gráfico e crie o gráfico inicial
+var chartData = {
+    labels: [],
+    datasets: [
+        {
+            label: 'Valores de y',
+            data: [], // Valores de y
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1,
+            fill: false
+        }
+    ]
 };
 
-// Opções do gráfico
-const options = {
-    scales: {
-        x: {
-            type: 'linear',
-            position: 'bottom'
-        },
-        y: {
-            min: 0
+// Obtenha o elemento canvas
+var ctx = document.getElementById('meuGrafico').getContext('2d');
+
+// Crie um gráfico de linha inicial
+var meuGrafico = new Chart(ctx, {
+    type: 'line',
+    data: chartData,
+    options: {
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: 'Valores de x'
+                }
+            },
+            y: {
+                title: {
+                    display: true,
+                    text: 'Valores de y'
+                }
+            }
         }
     }
-};
-
-// Obtém o contexto do canvas
-const ctx = document.getElementById('myChart').getContext('2d');
-
-// Cria o gráfico de dispersão
-const myChart = new Chart(ctx, {
-    type: 'scatter',
-    data: data,
-    options: options
 });
 
-
-function adicionarPonto(x, y) {
-    valoresX.push(x);
-    valoresY.push(y);
-
- 
-    if (valoresX.length > 50) {
-        valoresX.shift();
-        valoresY.shift();
-    }
-
-
-    myChart.data.datasets[0].data = valoresX.map((x, i) => ({ x, y: valoresY[i] }));
-    myChart.update();
+function addDataToChart(x, y) {
+    chartData.labels.push(x);
+    chartData.datasets[0].data.push(y);
+    meuGrafico.update();
 }
 
-
-document.addEventListener('dadosRecebidos', function (e) {
-    const x = parseFloat(e.detail.x); 
-    const y = parseFloat(e.detail.y);
-    adicionarPonto(x, y);
-});
