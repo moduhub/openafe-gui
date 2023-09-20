@@ -4,8 +4,8 @@ const path = require("path");
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    show: false,
+    titleBarStyle: "customButtonsOnHover",
     webPreferences: {
       // Configuração da CSP para permitir o carregamento de scripts externos
       // Certifique-se de que 'nodeIntegration' está definido como false
@@ -64,6 +64,8 @@ function createWindow() {
     return false;
   });
 
+  mainWindow.maximize();
+  mainWindow.show();
   mainWindow.loadFile("index.html");
 
   mainWindow.webContents.openDevTools();

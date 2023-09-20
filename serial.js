@@ -19,7 +19,7 @@ async function listPorts() {
     }
 
     if (filteredPorts.length === 0) {
-      portSelector.innerHTML = '<option value="">Nenhuma porta disponível.</option>';
+      portSelector.innerHTML = '<option value="">No ports available</option>';
     } else {
       filteredPorts.forEach((port, index) => {
         const option = document.createElement('option');
