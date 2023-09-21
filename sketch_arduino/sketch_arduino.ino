@@ -1,48 +1,41 @@
-const int ledPin = 13; // O LED embutido no Arduino (pino 13)
-char command; // Variável para armazenar o comando recebido
+// Variáveis para armazenar os dados x e y
+float x = 0.0; // Inicializa com 0.0 para começar com um valor válido
+float y = 0.0; // Inicializa com 0.0 para começar com um valor válido
 
 void setup() {
-  Serial.begin(9600); // Inicialize a comunicação serial com uma taxa de 9600 bps
-  pinMode(ledPin, OUTPUT); // Configure o pino do LED como saída
+  // Inicializa a comunicação serial com um baud rate de 115200
+  Serial.begin(9600);
 }
 
 void loop() {
-  if (Serial.available() > 0) { // Verifique se há dados disponíveis na porta serial
-    command = Serial.read(); // Leia o comando recebido
-
-    // Realize ações com base no comando recebido
-    switch (command) {
-      case 'H': // Ligar o LED (comando 'H')
-        digitalWrite(ledPin, HIGH);
-        Serial.println("LED Ligado");
-        break;
-      case 'L': // Desligar o LED (comando 'L')
-        digitalWrite(ledPin, LOW);
-        Serial.println("LED Desligado");
-        break;
-      case 'B': // Inverter o estado do LED (comando 'B')
-        digitalWrite(ledPin, !digitalRead(ledPin));
-        if (digitalRead(ledPin) == HIGH) {
-          Serial.println("LED Ligado");
-        } else {
-          Serial.println("LED Desligado");
+  // Verifica se há dados disponíveis na porta serial
+  while (Serial.available() > 0) {
+    // Lê o primeiro byte disponível
+    char comando = Serial.read();
+    
+    // Verifica o comando recebido
+    if (comando == '1') {
+      // Inicia o envio de dados
+      while (comando != '0') {
+        // Calcula os valores de x e y com base no seno do tempo
+        x = sin(millis() * 0.001); // O tempo é convertido para segundos
+        y = sin(millis() * 0.001 + 1.0); // Deslocamento de fase para y
+        
+        // Formata os dados no formato "$SGL,x,y"
+        String mensagem = "$SGL," + String(x) + "," + String(y);
+        
+        // Envia a mensagem pela porta serial
+        Serial.println(mensagem);
+        
+        // Aguarde um curto período de tempo para não inundar a porta serial
+        delay(100);
+        
+        // Verifique se há um novo comando
+        if (Serial.available() > 0) {
+          comando = Serial.read();
         }
-        break;
-      default:
-        // Comando desconhecido
-        Serial.println("Comando Inválido");
+      }
+      // Se recebeu "0", pare o envio de dados
     }
   }
-
-  // Loop de envio de dados
-  int x = random(0, 1000); // Gera um número aleatório entre 0 e 999 para x
-  int y = random(0, 1000); // Gera um número aleatório entre 0 e 999 para y
-
-  // Formata os valores de x e y em uma string "$SGL,x,y"
-  String data = "$SGL," + String(x) + "," + String(y);
-
-  // Envia a string pela porta serial
-  Serial.println(data);
-
-  delay(1000); // Aguarda 1 segundo antes de enviar a próxima leitura
 }

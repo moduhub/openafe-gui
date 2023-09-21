@@ -1,11 +1,11 @@
-// Defina as variáveis do gráfico e crie o gráfico inicial
-var chartData = {
+
+const chartData = {
     labels: [],
     datasets: [
         {
             label: 'Valores de y',
             data: [], // Valores de y
-            borderColor: 'rgba(75, 192, 192, 1)',
+            /* borderColor: 'rgba(75, 192, 192, 1)', */
             borderWidth: 1,
             fill: false
         }
@@ -13,10 +13,10 @@ var chartData = {
 };
 
 // Obtenha o elemento canvas
-var ctx = document.getElementById('meuGrafico').getContext('2d');
+const ctx = document.getElementById('meuGrafico').getContext('2d');
 
 // Crie um gráfico de linha inicial
-var meuGrafico = new Chart(ctx, {
+const meuGrafico = new Chart(ctx, {
     type: 'line',
     data: chartData,
     options: {
