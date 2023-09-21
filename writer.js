@@ -10,8 +10,8 @@
     var scanRate = document.getElementById("scanRate");
     var cycle = document.getElementById("cycle");
 
-    /* const commandInput = "CVM," + setTime.value + "," + startP.value + "," + endP.value + "," + step.value + "," + scanRate.value + "," + cycle.value; */
-    const commandInput = 1
+    const commandInput = "CVM," + setTime.value + "," + startP.value + "," + endP.value + "," + step.value + "," + scanRate.value + "," + cycle.value;
+  /*   const commandInput = 1 */
     console.log(commandInput);
     sendData(commandInput);
   });
