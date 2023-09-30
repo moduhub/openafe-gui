@@ -1,7 +1,6 @@
 let receivedData = '';
 let reader = null; // Variável para armazenar o leitor
 
-// Função para iniciar a leitura
 async function startReading() {
     if (reader) {
         // Se já houver um leitor, libere-o para interromper a leitura anterior
@@ -23,15 +22,27 @@ async function startReading() {
 
             if (receivedData.includes('\n')) {
                 const lines = receivedData.split('\n');
-
+                
                 for (const line of lines) {
+                    
                     if (line.startsWith("$SGL,")) {
+
+                        const data = line.split("*")
+                        const dataChecksum = data[0].replace("$", "").trim();
+                        const checksum = await calculateChecksum(dataChecksum);
+                        const z = String(data[1].split(",\r")[0]).trim();
+                        console.log("Checksum:" + checksum + "'")
+                        console.log("Ultimo:" + z + "'")
+                        console.log("Checksum:" + (checksum === z))
+                        
+                        
                         const part = line.split(',');
                         const x = parseFloat(part[1]);
                         const y = parseFloat(part[2]);
+                        
                         console.log('SGL:' + x);
-                        console.log('y:' + y);
-
+                        console.log('y:' + y);                       
+                        
                         addDataToChart(x, y);
                     }
                 }
@@ -53,7 +64,17 @@ function stopReading() {
     }
 }
 
+async function calculateChecksum(input) {
+    let checksum = 0;
+    // Percorre cada caractere na string de entrada
+    for (let i = 0; i < input.length; i++) {
+        checksum ^= input.charCodeAt(i); // Faz um XOR com o valor ASCII de cada caractere
+    }
+
+    // Converte o resultado para uma representação hexadecimal de dois dígitos
+    return checksum.toString(16).toUpperCase().padStart(2, '0');
+}
 
 document.getElementById('closePort').addEventListener('click', stopReading);
 
-document.getElementById('startPort').addEventListener('click', startReading);
+/* document.getElementById('startPort').addEventListener('click', startReading); */

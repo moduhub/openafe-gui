@@ -54,7 +54,7 @@ const meuGrafico = new Chart(ctx, {
             },
             title: {
                 display: true,
-                text: "dynamicTitle",
+                text: dynamicTitle,
                 font: {
                     size: 20,
                     weight: 'bold'
