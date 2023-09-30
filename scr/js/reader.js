@@ -53,8 +53,7 @@ function stopReading() {
     }
 }
 
-// Adicione um evento de clique ao botão "closePort" para chamar a função stopReading
+
 document.getElementById('closePort').addEventListener('click', stopReading);
 
-// Adicione um evento de clique a um botão (por exemplo, "startPort") para iniciar a leitura
 document.getElementById('startPort').addEventListener('click', startReading);
