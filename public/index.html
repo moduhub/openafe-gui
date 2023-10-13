@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Web Serial API</title>
     <link rel="stylesheet" href="./dist/style.css">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
     
     <body class="flex p-4">
 
@@ -19,7 +20,7 @@
 
           <div class="flex">
             <label for="title" class="w-56">Title Graphic</label>
-            <input step="1" id="title" type="text" class="border w-40 text-center">
+            <input step="1" id="title" type="text" class="border w-40 text-center" value="Cycle Voltometry">
           </div>
             <form id="cvForm">
             <div class="flex">
@@ -69,14 +70,16 @@
           </div>
       
         <div class="border h-10 flex justify-between items-center p-4">
-          <!-- <h1 class="text-cyan-400">List Port</h1> -->
           
-          <select class="w-44 border rounded-sm" id="portSelector"></select>
-          <button class="" id="connectButton"><svg class="w-6 h-6 dark:text-white" aria-hidden="true" fill="green" viewBox="0 0 20 20">
+          <select class="w-44 border rounded-sm" id="portSelector" title="Select Device"></select>
+          <button class="" id="connectButton" title="Connect Device"><svg class="w-6 h-6 dark:text-white" aria-hidden="true" fill="green" viewBox="0 0 20 20">
             <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z"/>
           </svg></button>
-          <button id="listPortsButton" class="w"><svg class="w-6 h-6 text-gray-800 dark:text-dark" aria-hidden="true" fill="none" viewBox="0 0 18 20">
+          <button id="listPortsButton" class="w" title="Refresh Ports"><svg class="w-6 h-6 text-gray-800 dark:text-dark" aria-hidden="true" fill="none" viewBox="0 0 18 20">
             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 1v5h-5M2 19v-5h5m10-4a8 8 0 0 1-14.947 3.97M1 10a8 8 0 0 1 14.947-3.97"/>
+          </svg></button>
+          <button id="closePortButton" class="w" title="Disconnect Device"><svg class="w-6 h-6 text-red-600 dark:text-red" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="red" viewBox="0 0 14 14">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
           </svg></button>
           
 
@@ -89,22 +92,25 @@
         <path d="M13.768 15.475a1 1 0 0 1-1.414-1.414L13.414 13H6a1 1 0 0 1 0-2h7.414l-1.06-1.061a1 1 0 1 1 1.414-1.414L16 10.757V2a1.97 1.97 0 0 0-1.933-2H7v5a2 2 0 0 1-2 2H0v11a1.969 1.969 0 0 0 1.933 2H14a2 2 0 0 0 2-2v-4.757l-2.232 2.232Z"/>
       </svg>
       </button>
-      <button>
-        
-      </button>
+    <button id="btn-clear">
+      <svg class="w-6 h-6 text-gray-800 dark:text-black" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 18 20">
+        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h16M7 8v8m4-8v8M7 1h4a1 1 0 0 1 1 1v3H6V2a1 1 0 0 1 1-1ZM3 5h12v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5Z"/>
+      </svg>
+    </button>
       
     </div>
     <div class="flex-1 border">
-    <canvas id="meuGrafico" class="w-full"></canvas>
+    <canvas id="mychart" class="w-full"></canvas>
     </div>
     
     <script src="../scr/js/tabs.js"></script>
     <script src="../scr/js/serial.js"></script>
     <script src="../scr/js/writer.js"></script>
     <script src="../scr/js/reader.js"></script>
+    <script src="../scr/js/notification.js"></script>
     <script src="../node_modules/chart.js/dist/chart.umd.js"></script>
     <script src="../node_modules/chartjs-plugin-zoom/dist/chartjs-plugin-zoom.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+    <script src="../node_modules/hammerjs/hammer.min.js"></script>
     <script src="../scr/chart/chart.js"></script>
 
   </body>

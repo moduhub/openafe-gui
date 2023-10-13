@@ -10,14 +10,14 @@
     var scanRate = document.getElementById("scanRate");
     var cycle = document.getElementById("cycle");
 
-    /* const commandInput = "CVM," + setTime.value + "," + startP.value + "," + endP.value + "," + step.value + "," + scanRate.value + "," + cycle.value; */
+    /* const commandInput = "CV," + setTime.value + "," + startP.value + "," + endP.value + "," + step.value + "," + scanRate.value + "," + cycle.value; */
     const commandInput = 1
     console.log(commandInput);
     sendData(commandInput);
   });
 
   async function sendData(commandInput) {
-    const command = commandInput; // Obtenha o comando do campo de entrada
+    const command = commandInput;
     console.log(command);
     console.log(port)
     console.log(port.writable);

@@ -11,12 +11,10 @@ function createWindow() {
       // Certifique-se de que 'nodeIntegration' está definido como false
       contextIsolation: true, // Recomendado: habilite o isolamento de contexto
       sandbox: true, // Recomendado: habilite a área de trabalho segura
-      webSecurity: false, // Recomendado: habilite (não recomendando desabilitar)
+      webSecurity: true, // Recomendado: habilite (não recomendando desabilitar)
       preload: path.join(__dirname, "./preload.js"), // O caminho para seu arquivo de pré-carregamento, se você estiver usando um
     },
   });
-
-  
 
   mainWindow.webContents.session.on(
     "select-serial-port",
