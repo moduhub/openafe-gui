@@ -10,17 +10,18 @@
     var scanRate = document.getElementById("scanRate");
     var cycle = document.getElementById("cycle");
 
-    /* const commandInput = "CV," + setTime.value + "," + startP.value + "," + endP.value + "," + step.value + "," + scanRate.value + "," + cycle.value; */
-    const commandInput = 1
-    console.log(commandInput);
-    sendData(commandInput);
+    const commandInput = "CVW," + setTime.value + "," + startP.value + "," + endP.value + "," + step.value + "," + scanRate.value + "," + cycle.value
+    const checksum = await calculateChecksum(commandInput);
+    console.log(commandInput)
+    /* const commandInput = 1 */
+    const fullCommandInput = "$" + commandInput + "*" + checksum
+    console.log(fullCommandInput);
+    sendData(fullCommandInput);
   });
 
   async function sendData(commandInput) {
     const command = commandInput;
     console.log(command);
-    console.log(port)
-    console.log(port.writable);
     if (port && port.writable) {
       writer = port.writable.getWriter();
       const textEncoder = new TextEncoder();

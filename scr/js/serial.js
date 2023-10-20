@@ -52,14 +52,14 @@ const connectPort = async () => {
     try {
       port = await navigator.serial.requestPort({ filters: [{ usbVendorId: 0x2341 }] });
       await port.open({ baudRate: 9600 });
-      alert('Connected device')
+      /* alert('Connected device') */
         disabledButton(connectButton);   
         disabledButton(listPortsButton);
         disabledButton(portSelector);
           
     } catch (error) {
       console.log(error.message);
-      alert('Error connecting to device')
+      /* alert('Error connecting to device') */
     }
   } else {
     alert('Selecione uma porta antes de conectar.');

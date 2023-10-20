@@ -1,9 +1,8 @@
-const NOTIFICATION_TITLE = 'Title'
-const NOTIFICATION_BODY = 'Notification from the Renderer process. Click to log to console.'
-const CLICK_MESSAGE = 'Notification clicked!'
+const { ipcRenderer } = require('electron');
 
-const notificationConnect = function () {
-    console.log('Connecting')
-new window.Notification(NOTIFICATION_TITLE, { body: NOTIFICATION_BODY })
-  .onclick = () => { document.getElementById('output').innerText = CLICK_MESSAGE }
-  }
+function showNotification(title, body) {
+  // Envia uma mensagem IPC para solicitar a notificação
+  ipcRenderer.send('show-notification', { title, body });
+}
+
+showNotification("Título da Notificação", "Corpo da notificação");
