@@ -1,13 +1,13 @@
 let receivedData = '';
-let reader = null; // Variável para armazenar o leitor
+let reader = null;
 
 async function startReading() {
     if (reader) {
-        // Se já houver um leitor, libere-o para interromper a leitura anterior
+        // If there is already a reader, release it to stop the previous reading
         reader.releaseLock();
     }
     
-    // Crie um novo leitor
+    // Create a new reader
     reader = port.readable.getReader();
 
     try {
@@ -19,35 +19,35 @@ async function startReading() {
             const textDecoder = new TextDecoder('utf-8');
             const data = textDecoder.decode(value);
             receivedData += data;
-
-            if (receivedData.includes('\n')) {
-                const lines = receivedData.split('\n');
-                
+    
+            const lines = receivedData.split('\n');
+    
+            if (lines.length > 1) {
+                receivedData = lines.pop();
+    
                 for (const line of lines) {
-                    
                     if (line.startsWith("$SGL,")) {
-
-                        const data = line.split("*")
-                        const dataChecksum = data[0].replace("$", "").trim();
-                        const checksum = await calculateChecksum(dataChecksum);
-                        const z = String(data[1].split(",\r")[0]).trim();
-                        console.log("Checksum:" + checksum + "'")
-                        console.log("Ultimo:" + z + "'")
-                        console.log("Checksum:" + (checksum === z))
-                        
-                        
                         const part = line.split(',');
-                        const x = parseFloat(part[1]);
-                        const y = parseFloat(part[2]);
-                        
-                        console.log('SGL:' + x);
-                        console.log('y:' + y);                       
-                        
-                        addDataToChart(x, y);
+                        if (part.length >= 3) {
+                            const x = parseFloat(part[1]);
+                            const y = parseFloat(part[2]);
+                            console.log('SGL:' + x);
+                            console.log('y:' + y);
+
+                            
+                            const data = line.split("*")
+                            const dataChecksum = data[0].replace("$", "").trim();
+                            const checksum = await calculateChecksum(dataChecksum);
+                            const z = String(data[1].split(",\r")[0]).trim(); 
+                            console.log("Checksum:" + checksum + "'")
+                            console.log("Ultimo:" + z + "'")
+                            console.log("Checksum:" + (checksum === z))
+
+    
+                            addDataToChart(x, y);
+                        }
                     }
                 }
-
-                receivedData = '';
             }
         }
     } catch (error) {
@@ -55,12 +55,12 @@ async function startReading() {
     }
 }
 
-// Função para parar a leitura quando necessário
+// Function to stop reading when necessary
 function stopReading() {
     if (reader) {
         reader.releaseLock();
         reader = null;
-        sendData("0")
+        sendData("DIE")
     }
 }
 
