@@ -61,8 +61,63 @@
 
         </div>
 
-          <div id="DPV" class="tabcontent">
-            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Sapiente illum odio veniam cum eaque recusandae reiciendis eum rem, natus ex temporibus. Dicta fugiat eligendi officiis, sequi quo nobis ea praesentium.</p>
+          <div id="DPV" class="tabcontent  border-2 space-y-3 p-4">
+            <div class="flex">
+              <label for="title" class="w-56">Title Graphic</label>
+              <input step="1" id="title" type="text" class="border w-40 text-center" value="Differential Pulse Voltammetry">
+            </div>
+
+            <form id="dpvForm">
+              <div class="flex">
+              <label for="setTime" class="w-56">SetTime</label>
+              <input value="0" step="1" id="setTime" type="number" class="border w-40 text-center">
+              </div>
+  
+              <div class="flex">
+              <label for="startP" class="w-56">StartP(mv)</label>
+              <input value="0" step="1" id="startP" type="number" class="border w-40 text-center">
+              </div>
+  
+              <div class="flex">
+              <label for="endP" class="w-56">EndP(mv)</label>
+              <input value="0" step="1" id="endP" type="number" class="border w-40 text-center">
+              </div>
+
+              <div class="flex">
+                <label for="pulseP" class="w-56">PulseP(mv)</label>
+                <input value="0" step="1" id="pulseP" type="number" class="border w-40 text-center">
+                </div>
+  
+              <div class="flex">
+              <label for="step" class="w-56">Step(mv)</label>
+              <input value="0" step="1" id="step" type="number" class="border w-40 text-center">
+              </div>
+
+              <div class="flex">
+                <label for="pulseW" class="w-56">PulseW</label>
+                <input value="0" step="1" id="pulseW" type="number" class="border w-40 text-center">
+              </div>
+
+              <div class="flex">
+                <label for="baseW" class="w-56">BaseW</label>
+                <input value="0" step="1" id="baseW" type="number" class="border w-40 text-center">
+              </div>
+  
+              <div class="flex">
+              <label for="periodP" class="w-56">PeriodP</label>
+              <input value="0" step="1" id="periodP" type="number" class="border w-40 text-center">
+              </div>
+  
+              <div class="flex">
+              <label for="periodB" class="w-56">PeriodB</label>
+              <input value="0" step="1" id="periodB" type="number" class="border w-40 text-center">
+              </div>
+  
+            </form>
+              <div class="flex gap-2 justify-between mt-3">
+                <button id="submitForm" type="submit" form="dpvForm" class="flex-1 bg-green-800 text-white h-7 rounded-md">Read Data</button>
+                <button id="closePort"  class="flex-1 bg-red-600 text-white  rounded-md">Stop Read</button>
+              </div>
           </div>
           
           <div id="SWV" class="tabcontent">
@@ -107,6 +162,8 @@
     <script src="../scr/js/tabs.js"></script>
     <script src="../scr/js/serial.js"></script>
     <script src="../scr/js/writer.js"></script>
+    <script src="../scr/command/cv.js"></script>
+    <script src="../scr/command/dpv.js"></script>
     <script src="../scr/js/reader.js"></script>
     <script src="../scr/js/checksum.js"></script>
     <script src="../node_modules/chart.js/dist/chart.umd.js"></script>
