@@ -1,24 +1,8 @@
-
-  const cvForm = document.getElementById("cvForm");
-
-  cvForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    var setTime = document.getElementById("setTime");
-    var startP = document.getElementById("startP");
-    var endP = document.getElementById("endP");
-    var step = document.getElementById("step");
-    var scanRate = document.getElementById("scanRate");
-    var cycle = document.getElementById("cycle");
-
-    const commandInput = "CVW," + setTime.value + "," + startP.value + "," + endP.value + "," + step.value + "," + scanRate.value + "," + cycle.value
-    const checksum = await calculateChecksum(commandInput);
-    console.log(commandInput)
-    /* const commandInput = 1 */
-    const fullCommandInput = "$" + commandInput + "*" + checksum
-    console.log(fullCommandInput);
-    sendData(fullCommandInput);
-  });
-
+  /**
+   * The function `sendData` sends a command to a writable port and starts reading the response.
+   * @param commandInput - The `commandInput` parameter is the input command that you want to send. It
+   * is a string that represents the command you want to send to the port.
+   */
   async function sendData(commandInput) {
     const command = commandInput;
     console.log(command);
