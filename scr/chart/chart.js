@@ -1,9 +1,9 @@
 const title = document.getElementById('title')
-let dynamicTitle = "Cycle Voltometry"
+let dynamicTitle = ""
 let mychart
 
 const chartData = {
-    labels: [], // Ajust X
+    labels: [],
     datasets: [
         {
             label: "",
@@ -95,10 +95,34 @@ function updateTitle(newText) {
 }
 
 function addDataToChart(x, y) {
-    chartData.labels.push(x);
-    chartData.datasets[0].data.push(y);
+    console.log(`Adicionando dados: x=${x}, y=${y}`);
+    const chartData = mychart.data;
+    const chartLabels = chartData.labels;
+    const chartDataArray = chartData.datasets[0].data;
+
+    // Verifique se o valor de x já existe nas labels
+    const existingIndex = chartLabels.indexOf(x);
+
+    if (existingIndex !== -1) {
+        // Se x já existe, verifique se chartDataArray[existingIndex] é um array
+        /* if (!Array.isArray(chartDataArray[existingIndex])) {
+            chartDataArray[existingIndex] = [chartDataArray[existingIndex]];
+        } */
+        // Adicione o novo valor y ao array
+        chartDataArray[existingIndex].push(y);
+    } else {
+        // Se x não existe, crie um novo par de valores
+        chartLabels.push(x);
+        chartDataArray.push([y]);
+        console.log(`Primeiros dados: x=${x}, y=${y}`);
+    }
+
+    mychart.data = chartData; // Defina os dados atualizados
     mychart.update();
 }
+
+
+
 
 var image = mychart.toBase64Image();
 
