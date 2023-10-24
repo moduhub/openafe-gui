@@ -27,16 +27,19 @@ async function startReading() {
                 receivedData = lines.pop();
     
                 for (const line of lines) {
+                    
                     if (line.startsWith("$MSG,END*3A")) {
                         reader.releaseLock();
                         reader = null;
                         console.log('Parando a leitura.');
+                        console.log(globalPoint.pointsCV)
                         console.log(sglLineCount)
                         sglLineCount = 0
                     }
     
                     if (line.startsWith("$SGL,")) {
-                        sglLineCount++; // Incrementa o contador de linhas $SGL:
+                        sglLineCount++;
+                        updateProgressBar();
                         const part = line.split(',');
                         if (part.length >= 3) {
                             const x = parseFloat(part[1]);
@@ -83,5 +86,11 @@ function stopReading() {
         reader = null;
     }
 }
+
+function updateProgressBar() {
+    var progressBar = document.getElementById("myProgressBar");
+    var width = (sglLineCount / globalPoint.pointsCV) * 100;
+    progressBar.style.width = width + "%";
+  }  
 
 document.getElementById('closePort').addEventListener('click', stopReading);

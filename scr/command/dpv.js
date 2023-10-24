@@ -15,7 +15,7 @@ const dpvForm = document.getElementById("dpvForm");
 
 
     const commandInput = "DPV," + setTime.value + "," + startP.value + "," + endP.value + ","+ pulseP.value + ","+ step.value + ","+ pulseW.value + ","+ baseW.value + ","+ periodP.value + ","+ periodB.value
-    
+    const pointsDPV = ((endP.value - (startP.value)) * 2) + 1;
     const checksum = await calculateChecksum(commandInput);
     console.log(commandInput)
     /* const commandInput = 1 */

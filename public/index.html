@@ -15,13 +15,13 @@
           <button class="tablinks flex w-full border hover:border-gray-500 justify-center" onclick="openCity(event, 'SWV')">SWV</button>
         </div>
       
+        <div class="flex p-4 border">
+          <label for="title" class="w-56">Title Graphic</label>
+          <input step="1" id="title" type="text" class="border w-40 text-center" value="Your Title Here">
+        </div>
         
         <div id="CV" class="tabcontent border-2 space-y-3 p-4">
 
-          <div class="flex">
-            <label for="title" class="w-56">Title Graphic</label>
-            <input step="1" id="title" type="text" class="border w-40 text-center" value="Cycle Voltometry">
-          </div>
             <form id="cvForm">
             <div class="flex">
             <label for="setTime" class="w-56">SetTime</label>
@@ -62,10 +62,6 @@
         </div>
 
           <div id="DPV" class="tabcontent  border-2 space-y-3 p-4">
-            <div class="flex">
-              <label for="title" class="w-56">Title Graphic</label>
-              <input step="1" id="title" type="text" class="border w-40 text-center" value="Differential Pulse Voltammetry">
-            </div>
 
             <form id="dpvForm">
               <div class="flex">
@@ -140,7 +136,7 @@
 
                 <!-- Notification Connecterd Device -->
         <div class="flex justify-center">
-          <div id="connectedDevice" class="mt-5 w-64 bg-green-300 text-black p-2 shadow-md border rounded hidden">
+          <div id="connectedDevice" class="mt-5 w-64 bg-green-300 text-black p-2 shadow-md border rounded hidden closeNotification">
             <button id="closeConnectedDevice" class="float-right">&times;</button>
             <h2 class="text-base font-semibold">✅ Device Connected</h2>
             <p class="text-sm">Your device is now connected and ready to use.</p>
@@ -149,7 +145,7 @@
 
         <!-- Notification Disconnecte Device -->
         <div class="flex justify-center">
-          <div id="disconnectedDevice" class="mt-5 w-64 bg-red-300 text-black p-2 shadow-md border rounded hidden">
+          <div id="disconnectedDevice" class="mt-5 w-64 bg-red-300 text-black p-2 shadow-md border rounded hidden closeNotification">
             <button id="closeDisconnectedDevice" class="float-right">&times;</button>
             <h2 class="text-base font-semibold">❌ Device Disconnected</h2>
             <p class="text-sm">Your device has been disconnected.</p>
@@ -173,9 +169,17 @@
     </button>
       
     </div>
+
     <div class="flex-1 border">
-    <canvas id="mychart" class="w-full"></canvas>
+      <div>
+      <canvas id="mychart" class="w-full"></canvas>
+      </div>
+
+      <div class="w-full bg-gray-200 h-2.5 dark:bg-gray-300">
+        <div id="myProgressBar" class="bg-green-600 h-2.5 rounded-full" style="width: 0"></div>
+      </div>
     </div>
+    
 
   
   
