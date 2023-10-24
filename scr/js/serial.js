@@ -52,7 +52,7 @@ const connectPort = async () => {
     try {
       port = await navigator.serial.requestPort({ filters: [{ usbVendorId: 0x2341 }] });
       await port.open({ baudRate: 9600 });
-      /* alert('Connected device') */
+        notifyConnected()
         disabledButton(connectButton);   
         disabledButton(listPortsButton);
         disabledButton(portSelector);
@@ -69,7 +69,8 @@ const connectPort = async () => {
 
 const closePort = function () {
   port.close();
-  alert('Disconnect device')
+  /* alert('Disconnect device') */
+  notifyDisconnected()
   enabledButton(connectButton);   
   enabledButton(listPortsButton);
   enabledButton(portSelector);

@@ -1,8 +1,37 @@
-const { ipcRenderer } = require('electron');
+const connectedDevice = document.getElementById('connectedDevice');
+const disconnectedDevice = document.getElementById('disconnectedDevice');
+const closeNotificationButtons = document.querySelectorAll('.closeNotification');
+let notificationTimeout;
+const notificationDelay = 2000; // Tempo de atraso em milissegundos (5 segundos)
 
-function showNotification(title, body) {
-  // Envia uma mensagem IPC para solicitar a notificação
-  ipcRenderer.send('show-notification', { title, body });
+function notifyConnected() {
+  connectedDevice.classList.remove('hidden');
+    
+  notificationTimeout = setTimeout(closeConnectedNotification, notificationDelay);
 }
 
-showNotification("Título da Notificação", "Corpo da notificação");
+function notifyDisconnected() {
+  disconnectedDevice.classList.remove('hidden');
+
+  notificationTimeout = setTimeout(closeDisconnectedNotification, notificationDelay);
+}
+
+function closeConnectedNotification() {
+  connectedDevice.classList.add('hidden');
+  clearTimeout(notificationTimeout);
+}
+
+function closeDisconnectedNotification() {
+  disconnectedDevice.classList.add('hidden');
+  clearTimeout(notificationTimeout);
+}
+
+closeNotificationButtons.forEach(button => {
+  button.addEventListener('click', notifyClose);
+});
+
+function notifyClose() {
+  connectedDevice.classList.add('hidden');
+  disconnectedDevice.classList.add('hidden');
+  clearTimeout(notificationTimeout);
+}

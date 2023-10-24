@@ -25,32 +25,32 @@
             <form id="cvForm">
             <div class="flex">
             <label for="setTime" class="w-56">SetTime</label>
-            <input value="0" step="1" id="setTime" type="number" class="border w-40 text-center">
+            <input value="1000" step="1" id="setTime" type="number" class="border w-40 text-center">
             </div>
 
             <div class="flex">
             <label for="startP" class="w-56">StartP(mv)</label>
-            <input value="0" step="1" id="startP" type="number" class="border w-40 text-center">
+            <input value="-20" step="1" id="startP" type="number" class="border w-40 text-center">
             </div>
 
             <div class="flex">
             <label for="endP" class="w-56">EndP(mv)</label>
-            <input value="0" step="1" id="endP" type="number" class="border w-40 text-center">
+            <input value="20" step="1" id="endP" type="number" class="border w-40 text-center">
             </div>
 
             <div class="flex">
             <label for="step" class="w-56">Step(mv)</label>
-            <input value="0" step="1" id="step" type="number" class="border w-40 text-center">
+            <input value="10" step="1" id="step" type="number" class="border w-40 text-center">
             </div>
 
             <div class="flex">
             <label for="scanRate" class="w-56">ScanRate(mv)</label>
-            <input value="0" step="1" id="scanRate" type="number" class="border w-40 text-center">
+            <input value="1" step="1" id="scanRate" type="number" class="border w-40 text-center">
             </div>
 
             <div class="flex">
             <label for="cycle" class="w-56">Cycles</label>
-            <input value="0" step="1" id="cycle" type="number" class="border w-40 text-center">
+            <input value="1" step="1" id="cycle" type="number" class="border w-40 text-center">
             </div>
 
           </form>
@@ -136,9 +136,28 @@
           <button id="closePortButton" class="w" title="Disconnect Device"><svg class="w-6 h-6 text-red-600 dark:text-red" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="red" viewBox="0 0 14 14">
             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
           </svg></button>
-          
-
         </div> 
+
+                <!-- Notification Connecterd Device -->
+        <div class="flex justify-center">
+          <div id="connectedDevice" class="mt-5 w-64 bg-green-300 text-black p-2 shadow-md border rounded hidden">
+            <button id="closeConnectedDevice" class="float-right">&times;</button>
+            <h2 class="text-base font-semibold">✅ Device Connected</h2>
+            <p class="text-sm">Your device is now connected and ready to use.</p>
+          </div>
+        </div>
+
+        <!-- Notification Disconnecte Device -->
+        <div class="flex justify-center">
+          <div id="disconnectedDevice" class="mt-5 w-64 bg-red-300 text-black p-2 shadow-md border rounded hidden">
+            <button id="closeDisconnectedDevice" class="float-right">&times;</button>
+            <h2 class="text-base font-semibold">❌ Device Disconnected</h2>
+            <p class="text-sm">Your device has been disconnected.</p>
+          </div>
+        </div>
+
+
+
       </div>
     
     <div class="flex flex-col w-8 border items-center justify-center gap-4">
@@ -157,15 +176,21 @@
     <div class="flex-1 border">
     <canvas id="mychart" class="w-full"></canvas>
     </div>
-    
-    <script src="../scr/js/notification.js"></script>
+
+  
+  
+  
+  
+
+
     <script src="../scr/js/tabs.js"></script>
     <script src="../scr/js/serial.js"></script>
     <script src="../scr/js/writer.js"></script>
+    <script src="../scr/js/reader.js"></script>
     <script src="../scr/command/cv.js"></script>
     <script src="../scr/command/dpv.js"></script>
-    <script src="../scr/js/reader.js"></script>
     <script src="../scr/js/checksum.js"></script>
+    <script src="../scr/js/notification.js"></script>
     <script src="../node_modules/chart.js/dist/chart.umd.js"></script>
     <script src="../node_modules/chartjs-plugin-zoom/dist/chartjs-plugin-zoom.min.js"></script>
     <script src="../node_modules/hammerjs/hammer.min.js"></script>
