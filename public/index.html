@@ -1,208 +1,166 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Web Serial API</title>
-    <link rel="stylesheet" href="./dist/style.css">
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
-    
-    <body class="flex p-4">
+   <head>
+      <meta charset="UTF-8">
+      <title>Web Serial API</title>
+      <link rel="stylesheet" href="./dist/style.css">
+      <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
 
+      
+   </head>
+   <body class="flex p-4 h-screen">
       <div class=" flex flex-col border w-80">
-        <div class="tab flex justify-between border rounded-md">
-          <button class="tablinks flex w-full border hover:border-gray-500 justify-center" id="defaultOpen" onclick="openCity(event, 'CV')">CV</button>
-          <button class="tablinks flex w-full border hover:border-gray-500 justify-center" onclick="openCity(event, 'DPV')">DPV</button>
-          <button class="tablinks flex w-full border hover:border-gray-500 justify-center" onclick="openCity(event, 'SWV')">SWV</button>
-        </div>
-      
-        <div class="flex p-4 border">
-          <label for="title" class="w-56">Title Graphic</label>
-          <input step="1" id="title" type="text" class="border w-40 text-center" value="Your Title Here">
-        </div>
-        
-        <div id="CV" class="tabcontent border-2 space-y-3 p-4">
-
+         <div class="tab flex justify-between border rounded-md">
+            <button class="tablinks flex w-full border hover:border-gray-500 justify-center" id="defaultOpen" onclick="openCity(event, 'CV')">CV</button>
+            <button class="tablinks flex w-full border hover:border-gray-500 justify-center" onclick="openCity(event, 'DPV')">DPV</button>
+            <button class="tablinks flex w-full border hover:border-gray-500 justify-center" onclick="openCity(event, 'SWV')">SWV</button>
+         </div>
+         <div class="flex p-4 border">
+            <label for="title" class="w-56">Title Graphic</label>
+            <input step="1" id="title" type="text" class="border w-40 text-center" value="Your Title Here">
+         </div>
+         <div id="CV" class="tabcontent border-2 space-y-3 p-4">
             <form id="cvForm">
-            <div class="flex">
-            <label for="setTime" class="w-56">SetTime</label>
-            <input value="1000" step="1" id="setTime" type="number" class="border w-40 text-center">
-            </div>
-
-            <div class="flex">
-            <label for="startP" class="w-56">StartP(mv)</label>
-            <input value="-20" step="1" id="startP" type="number" class="border w-40 text-center">
-            </div>
-
-            <div class="flex">
-            <label for="endP" class="w-56">EndP(mv)</label>
-            <input value="20" step="1" id="endP" type="number" class="border w-40 text-center">
-            </div>
-
-            <div class="flex">
-            <label for="step" class="w-56">Step(mv)</label>
-            <input value="10" step="1" id="step" type="number" class="border w-40 text-center">
-            </div>
-
-            <div class="flex">
-            <label for="scanRate" class="w-56">ScanRate(mv)</label>
-            <input value="1" step="1" id="scanRate" type="number" class="border w-40 text-center">
-            </div>
-
-            <div class="flex">
-            <label for="cycle" class="w-56">Cycles</label>
-            <input value="1" step="1" id="cycle" type="number" class="border w-40 text-center">
-            </div>
-
-          </form>
-            <div class="flex gap-2 justify-between mt-3">
-              <button id="submitForm" type="submit" form="cvForm" class="flex-1 bg-green-800 text-white h-7 rounded-md">Read Data</button>
-              <button id="closePort"  class="flex-1 bg-red-600 text-white  rounded-md">Stop Read</button>
-            </div>
-
-        </div>
-
-          <div id="DPV" class="tabcontent  border-2 space-y-3 p-4">
-
-            <form id="dpvForm">
-              <div class="flex">
-              <label for="setTime" class="w-56">SetTime</label>
-              <input value="0" step="1" id="setTime" type="number" class="border w-40 text-center">
-              </div>
-  
-              <div class="flex">
-              <label for="startP" class="w-56">StartP(mv)</label>
-              <input value="0" step="1" id="startP" type="number" class="border w-40 text-center">
-              </div>
-  
-              <div class="flex">
-              <label for="endP" class="w-56">EndP(mv)</label>
-              <input value="0" step="1" id="endP" type="number" class="border w-40 text-center">
-              </div>
-
-              <div class="flex">
-                <label for="pulseP" class="w-56">PulseP(mv)</label>
-                <input value="0" step="1" id="pulseP" type="number" class="border w-40 text-center">
-                </div>
-  
-              <div class="flex">
-              <label for="step" class="w-56">Step(mv)</label>
-              <input value="0" step="1" id="step" type="number" class="border w-40 text-center">
-              </div>
-
-              <div class="flex">
-                <label for="pulseW" class="w-56">PulseW</label>
-                <input value="0" step="1" id="pulseW" type="number" class="border w-40 text-center">
-              </div>
-
-              <div class="flex">
-                <label for="baseW" class="w-56">BaseW</label>
-                <input value="0" step="1" id="baseW" type="number" class="border w-40 text-center">
-              </div>
-  
-              <div class="flex">
-              <label for="periodP" class="w-56">PeriodP</label>
-              <input value="0" step="1" id="periodP" type="number" class="border w-40 text-center">
-              </div>
-  
-              <div class="flex">
-              <label for="periodB" class="w-56">PeriodB</label>
-              <input value="0" step="1" id="periodB" type="number" class="border w-40 text-center">
-              </div>
-  
+               <div class="flex">
+                  <label for="setTime" class="w-56">SetTime</label>
+                  <input value="1000" step="1" id="setTime" type="number" class="border w-40 text-center">
+               </div>
+               <div class="flex">
+                  <label for="startP" class="w-56">StartP(mv)</label>
+                  <input value="-20" step="1" id="startP" type="number" class="border w-40 text-center">
+               </div>
+               <div class="flex">
+                  <label for="endP" class="w-56">EndP(mv)</label>
+                  <input value="20" step="1" id="endP" type="number" class="border w-40 text-center">
+               </div>
+               <div class="flex">
+                  <label for="step" class="w-56">Step(mv)</label>
+                  <input value="10" step="1" id="step" type="number" class="border w-40 text-center">
+               </div>
+               <div class="flex">
+                  <label for="scanRate" class="w-56">ScanRate(mv)</label>
+                  <input value="1" step="1" id="scanRate" type="number" class="border w-40 text-center">
+               </div>
+               <div class="flex">
+                  <label for="cycle" class="w-56">Cycles</label>
+                  <input value="1" step="1" id="cycle" type="number" class="border w-40 text-center">
+               </div>
             </form>
-              <div class="flex gap-2 justify-between mt-3">
-                <button id="submitForm" type="submit" form="dpvForm" class="flex-1 bg-green-800 text-white h-7 rounded-md">Read Data</button>
-                <button id="closePort"  class="flex-1 bg-red-600 text-white  rounded-md">Stop Read</button>
-              </div>
-          </div>
-          
-          <div id="SWV" class="tabcontent">
+            <div class="flex gap-2 justify-between mt-3">
+               <button id="submitFormCV" type="submit" form="cvForm" class="flex-1 bg-green-800 text-white h-7 rounded-md">Read Data</button>
+               <button id="closePortCV"  class="flex-1 bg-red-600 text-white  rounded-md">Stop Read</button>
+            </div>
+         </div>
+         <div id="DPV" class="tabcontent  border-2 space-y-3 p-4">
+            <form id="dpvForm">
+               <div class="flex">
+                  <label for="setTime" class="w-56">SetTime</label>
+                  <input value="0" step="1" id="setTime" type="number" class="border w-40 text-center">
+               </div>
+               <div class="flex">
+                  <label for="startP" class="w-56">StartP(mv)</label>
+                  <input value="0" step="1" id="startP" type="number" class="border w-40 text-center">
+               </div>
+               <div class="flex">
+                  <label for="endP" class="w-56">EndP(mv)</label>
+                  <input value="0" step="1" id="endP" type="number" class="border w-40 text-center">
+               </div>
+               <div class="flex">
+                  <label for="pulseP" class="w-56">PulseP(mv)</label>
+                  <input value="0" step="1" id="pulseP" type="number" class="border w-40 text-center">
+               </div>
+               <div class="flex">
+                  <label for="step" class="w-56">Step(mv)</label>
+                  <input value="0" step="1" id="step" type="number" class="border w-40 text-center">
+               </div>
+               <div class="flex">
+                  <label for="pulseW" class="w-56">PulseW</label>
+                  <input value="0" step="1" id="pulseW" type="number" class="border w-40 text-center">
+               </div>
+               <div class="flex">
+                  <label for="baseW" class="w-56">BaseW</label>
+                  <input value="0" step="1" id="baseW" type="number" class="border w-40 text-center">
+               </div>
+               <div class="flex">
+                  <label for="periodP" class="w-56">PeriodP</label>
+                  <input value="0" step="1" id="periodP" type="number" class="border w-40 text-center">
+               </div>
+               <div class="flex">
+                  <label for="periodB" class="w-56">PeriodB</label>
+                  <input value="0" step="1" id="periodB" type="number" class="border w-40 text-center">
+               </div>
+            </form>
+            <div class="flex gap-2 justify-between mt-3">
+               <button id="submitFormDPV" type="submit" form="dpvForm" class="flex-1 bg-green-800 text-white h-7 rounded-md">Read Data</button>
+               <button id="closePortDPV"  class="flex-1 bg-red-600 text-white  rounded-md">Stop Read</button>
+            </div>
+         </div>
+         <div id="SWV" class="tabcontent">
             <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Maiores odio adipisci provident quia accusantium nulla vero. Quae nobis quis libero quia maxime? Illum, eligendi voluptatem similique sequi inventore deleniti placeat.</p>
-          </div>
-      
-        <div class="border h-10 flex justify-between items-center p-4">
-          
-          <select class="w-44 border rounded-sm" id="portSelector" title="Select Device"></select>
-          <button class="" id="connectButton" title="Connect Device"><svg class="w-6 h-6 dark:text-white" aria-hidden="true" fill="green" viewBox="0 0 20 20">
-            <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z"/>
-          </svg></button>
-          <button id="listPortsButton" class="w" title="Refresh Ports"><svg class="w-6 h-6 text-gray-800 dark:text-dark" aria-hidden="true" fill="none" viewBox="0 0 18 20">
-            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 1v5h-5M2 19v-5h5m10-4a8 8 0 0 1-14.947 3.97M1 10a8 8 0 0 1 14.947-3.97"/>
-          </svg></button>
-          <button id="closePortButton" class="w" title="Disconnect Device"><svg class="w-6 h-6 text-red-600 dark:text-red" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="red" viewBox="0 0 14 14">
-            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-          </svg></button>
-        </div> 
-
-                <!-- Notification Connecterd Device -->
-        <div class="flex justify-center">
-          <div id="connectedDevice" class="mt-5 w-64 bg-green-300 text-black p-2 shadow-md border rounded hidden closeNotification">
-            <button id="closeConnectedDevice" class="float-right">&times;</button>
-            <h2 class="text-base font-semibold">✅ Device Connected</h2>
-            <p class="text-sm">Your device is now connected and ready to use.</p>
-          </div>
+         </div>
+         <div class="border h-10 flex justify-between items-center p-4">
+            <select class="w-44 border rounded-sm" id="portSelector" title="Select Device"></select>
+            <button class="" id="connectButton" title="Connect Device">
+               <svg class="w-6 h-6 dark:text-white" aria-hidden="true" fill="green" viewBox="0 0 20 20">
+                  <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z"/>
+               </svg>
+            </button>
+            <button id="listPortsButton" class="w" title="Refresh Ports">
+               <svg class="w-6 h-6 text-gray-800 dark:text-dark" aria-hidden="true" fill="none" viewBox="0 0 18 20">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 1v5h-5M2 19v-5h5m10-4a8 8 0 0 1-14.947 3.97M1 10a8 8 0 0 1 14.947-3.97"/>
+               </svg>
+            </button>
+            <button id="closePortButton" class="w" title="Disconnect Device">
+               <svg class="w-6 h-6 text-red-600 dark:text-red" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="red" viewBox="0 0 14 14">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+               </svg>
+            </button>
+         </div>
+         <!-- Notification Connecterd Device -->
+         <div class="flex justify-center">
+            <div id="connectedDevice" class="mt-5 w-64 bg-green-300 text-black p-2 shadow-md border rounded hidden closeNotification">
+               <button class="float-right" role="button" data-alert-dimissible="true">&times;</button>
+               <h2 class="text-base font-semibold">✅ Device Connected</h2>
+               <p class="text-sm">Your device is now connected and ready to use.</p>
+            </div>
+         </div>
+         <!-- Notification Disconnecte Device -->
+         <div class="flex justify-center">
+            <div id="disconnectedDevice" class="mt-5 w-64 bg-red-300 text-black p-2 shadow-md border rounded hidden closeNotification">
+               <button class="float-right" role="button" data-alert-dimissible="true">&times;</button>
+               <h2 class="text-base font-semibold">❌ Device Disconnected</h2>
+               <p class="text-sm">Your device has been disconnected.</p>
+            </div>
+         </div>
+      </div>
+      <div class="flex flex-col w-8 border items-center justify-center gap-4">
+         <button id="btn-download">
+            <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="black" viewBox="0 0 16 20">
+               <path d="M5 5V.13a2.96 2.96 0 0 0-1.293.749L.879 3.707A2.96 2.96 0 0 0 .13 5H5Z"/>
+               <path d="M13.768 15.475a1 1 0 0 1-1.414-1.414L13.414 13H6a1 1 0 0 1 0-2h7.414l-1.06-1.061a1 1 0 1 1 1.414-1.414L16 10.757V2a1.97 1.97 0 0 0-1.933-2H7v5a2 2 0 0 1-2 2H0v11a1.969 1.969 0 0 0 1.933 2H14a2 2 0 0 0 2-2v-4.757l-2.232 2.232Z"/>
+            </svg>
+         </button>
+         <button id="btn-clear">
+            <svg class="w-6 h-6 text-gray-800 dark:text-black" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 18 20">
+               <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h16M7 8v8m4-8v8M7 1h4a1 1 0 0 1 1 1v3H6V2a1 1 0 0 1 1-1ZM3 5h12v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5Z"/>
+            </svg>
+         </button>
+      </div>
+      <div class="flex-1 border">
+        <div id="mychart" class="w-full h-full"></div>
+        <div class="w-full bg-gray-200 h-2.5 dark:bg-gray-300">
+          <div id="myProgressBar" class="bg-green-600 h-2.5 rounded-full" style="width: 0"></div>
         </div>
-
-        <!-- Notification Disconnecte Device -->
-        <div class="flex justify-center">
-          <div id="disconnectedDevice" class="mt-5 w-64 bg-red-300 text-black p-2 shadow-md border rounded hidden closeNotification">
-            <button id="closeDisconnectedDevice" class="float-right">&times;</button>
-            <h2 class="text-base font-semibold">❌ Device Disconnected</h2>
-            <p class="text-sm">Your device has been disconnected.</p>
-          </div>
-        </div>
-
-
-
       </div>
-    
-    <div class="flex flex-col w-8 border items-center justify-center gap-4">
-      <button id="btn-download"><svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="black" viewBox="0 0 16 20">
-        <path d="M5 5V.13a2.96 2.96 0 0 0-1.293.749L.879 3.707A2.96 2.96 0 0 0 .13 5H5Z"/>
-        <path d="M13.768 15.475a1 1 0 0 1-1.414-1.414L13.414 13H6a1 1 0 0 1 0-2h7.414l-1.06-1.061a1 1 0 1 1 1.414-1.414L16 10.757V2a1.97 1.97 0 0 0-1.933-2H7v5a2 2 0 0 1-2 2H0v11a1.969 1.969 0 0 0 1.933 2H14a2 2 0 0 0 2-2v-4.757l-2.232 2.232Z"/>
-      </svg>
-      </button>
-    <button id="btn-clear">
-      <svg class="w-6 h-6 text-gray-800 dark:text-black" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 18 20">
-        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h16M7 8v8m4-8v8M7 1h4a1 1 0 0 1 1 1v3H6V2a1 1 0 0 1 1-1ZM3 5h12v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5Z"/>
-      </svg>
-    </button>
-      
-    </div>
-
-    <div class="flex-1 border">
-      <div>
-      <canvas id="mychart" class="w-full"></canvas>
-      </div>
-
-      <div class="w-full bg-gray-200 h-2.5 dark:bg-gray-300">
-        <div id="myProgressBar" class="bg-green-600 h-2.5 rounded-full" style="width: 0"></div>
-      </div>
-    </div>
-    
-
-  
-  
-  
-  
-
-
-    <script src="../scr/js/tabs.js"></script>
-    <script src="../scr/js/serial.js"></script>
-    <script src="../scr/js/writer.js"></script>
-    <script src="../scr/js/reader.js"></script>
-    <script src="../scr/command/cv.js"></script>
-    <script src="../scr/command/dpv.js"></script>
-    <script src="../scr/js/checksum.js"></script>
-    <script src="../scr/js/notification.js"></script>
-    <script src="../node_modules/chart.js/dist/chart.umd.js"></script>
-    <script src="../node_modules/chartjs-plugin-zoom/dist/chartjs-plugin-zoom.min.js"></script>
-    <script src="../node_modules/hammerjs/hammer.min.js"></script>
-    <script src="../scr/chart/chart.js"></script>
-
-  </body>
+      <script src="../scr/js/tabs.js"></script>
+      <script src="../node_modules/plotly.js-dist-min/plotly.min.js"></script>
+      <script src="../scr/chart/chart.js"></script>
+      <script src="../scr/js/serial.js"></script>
+      <script src="../scr/js/writer.js"></script>
+      <script src="../scr/js/reader.js"></script>
+      <script src="../scr/command/cv.js"></script>
+      <script src="../scr/command/dpv.js"></script>
+      <script src="../scr/js/checksum.js"></script>
+      <script src="../scr/js/notification.js"></script>
+   </body>
 </html>
-
- 
-
-

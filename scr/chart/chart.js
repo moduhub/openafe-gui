@@ -1,135 +1,91 @@
-const title = document.getElementById('title')
-let dynamicTitle = ""
-let mychart
+const title = document.getElementById('title');
+let dynamicTitle = ' ';
+let mychart;
 
-const chartData = {
-    labels: [],
-    datasets: [
-        {
-            label: "",
-            data: [],
-            borderWidth: 1,
-            borderColor: '#000000',
-            fill: false,
-            hidden: false
-        }
-    ]
+const chartData = [{
+    x: [],
+    y: [],
+    mode: 'lines',
+    line: {
+        color: 'black'
+    }
+}];
+
+const layout = {
+    title: dynamicTitle, // Defina o título diretamente com dynamicTitle
+    font: {
+        /* family: 'Times New Roman', */
+        size: 15,
+        weight: 'bold'
+    },
+    showlegend: false,
+    xaxis: {
+        title: 'Voltage (mV)',
+        linecolor: 'black',
+        mirror: true
+    },
+    yaxis: {
+        title: 'Current (uA)',
+        linecolor: 'black',
+        mirror: true
+    },
+    modebar: {
+        // vertical modebar button layout
+        orientation: 'v',
+        // for demonstration purposes
+      },
 };
 
-// Obtenha o elemento canvas
-
-// Crie um gráfico de linha inicial
-const render = function() {
-    const ctx = document.getElementById('mychart').getContext('2d');
-    mychart = new Chart(ctx, {
-        type: 'line',
-        data: chartData,
-        options: {
-            animation: {
-                duration: 0
-            },
-            scales: {
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Voltage (mV)'
-                    }
-                },
-                y: {
-                    title: {
-                        display: true,
-                        text: 'Current (uA)'
-                    }
-                }
-            },
-            plugins: {
-                zoom: {
-                    zoom: {
-                    wheel: {
-                    enabled: true,
-                    },
-                    pinch: {
-                    enabled: true
-                    },
-                    mode: 'x',
-                }
-                },
-                title: {
-                    display: true,
-                    text: dynamicTitle,
-                    font: {
-                        size: 20,
-                        weight: 'bold'
-                    },
-                    color: "black",
-                    padding: {
-                        top: 10,
-                        bottom: 10,
-                    }
-                },
-                legend: {
-                    display: false
-                    }
-            }
-    
-        }
-    })
-};
-render()
-
-document.getElementById('btn-clear').onclick = function() {
-    chartData.labels = [];
-    chartData.datasets[0].data = []; 
-    mychart.update(); 
+const config = {
+    scrollZoom: true,
+    displaylogo: false,
+    displayModeBar: true,
+    responsive: true,
 }
 
+// Função para renderizar o gráfico Plotly
+const render = function() {
+    mychart = Plotly.newPlot('mychart', chartData, layout, config);
+};
+render();
+
+// Limpar o gráfico
+document.getElementById('btn-clear').onclick = function() {
+    chartData[0].x = [];
+    chartData[0].y = [];
+    updateData();
+};
 
 title.addEventListener('input', (e) => {
     dynamicTitle = e.target.value;
     updateTitle(dynamicTitle);
 });
 
+// Função para atualizar os dados do gráfico
+function updateData() {
+    Plotly.update('mychart', chartData, layout);
+}
+
+// Função para atualizar o título
 function updateTitle(newText) {
-    mychart.options.plugins.title.text = newText;
-    mychart.update();
+    layout.title.text = newText;  // Correção aqui
+    Plotly.update('mychart', chartData, layout);
 }
 
+// Função para adicionar dados ao gráfico
 function addDataToChart(x, y) {
-    console.log(`Adicionando dados: x=${x}, y=${y}`);
-    const chartData = mychart.data;
-    const chartLabels = chartData.labels;
-    const chartDataArray = chartData.datasets[0].data;
-
-    // Verifique se o valor de x já existe nas labels
-    const existingIndex = chartLabels.indexOf(x);
-
-    if (existingIndex !== -1) {
-        // Se x já existe, verifique se chartDataArray[existingIndex] é um array
-        /* if (!Array.isArray(chartDataArray[existingIndex])) {
-            chartDataArray[existingIndex] = [chartDataArray[existingIndex]];
-        } */
-        // Adicione o novo valor y ao array
-        chartDataArray[existingIndex].push(y);
-    } else {
-        // Se x não existe, crie um novo par de valores
-        chartLabels.push(x);
-        chartDataArray.push([y]);
-        console.log(`Primeiros dados: x=${x}, y=${y}`);
-    }
-
-    mychart.data = chartData; // Defina os dados atualizados
-    mychart.update();
+    chartData[0].x.push(x);
+    chartData[0].y.push(y);
+    updateData();
 }
-
-
-
-
-var image = mychart.toBase64Image();
 
 document.getElementById('btn-download').onclick = function() {
-    // Trigger the download
-    var a = document.createElement('a');
-    a.href = mychart.toBase64Image();
-    a.download = 'my_file_name.png';
-    a.click();
-}
+    // Baixar o gráfico como imagem
+    Plotly.toImage('mychart', { format: 'png' })
+        .then(function(url) {
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'my_file_name.png';
+            a.click();
+        });
+};

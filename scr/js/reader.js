@@ -93,4 +93,5 @@ function updateProgressBar() {
     progressBar.style.width = width + "%";
   }  
 
-document.getElementById('closePort').addEventListener('click', stopReading);
+document.getElementById('closePortCV').addEventListener('click', stopReading);
+document.getElementById('closePortDPV').addEventListener('click', stopReading);
