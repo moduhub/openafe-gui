@@ -133,28 +133,15 @@
             </div>
          </div>
       </div>
-      <div class="flex flex-col w-8 border items-center justify-center gap-4">
-         <button id="btn-download">
-            <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="black" viewBox="0 0 16 20">
-               <path d="M5 5V.13a2.96 2.96 0 0 0-1.293.749L.879 3.707A2.96 2.96 0 0 0 .13 5H5Z"/>
-               <path d="M13.768 15.475a1 1 0 0 1-1.414-1.414L13.414 13H6a1 1 0 0 1 0-2h7.414l-1.06-1.061a1 1 0 1 1 1.414-1.414L16 10.757V2a1.97 1.97 0 0 0-1.933-2H7v5a2 2 0 0 1-2 2H0v11a1.969 1.969 0 0 0 1.933 2H14a2 2 0 0 0 2-2v-4.757l-2.232 2.232Z"/>
-            </svg>
-         </button>
-         <button id="btn-clear">
-            <svg class="w-6 h-6 text-gray-800 dark:text-black" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 18 20">
-               <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h16M7 8v8m4-8v8M7 1h4a1 1 0 0 1 1 1v3H6V2a1 1 0 0 1 1-1ZM3 5h12v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5Z"/>
-            </svg>
-         </button>
-      </div>
       <div class="flex-1 border">
-        <div id="mychart" class="w-full h-full"></div>
-        <div class="w-full bg-gray-200 h-2.5 dark:bg-gray-300">
-          <div id="myProgressBar" class="bg-green-600 h-2.5 rounded-full" style="width: 0"></div>
-        </div>
+         <div class="h-full flex flex-col">
+            <div id="mychart" class="w-full h-full"></div>
+            <div class="w-full bg-gray-200 h-2.5 dark:bg-gray-300">
+               <div id="myProgressBar" class="bg-green-600 h-2.5 rounded-full" style="width: 0"></div>
+            </div>
+         </div>
       </div>
       <script src="../scr/js/tabs.js"></script>
-      <script src="../node_modules/plotly.js-dist-min/plotly.min.js"></script>
-      <script src="../scr/chart/chart.js"></script>
       <script src="../scr/js/serial.js"></script>
       <script src="../scr/js/writer.js"></script>
       <script src="../scr/js/reader.js"></script>
@@ -162,5 +149,7 @@
       <script src="../scr/command/dpv.js"></script>
       <script src="../scr/js/checksum.js"></script>
       <script src="../scr/js/notification.js"></script>
+      <script src="../node_modules/plotly.js-dist-min/plotly.min.js"></script>
+      <script src="../scr/chart/chart.js"></script>
    </body>
 </html>
