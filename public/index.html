@@ -27,19 +27,19 @@
                </div>
                <div class="flex">
                   <label for="startP" class="w-56">StartP(mv)</label>
-                  <input value="-20" step="1" id="startP" type="number" class="border w-40 text-center">
+                  <input value="-800" step="1" id="startP" type="number" class="border w-40 text-center">
                </div>
                <div class="flex">
                   <label for="endP" class="w-56">EndP(mv)</label>
-                  <input value="20" step="1" id="endP" type="number" class="border w-40 text-center">
+                  <input value="0" step="1" id="endP" type="number" class="border w-40 text-center">
                </div>
                <div class="flex">
                   <label for="step" class="w-56">Step(mv)</label>
-                  <input value="10" step="1" id="step" type="number" class="border w-40 text-center">
+                  <input value="1" step="1" id="step" type="number" class="border w-40 text-center">
                </div>
                <div class="flex">
                   <label for="scanRate" class="w-56">ScanRate(mv)</label>
-                  <input value="1" step="1" id="scanRate" type="number" class="border w-40 text-center">
+                  <input value="100" step="1" id="scanRate" type="number" class="border w-40 text-center">
                </div>
                <div class="flex">
                   <label for="cycle" class="w-56">Cycles</label>
@@ -116,35 +116,92 @@
                </svg>
             </button>
          </div>
+
          <!-- Notification Connecterd Device -->
          <div class="flex justify-center">
-            <div id="connectedDevice" class="mt-5 w-64 bg-green-300 text-black p-2 shadow-md border rounded hidden closeNotification">
-               <button class="float-right" role="button" data-alert-dimissible="true">&times;</button>
+            <div id="connectedDevice" class="mt-5 w-64 bg-green-300 text-black p-2 shadow-md border rounded hidden">
+               <button class="float-right" data-alert-dimissible="true" data-notification-id="connectedDevice" onclick="handleClickCloseButton(this)">&times;</button>
                <h2 class="text-base font-semibold">✅ Device Connected</h2>
                <p class="text-sm">Your device is now connected and ready to use.</p>
             </div>
          </div>
+         <!-- Notification Connecterd Device -->
+
          <!-- Notification Disconnecte Device -->
          <div class="flex justify-center">
-            <div id="disconnectedDevice" class="mt-5 w-64 bg-red-300 text-black p-2 shadow-md border rounded hidden closeNotification">
-               <button class="float-right" role="button" data-alert-dimissible="true">&times;</button>
-               <h2 class="text-base font-semibold">❌ Device Disconnected</h2>
-               <p class="text-sm">Your device has been disconnected.</p>
+            <div id="disconnectedDevice" class="mt-5 w-64 bg-red-300 text-black p-2 shadow-md border rounded hidden">
+                <button class="float-right" data-alert-dimissible="true" data-notification-id="disconnectedDevice" onclick="handleClickCloseButton(this)">&times;</button>
+                <h2 class="text-base font-semibold">❌ Device Disconnected</h2>
+                <p class="text-sm">Your device has been disconnected.</p>
+            </div>
+        </div>
+         <!-- Notification Disconnecte Device -->
+
+         <!-- Notification Device Malfunction -->
+         <div class="flex justify-center">
+            <div id="deviceMalfunction" class="mt-5 w-64 bg-red-300 text-black p-2 shadow-md border rounded hidden">
+               <button class="float-right" role="button" data-alert-dimissible="true" data-notification-id="deviceMalfunction" onclick="handleClickCloseButton(this)">&times;</button>
+               <h2 class="text-base font-semibold">🚫 Device Malfunction</h2>
+               <p class="text-sm">The device is not functioning properly. Please check the device status.</p>
             </div>
          </div>
+         <!-- Notification Device Malfunction -->
+
+         <!-- Notification Data Out of Rang -->
+         <div class="flex justify-center">
+            <div id="dataOutRange" class="mt-5 w-64 bg-yellow-300 text-black p-2 shadow-md border rounded hidden">
+               <button class="float-right" role="button" data-alert-dimissible="true" data-notification-id="dataOutRange" onclick="handleClickCloseButton(this)">&times;</button>
+               <h2 class="text-base font-semibold">⚠️ Data Out of Range</h2>
+               <p class="text-sm">The received data is out of the acceptable range. Please review the data.</p>
+            </div>
+         </div>
+         <!-- Notification Data Out of Rang -->
+
       </div>
-      <div class="flex-1 border">
+      <div class="flex-1 border z-10">
          <div class="h-full flex flex-col">
             <div id="mychart" class="w-full h-full"></div>
             <div class="w-full bg-gray-200 h-2.5 dark:bg-gray-300">
                <div id="myProgressBar" class="bg-green-600 h-2.5 rounded-full" style="width: 0"></div>
             </div>
+
+            <!-- Nofication Data Received-->
+            <div class="absolute bottom-1/2 left-1/2">
+               <div id="dataReceived" class="w-64 bg-green-300 text-black p-2 shadow-md border rounded hidden">
+                  <button class="float-right" role="button" data-alert-dimissible="true" data-notification-id="dataReceived" onclick="handleClickCloseButton(this)">&times;</button>
+                  <h2 class="text-base font-semibold">✅ Data Received</h2>
+                  <p class="text-sm">Your data has been received successfully.</p>
+               </div>
+            </div>
+            <!-- Nofication Data Received-->
+
+            <!-- Nofication Data Loss-->
+            <div class="absolute bottom-1/2 left-1/2">
+               <div id="dataLoss" class="w-64 bg-yellow-300 text-black p-2 shadow-md border rounded hidden">
+                  <button class="float-right" role="button" data-alert-dimissible="true" data-notification-id="dataLoss" onclick="handleClickCloseButton(this)">&times;</button>
+                  <h2 class="text-base font-semibold">⚠️ Data Loss</h2>
+                  <p class="text-sm">There was a loss of received data.</p>
+               </div>
+            </div>
+            <!-- Nofication Data Loss-->
          </div>
       </div>
+
+      <!-- Nofication Data Loss-->
+      <div class="absolute bottom-1/2 left-1/2 z-40">
+         <div id="contactSupport" class="w-64 bg-yellow-300 text-black p-2 shadow-md border rounded hidden">
+            <button class="float-right" role="button" data-alert-dimissible="true" data-notification-id="contactSupport" onclick="handleClickCloseButton(this)">&times;</button>
+            <h2 class="text-base font-semibold">❌ Contact Support</h2>
+            <p class="text-sm">An error occurred. Please contact support for assistance <a class="text-sm text-decoration: underline" href="https://api.whatsapp.com/send?phone=5547996040396" target="_blank">ModHub Technology</a>. </p>
+            
+         </div>
+      </div>
+      <!-- Nofication Data Loss-->
+      
       <script src="../scr/js/tabs.js"></script>
-      <script src="../scr/js/serial.js"></script>
-      <script src="../scr/js/writer.js"></script>
-      <script src="../scr/js/reader.js"></script>
+      <script src="../scr/arduino/serial.js"></script>
+      <script src="../scr/arduino/writer.js"></script>
+      <script src="../scr/arduino/reader.js"></script>
       <script src="../scr/command/cv.js"></script>
       <script src="../scr/command/dpv.js"></script>
       <script src="../scr/js/checksum.js"></script>
