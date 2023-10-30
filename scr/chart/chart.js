@@ -1,6 +1,7 @@
 const title = document.getElementById('title');
 let dynamicTitle = ' ';
 let mychart;
+let data = []
 
 const binIconSVG =  {'width': 500,
 'height': 600,
@@ -74,7 +75,9 @@ title.addEventListener('input', (e) => {
 // Função para atualizar os dados do gráfico
 function updateData() {
     Plotly.update('mychart', chartData, layout);
+    /* setTimeout(updateData, 500); */
 }
+
 
 // Função para atualizar o título
 function updateTitle(newText) {
@@ -85,7 +88,28 @@ function updateTitle(newText) {
 // Função para adicionar dados ao gráfico
 function addDataToChart(x, y) {
     chartData[0].x.push(x);
-    chartData[0].y.push(y);
+    chartData[0].y.push(y);  
     updateData();
+    data.push({ x, y });
 }
-    
+
+function getPlotterData(){
+    const resultValue = data.reduce((result, data) => {
+        if(data.y > result.y){
+            resultValue.y = data
+        }
+        if(data.y < result.y){
+            resultValue.y = data
+        }
+        return result
+    }, {max: {}, min: {}})
+   
+
+
+    console.log('x:' + resultValue.y, 'y:' + resultValue.y);
+
+
+/*     const x = plotterData[0].trace.x
+    const y = plotterData[0].trace.y
+    console.log(x,y) */
+}
