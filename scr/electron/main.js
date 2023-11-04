@@ -14,6 +14,8 @@ function createWindow() {
       webSecurity: true, // Recomendado: habilite (não recomendando desabilitar)
       preload: path.join(__dirname, "./preload.js"), // O caminho para seu arquivo de pré-carregamento, se você estiver usando um
     },
+    icon: "modhub_azulPNG.ico",
+    autoHideMenuBar: true
   });
 
   mainWindow.webContents.session.on(
@@ -66,7 +68,7 @@ function createWindow() {
   mainWindow.show();
   mainWindow.loadFile("public/index.html");
 
-  mainWindow.webContents.openDevTools();
+  /* mainWindow.webContents.openDevTools(); */ //devtools.open
 }
 
 app.whenReady().then(() => {

@@ -29,10 +29,10 @@
     "electron-builder": "^24.6.4"
   },
   "build": {
-    "appId": "com.example.myapp",
-    "productName": "MyApp",
+    "appId": "OpenFE.app",
+    "productName": "OpenFE - ModHub Tecnology",
     "directories": {
-      "output": "dist"
+      "output": "ModHub - OpenFe"
     },
     "files": [
       "dist/**/*",
@@ -45,7 +45,8 @@
       "target": "dmg"
     },
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "modhub_azulPNG.ico"
     }
   }
 }
