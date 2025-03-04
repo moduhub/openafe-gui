@@ -1,131 +1,141 @@
-// Variáveis para armazenar os dados de potencial (x) e corrente (y)
-float x = -1.0; // Inicializa com -1.0 para a varredura
-float y = 0.0;  // Inicializa com 0.0
+// Variáveis para armazenar os dados da varredura cíclica
+float x = 0;  // Potencial inicial
+float y = 0;   // Corrente inicial
 
-// Variáveis
-String comandoRecebido = "";
-float setTime = 0;
-float startP = 0;
-float endP = 0;
-float step = 0;
-float scanRate = 0;
-float cycle = 0;
+// Estrutura para armazenar os parâmetros da varredura
+struct CVWParams {
+  float settlingTime;
+  float startPotential;
+  float endPotential;
+  float step;
+  float scanRate;
+  float cycles;
+};
+
+// Variáveis globais
+CVWParams cvwParams;
 bool varredura = false;
+int currentCycle = 0;
+String comandoRecebido = "";
+const int ledPin = 13; // Pino do LED
+float directionStep = 1;
 
-String elementos[7];
-
+// Prototipação das funções
 float calcularCorrente(float potential);
+String calcularChecksum(String s);
+void inputCVW(String str);
 
+// Setup
 void setup() {
-  // Inicializa a comunicação serial com um baud rate de 9600
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, LOW);  // Inicializa o LED apagado
   Serial.begin(9600);
 }
 
-// Função para calcular o checksum de uma string, excluindo o caractere '$'
-String calcularChecksum(String s) {
-  char checksum = 0;
-  for (int i = 0; i < s.length(); i++) {
-    if (s[i] != '$') { // Ignora o caractere '$'
-      checksum ^= s[i]; // Faz um XOR com o valor ASCII de cada caractere
+// Looping
+void loop() {
+  if (Serial.available()) {
+    comandoRecebido = Serial.readStringUntil('\n');
+
+    if (comandoRecebido.startsWith("$CVW")) {
+      // Leitura do GUI
+      inputCVW(comandoRecebido);
+      varredura = true;
+      directionStep = 1;
+      x = cvwParams.startPotential;
+
+      // Espera para estabilização
+      //delay(cvwParams.settlingTime);
+
+      while (varredura) {
+        digitalWrite(ledPin, HIGH);  // Acende o LED durante a varredura
+        y = calcularCorrente(x, directionStep, cvwParams.startPotential, cvwParams.endPotential);
+        
+        // Formata a mensagem e calcula o checksum
+        String mensagem = "$SGL," + String(x, 6) + "," + String(y, 6);
+        String checksum = calcularChecksum(mensagem);
+        mensagem += "*" + checksum;
+        
+        Serial.println(mensagem);
+        delay(100);  // Atraso para não sobrecarregar a porta serial
+
+        x += cvwParams.step * directionStep;  // Avança para o próximo valor de potencial
+        if (x >= cvwParams.endPotential) {
+          directionStep = -1;  // Inverte a direção da varredura
+        }
+        else if(x < cvwParams.startPotential){
+          directionStep = 1;
+          currentCycle++;  // Contabiliza o ciclo
+        }
+        
+        if (currentCycle >= cvwParams.cycles) {
+          varredura = false;  // Finaliza a varredura após os ciclos definidos
+          Serial.println("Processo encerrado por ciclos");
+          digitalWrite(ledPin, LOW);  // Desliga o LED ao fim da varredura
+        }
+
+        // Verifica se um comando de parada foi recebido
+        if (Serial.available()) {
+          String comando = Serial.readStringUntil('\n');
+          if (comando == "$CMD,DIE*2E") {
+            varredura = false;  // Finaliza a varredura
+            Serial.println("Processo encerrado por força bruta");
+            digitalWrite(ledPin, LOW);  // Desliga o LED
+          }
+        }
+      }
     }
-  } 
-
-  // Converte o resultado para uma representação hexadecimal de dois dígitos
-  char checksumHex[3];
-  sprintf(checksumHex, "%02X", checksum);
-
-  return String(checksumHex);
+  }
 }
 
-// Recebimento do comando CVW
-// CVW,1000,-800,0,100,1,1*57
+// Função para processar o comando $CVW e extrair os parâmetros
+// exemplo: $CVW,1000,-800,0,100,2,1*54
 void inputCVW(String str) {
+
   int index = 0;
+  String elementos[7];
   int startIndex = 0;
   int endIndex = str.indexOf(',');
 
+  // Divide a string em partes usando vírgula como delimitador
   while (endIndex >= 0) {
     elementos[index++] = str.substring(startIndex, endIndex);
     startIndex = endIndex + 1;
     endIndex = str.indexOf(',', startIndex);
   }
-  elementos[index] = str.substring(startIndex);
+  elementos[index] = str.substring(startIndex);  // Último valor após a última vírgula
 
-  // Converte os elementos para float
-  setTime = elementos[1].toFloat();
-  startP = elementos[2].toFloat();
-  endP = elementos[3].toFloat();
-  step = elementos[4].toFloat();
-  scanRate = elementos[5].toFloat();
-
-  // Atualiza o gráfico
-  x = startP;
-  
-  // Pega somente o primeiro termo do último elemento
-  cycle = elementos[6].substring(0, elementos[6].indexOf('*')).toFloat();
+  // Converte os elementos para float e atribui aos parâmetros
+  cvwParams.settlingTime = elementos[1].toFloat();
+  cvwParams.startPotential = elementos[2].toFloat();
+  cvwParams.endPotential = elementos[3].toFloat();
+  cvwParams.scanRate = elementos[4].toFloat();
+  cvwParams.step = elementos[5].toFloat();
+  cvwParams.cycles = elementos[6].substring(0, elementos[6].indexOf('*')).toFloat();
 }
 
-void loop() {
-  // Verifica se há dados disponíveis na porta serial
-  while (Serial.available() > 0) {
-    // Lê a string completa até o caractere de nova linha
-    comandoRecebido = Serial.readStringUntil('\n');
-    // Verifica se a string recebida começa com ":$CVW"
-    if (comandoRecebido.startsWith("$CVW")) {
-      // Divide a string em elementos separados por vírgula, e os salva nas devidas variáveis
-      inputCVW(comandoRecebido);
-
-      varredura = true;
-      // Inicia a varredura de voltametria cíclica
-      while (varredura) {
-        // Calcula a corrente com base no potencial simulado
-        y = calcularCorrente(x);
-        
-        // Formata os dados no formato "$SGL,x,y*checksum"
-        String mensagem = "$SGL," + String(x, 6) + "," + String(y, 6);
-        
-        // Calcula o checksum da mensagem
-        String checksum = calcularChecksum(mensagem);
-        
-        // Adiciona o checksum à mensagem
-        mensagem += "*" + checksum;
-        
-        // Envia a mensagem pela porta serial
-        Serial.println(mensagem);
-        
-        // Aguarde um curto período de tempo para não inundar a porta serial
-        delay(100);
-        
-        // Avance para o próximo potencial
-        x += 0.01; // Aumenta o potencial em 0.01 V
-        
-        // Se atingir o potencial máximo, inverta a direção da varredura
-        if (x > endP || x < startP) {
-          x = -x;
-        }
-        
-        // Verifique se há um novo comando
-        if (Serial.available() > 0) {
-          String comando = Serial.readStringUntil('\n');
-          if (comando == "$CMD,DIE*2E") {
-            varredura = false;
-            Serial.print("Processo encerrado");
-          }
-          Serial.print("Comando: ");
-          Serial.println(comando);
-        }
-      }
+// Função para calcular o checksum de uma string
+String calcularChecksum(String s) {
+  char checksum = 0;
+  for (int i = 0; i < s.length(); i++) {
+    if (s[i] != '$') {  // Ignora o caractere '$'
+      checksum ^= s[i];  // Faz um XOR com o valor ASCII de cada caractere
     }
-    Serial.print("Comando: ");
-    Serial.println(comandoRecebido);
   }
+
+  // Converte o resultado do XOR em formato hexadecimal
+  char checksumHex[3];
+  sprintf(checksumHex, "%02X", checksum);
+
+  return String(checksumHex);  // Retorna o checksum como string
 }
 
-// Função de cálculo de corrente (simulação)
-float calcularCorrente(float potential) {
-  // Aqui você pode ajustar a função para simular o comportamento da corrente
-  // de acordo com a voltametria cíclica desejada
-  // Para um exemplo simples, a corrente varia senoidalmente com o potencial
-  float current = sin(potential * 3.14) * 0.1; // Ajuste os parâmetros conforme necessário
-  return current;
+// Função para calcular a corrente com base no potencial (simulação)
+float calcularCorrente(float potencial, float directionStep, float startPotential, float endPotential) {
+  // A corrente varia senoidalmente com o potencial
+  float deltaPotencial = (endPotential - startPotential);
+  float periodo = (deltaPotencial>0) ? deltaPotencial : -deltaPotencial;
+  float omega = 2 * PI / periodo;
+  float corrente = sin(omega * potencial); 
+  return (directionStep == 1) ? corrente : 0;
 }
