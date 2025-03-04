@@ -57,7 +57,10 @@ void loop() {
         mensagem += "*" + checksum;
         
         Serial.println(mensagem);
-        delay(100);  // Atraso para não sobrecarregar a porta serial
+
+        // Controle tempo ( em segundos )
+        float periodoLeitura = 1000 * (cvwParams.step/cvwParams.scanRate);
+        delay(periodoLeitura);  // Controle do tempo
 
         x += cvwParams.step * directionStep;  // Avança para o próximo valor de potencial
         if (x >= cvwParams.endPotential) {
