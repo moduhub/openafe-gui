@@ -2,17 +2,27 @@ let receivedData = '';
 let reader = null;
 let sglLineCount = 0; // Inicialize o contador
 var numPoints = 0;
+let isReading = true;
 
 async function startReading() {
+   if (!port || !port.readable) {
+      console.error('Porta não está aberta ou não é legível.');
+      return;
+   }
+
    if (reader) {
-      reader.releaseLock();
+      try {
+         reader.releaseLock();
+      } catch (error) {
+         console.error('Erro ao liberar o bloqueio do leitor:', error);
+      }
    }
 
    reader = port.readable.getReader();
 
    try {
-      while (true) {
-         const {value,done} = await reader.read();
+      while (isReading) {
+         const { value, done } = await reader.read();
          if (done) {
             break;
          }
@@ -25,17 +35,40 @@ async function startReading() {
          if (lines.length > 1) {
             receivedData = lines.pop();
 
+            console.log("Linhas recebidas: "+lines.length)
+            console.log("INF. RECEBIDA: " + lines);
+
             for (const line of lines) {
-
-               processLines(line)
+               processLines(line);
             }
-
          }
       }
    } catch (error) {
       console.error('Erro na leitura:', error);
+   } finally {
+      if (reader) {
+         try {
+            reader.releaseLock();
+         } catch (error) {
+            console.error('Erro ao liberar o bloqueio do leitor:', error);
+         }
+         reader = null;
+      }
    }
+}
 
+function stopReading() {
+  if (reader) {
+     sendData("$CMD,DIE*2E");
+     getPlotterData();
+     isReading = false; // Parar a leitura
+     try {
+        reader.releaseLock();
+     } catch (error) {
+        console.error('Erro ao liberar o bloqueio do leitor:', error);
+     }
+     reader = null;
+  }
 }
 
 async function processLines(line) {
@@ -62,23 +95,29 @@ async function processLines(line) {
          }
    }
 
-   if (line.startsWith("$MSG,END*3A")) {
-      reader.releaseLock();
-      reader = null;
-      console.log('Parando a leitura.');
-      console.log(numPoints - sglLineCount)
-      numPoints == sglLineCount ? openNotificationNotClose("dataReceived") : openNotificationNotClose("dataLoss")
-      sglLineCount = 0
-   }
+  if (line.startsWith("$MSG,END*3A")) {
+    if (reader) {
+       try {
+          reader.releaseLock();
+       } catch (error) {
+          console.error('Erro ao liberar o bloqueio do leitor:', error);
+       }
+       reader = null;
+    }
+    console.log('Parando a leitura.');
+    console.log(numPoints - sglLineCount);
+    numPoints == sglLineCount ? openNotificationNotClose("dataReceived") : openNotificationNotClose("dataLoss");
+    sglLineCount = 0;
+ }
 
-   if (line.startsWith("$SGL,")) {
+  if (line.startsWith("$SGL,")) {
       sglLineCount++;
       updateProgressBar();
       const part = line.split(',');
       const x = parseFloat(part[1]);
       const y = parseFloat(part[2]);
-/*       console.log('SGL:' + x);
-      console.log('y:' + y); */
+      //console.log('SGL:' + x);
+      //console.log('y:' + y); 
 
       const data = line.split("*");
       const dataChecksum = data[0].replace("$", "").trim();
@@ -90,16 +129,6 @@ async function processLines(line) {
    } else {
       // Registro de erro
       console.log('Dados com problema: linha com formato incorreto -', line);
-   }
-}
-
-
-function stopReading() {
-   if (reader) {
-      sendData("$CMD,DIE*2E")
-      getPlotterData()
-      reader.releaseLock();
-      reader = null;
    }
 }
 

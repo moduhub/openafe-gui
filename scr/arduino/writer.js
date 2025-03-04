@@ -5,7 +5,10 @@
    */
   async function sendData(commandInput) {
     const command = commandInput;
-    console.log(command);
+
+    // Comando enviado para o arduino
+    console.log("Comando enviado final:"+command);
+
     if (port && port.writable) {
       writer = port.writable.getWriter();
       const textEncoder = new TextEncoder();

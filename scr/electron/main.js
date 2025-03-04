@@ -15,8 +15,11 @@ function createWindow() {
       preload: path.join(__dirname, "./preload.js"), // O caminho para seu arquivo de pré-carregamento, se você estiver usando um
     },
     icon: "modhub_azulPNG.ico",
-    autoHideMenuBar: true
+    autoHideMenuBar: false
   });
+
+  //Inciar com o dev tools aberto
+  mainWindow.webContents.openDevTools()
 
   mainWindow.webContents.session.on(
     "select-serial-port",
