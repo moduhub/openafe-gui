@@ -1,52 +1,53 @@
 {
+  "name": "openafe-gui",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/electron/main.js",
   "dependencies": {
-    "electron-notifications": "^1.0.0",
-    "plotly.js-dist-min": "^2.27.0",
-    "tailwindcss": "^3.3.3"
+    "electron": "^35.0.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@fontsource/roboto": "^5.2.5",
+    "@mui/icons-material": "^6.4.6",
+    "@mui/material": "^6.4.6",
+    "@mui/styled-engine-sc": "^6.4.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.2.0",
+    "react-scripts": "5.0.1",
+    "styled-components": "^6.1.15"
   },
-  "name": "teste",
-  "version": "1.0.0",
-  "main": "scr/electron/main.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron .",
-    "tailwind": "npx tailwindcss -i public/style.css -o public/dist/style.css --watch",
-    "dev": "start electron . & tailwind",
-    "build": "electron-builder",
-    "build:mac": "electron-builder --mac",
-    "build:win": "electron-builder --win",
-    "build:linux": "electron-builder --linux"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "permissions": [
-    "notifications"
-  ],
   "devDependencies": {
-    "electron": "^26.1.0",
-    "electron-builder": "^24.6.4"
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@testing-library/user-event": "^13.5.0",
+    "cross-env": "^7.0.3",
+    "web-vitals": "^2.1.4"
   },
-  "build": {
-    "appId": "OpenFE.app",
-    "productName": "OpenFE - ModHub Tecnology",
-    "directories": {
-      "output": "ModHub - OpenFe"
-    },
-    "files": [
-      "dist/**/*",
-      "node_modules/**/*",
-      "public/**/*",
-      "scr/**/*"
+  "scripts": {
+    "start": "cross-env browser=none react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "electron": "electron ."
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
     ],
-    "mac": {
-      "category": "public.app-category.utilities",
-      "target": "dmg"
-    },
-    "win": {
-      "target": "nsis",
-      "icon": "modhub_azulPNG.ico"
-    }
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
