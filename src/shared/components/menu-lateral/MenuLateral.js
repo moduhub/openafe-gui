@@ -1,19 +1,23 @@
-import { Typography, Divider, Drawer, Icon, List, ListItemButton, ListItemIcon, ListItemText, useTheme } from '@mui/material';
+import { Typography, Divider, Drawer, List, ListItemButton, ListItemIcon, ListItemText, useTheme } from '@mui/material';
 import { Box } from '@mui/system';
 import SettingsIcon from '@mui/icons-material/Settings'; // Importando o ícone de configurações
 import HomeIcon from '@mui/icons-material/Home'; // Importando o ícone de Home
 import BarChartIcon from '@mui/icons-material/BarChart'; // Importando o ícone de Estatísticas
 import MenuIcon from '@mui/icons-material/Menu'; // Importando o ícone de Menu
 
+import { useDrawerContext } from '../../contexts'
 
 export const MenuLateral = ({ children }) => {
+
   const theme = useTheme();
+  const { isDrawerOpen, drawerOptions, toggleDrawerOpen } = useDrawerContext();
 
   return (
     <>
-      <Drawer variant='permanent'>
+      <Drawer variant='temporary' open={isDrawerOpen} onClose={toggleDrawerOpen}>
       <Box width={theme.spacing(28)} height="100%" display="flex" flexDirection="column" justifyContent="space-between">
           <Box>
+
             <Box width="100%" height={theme.spacing(8)} display="flex" alignItems="center" justifyContent="center">
               <MenuIcon sx={{ height: theme.spacing(3), width: theme.spacing(3), marginRight: theme.spacing(1) }} />
               <Typography variant="h6" component="div" sx={{ marginLeft: theme.spacing(1) }}>

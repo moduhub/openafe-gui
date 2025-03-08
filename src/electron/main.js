@@ -1,39 +1,45 @@
-const { app, BrowserWindow } = require("electron")
+const { app, BrowserWindow, ipcMain } = require("electron")
 const path = require('path')
+const { SerialPort } = require('serialport')
 
-function createWindow(){
-
+function createWindow() {
   const mainWindow = new BrowserWindow({
     show: false,
     titleBarStyle: "customButtonsOnHover",
     webPreferences: {
-      // Configuração da CSP para permitir o carregamento de scripts externos
-      // Certifique-se de que 'nodeIntegration' está definido como false
-      contextIsolation: true, // Recomendado: habilite o isolamento de contexto
-      sandbox: true, // Recomendado: habilite a área de trabalho segura
-      webSecurity: true, // Recomendado: habilite (não recomendando desabilitar)
-      preload: path.join(__dirname, "./preload.js"), // O caminho para seu arquivo de pré-carregamento, se você estiver usando um
+      contextIsolation: true,
+      sandbox: true,
+      webSecurity: true,
+      preload: path.join(__dirname, "./preload.js"),
     },
     icon: "modhub_azulPNG.ico",
     autoHideMenuBar: false
   })
 
-  // Abre o React
   mainWindow.loadURL('http://localhost:3000')
-
-  // Open the DevTools.
   mainWindow.webContents.openDevTools()
   mainWindow.maximize()
+
+  // Envia as portas seriais para o React
+  ipcMain.on('request-serial-ports', async (event) => {
+    try {
+      const ports = await SerialPort.list()
+      console.log('Serial ports found:', ports)
+      event.reply('serial-ports', ports)
+    } catch (err) {
+      console.error('Error listing serial ports', err)
+    }
+  })
 }
 
-app.whenReady().then(()=>{
+app.whenReady().then(() => {
   createWindow()
 
-  app.on("active",()=>{
-    if(BrowserWindow.getAllWindows().length===0) createWindow()
+  app.on("active", () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })
 
-app.on("window-all-closed",()=>{
-  if(process.platform != "darwin") app.quit()
+app.on("window-all-closed", () => {
+  if (process.platform != "darwin") app.quit()
 })
