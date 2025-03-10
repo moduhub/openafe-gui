@@ -1,15 +1,11 @@
-const { contextBridge, ipcRenderer } = require('electron')
+const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electron', {
-  requestSerialPorts: () => {
-    //console.log('Requesting serial ports')
-    ipcRenderer.send('request-serial-ports')
-  },
-  onSerialPorts: (callback) => {
-    ipcRenderer.removeAllListeners('serial-ports') // Remove todos os listeners anteriores
-    ipcRenderer.on('serial-ports', (event, ports) => {
-      //console.log('Received serial-ports event:', ports)
-      callback(ports)
-    })
-  }
-})
+  sendCommand: (command) => ipcRenderer.send('send-command', command),
+  connectToPort: (port) => ipcRenderer.send('connect-to-port', port),
+  disconnectPort: () => ipcRenderer.send('disconnect-port'),
+  getAvailablePorts: (callback) => ipcRenderer.invoke('get-available-ports').then(callback),
+  onArduinoData: (callback) => ipcRenderer.on('arduino-data', (event, data) => callback(data)),
+  onSerialPortOpened: (callback) => ipcRenderer.on('serial-port-opened', (event, message) => callback(message)),
+  onSerialPortDisconnected: (callback) => ipcRenderer.on('serial-port-disconnected', (event, message) => callback(message))
+});

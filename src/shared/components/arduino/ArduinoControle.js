@@ -1,44 +1,67 @@
-export async function listPorts() {
-  try {
-    // Remove o listener anterior, se existir
-    window.electron.onSerialPorts((ports) => {
-      // Filtra as portas para manter apenas as do Arduino
-      const filteredPorts = ports.filter((port) => {
-        return (
-          port.vendorId === '2341' && // Vendor ID do Arduino
-          (port.productId === '0043' || port.productId === '0001') // Product IDs do Arduino
-        );
+export function listarPortas() {
+  return new Promise((resolve, reject) => {
+    try {
+      window.electron.getAvailablePorts((ports) => {
+        const filteredPorts = ports.filter((port) => {
+          return (
+            port.vendorId === '2341' && // Vendor ID do Arduino
+            (port.productId === '0043' || port.productId === '0001') // Product IDs do Arduino
+          );
+        });
+        console.log("Portas filtradas: ")
+        console.log(filteredPorts);
+        resolve(filteredPorts);
       });
-
-      console.log("Portas Arduino:")
-      console.log(filteredPorts)
-      return filteredPorts;
-    })
-
-    // Solicita as portas seriais
-    window.electron.requestSerialPorts()
-  } catch (error) {
-    console.error('Error listing ports:', error);
-    return [];
-  }
+    } catch (error) {
+      console.error('Error listing ports:', error);
+      reject(error);
+    }
+  });
 }
 
-export async function connectPort(selectedPort) {
+export const iniciarLeitura = () => {
+  window.electron.sendCommand('$CVW,1000,-800,0,100,2,1*54');
+};
+
+export const finalizarLeitura = () => {
+  window.electron.sendCommand('$CMD,DIE*2E');
+};
+
+export const desconectarPorta = () => {
+  window.electron.disconnectPort();
+};
+
+export const atualizarHooks = (setPortas, setArduinoData, setIsConnected, setPortaSelecionada) => {
+  receberPortas(setPortas);
+
+  window.electron.onArduinoData((data) => {
+    setArduinoData(data);
+    console.log(data);
+  });
+
+  window.electron.onSerialPortOpened((message) => {
+    console.log(message);
+    setIsConnected(true);
+  });
+
+  window.electron.onSerialPortDisconnected((message) => {
+    console.log(message);
+    setPortaSelecionada('');
+    setIsConnected(false);
+  });
+};
+
+export const receberPortas = async (setPortas) => {
   try {
-    const success = await window.electron.connectPort(selectedPort);
-    console.log('Conexão com a porta:', success ? 'sucesso' : 'falha');
-    return success;
-  } catch (error) {
-    console.error('Error connecting to port:', error);
-    return false;
+    const portsData = await listarPortas();
+    setPortas(Array.isArray(portsData) ? portsData : []);
+  } catch (erro) {
+    console.log("Não foi possível receber dados: " + erro);
   }
-}
+};
 
-export function closePort() {
-  try {
-    window.electron.closePort();
-    console.log('Porta fechada');
-  } catch (error) {
-    console.error('Error closing port:', error);
-  }
-}
+export const conectarPorta = (port, setPortaSelecionada) => {
+  setPortaSelecionada(port);
+  window.electron.connectToPort(port);
+  console.log("Requisição de conectar feita")
+};

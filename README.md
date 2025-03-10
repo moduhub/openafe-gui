@@ -36,8 +36,6 @@ O OpenAFE GUI é uma interface gráfica para o OpenAFE, projetada para facilitar
   npm run electron
 ```
 
-
-
 ## 🛠️ Tecnologias Utilizadas
 
 - **React**: Biblioteca JavaScript para construção de interfaces de usuário.
