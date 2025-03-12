@@ -53,14 +53,8 @@ export const MenuSuperior = ({ children }) => {
       </AppBar>
 
       <Box>
-        <Box display="flex" flex={1}>
+        <Box>
           {children} {/* Conteúdo principal */}
-        </Box>
-        <Box width='100%' height='100%'>
-          <Button onClick={iniciarLeitura} >Start</Button>
-          <Button onClick={finalizarLeitura} >Stop</Button>
-          <Divider />
-          <Typography variant="body1">Arduino Data: {arduinoData}</Typography>
         </Box>
       </Box>
     </>

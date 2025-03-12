@@ -10,7 +10,7 @@ import { useDrawerContext } from '../../contexts'
 export const MenuLateral = ({ children }) => {
 
   const theme = useTheme();
-  const { isDrawerOpen, drawerOptions, toggleDrawerOpen } = useDrawerContext();
+  const { isDrawerOpen, toggleDrawerOpen } = useDrawerContext();
 
   return (
     <>
@@ -67,11 +67,9 @@ export const MenuLateral = ({ children }) => {
             </Box>
           </Box>
         </Box>
-      </Drawer> 
+      </Drawer>    
 
-      
-
-      <Box height="100%" marginLeft={theme.spacing(28)} marginTop={theme.spacing(8)}>
+      <Box height="100%" marginTop={theme.spacing(8)}>
         {children}
       </Box>
     </>
