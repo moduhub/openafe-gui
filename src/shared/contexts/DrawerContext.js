@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useState } from 'react';
+import { Box } from '@mui/system';
 
 // Cria um contexto chamado DrawerContext com um valor padrão de um objeto vazio
 const DrawerContext = createContext({});
@@ -23,7 +24,9 @@ export const DrawerProvider = ({ children }) => {
 
   return (
     <DrawerContext.Provider value={{ isDrawerOpen, drawerOptions, toggleDrawerOpen, setDrawerOptions: handleSetDrawerOptions }}>
-      {children}
+      <Box height="100%">
+        {children}
+      </Box>
     </DrawerContext.Provider>
   );
 };

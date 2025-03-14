@@ -1,31 +1,48 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import Plotly from 'plotly.js-dist';
+import { ThemeContext } from '../contexts/ThemeContext';
 
 export const useChart = () => {
+  const { theme } = useContext(ThemeContext);
+
   const [chartData, setChartData] = useState([{
     x: [],
     y: [],
     mode: 'lines',
-    line: { color: 'black' },
+    line: { color: theme.palette.primary.main },
   }]);
 
   const layout = {
-    font: { size: 15, weight: 'bold' },
+    font: { size: 15, color: theme.palette.text.primary },
     showlegend: false,
-    xaxis: { title: 'Voltage (mV)', linecolor: 'black', mirror: true },
-    yaxis: { title: 'Current (uA)', linecolor: 'black', mirror: true },
+    paper_bgcolor: theme.palette.background.default,
+    plot_bgcolor: theme.palette.background.paper,
+    xaxis: { 
+      title: 'Voltage (mV)', 
+      linecolor: theme.palette.text.primary, 
+      mirror: true,
+      gridcolor: theme.palette.divider,
+      zerolinecolor: theme.palette.divider,
+    },
+    yaxis: { 
+      title: 'Current (uA)', 
+      linecolor: theme.palette.text.primary, 
+      mirror: true,
+      gridcolor: theme.palette.divider,
+      zerolinecolor: theme.palette.divider,
+    },
     modebar: {
       orientation: 'v',
-      bgcolor: 'rgba(255, 255, 255, 0.7)',
-      iconColor: 'red',
-      logoColor: 'rgba(0, 31, 95, 0.3)',
+      bgcolor: theme.palette.background.paper,
+      iconColor: theme.palette.primary.main,
+      logoColor: theme.palette.secondary.main,
     },
   };
 
   const config = {
     scrollZoom: false,
     displaylogo: false,
-    displayModeBar: false, //Barra de funções do gráfico
+    displayModeBar: false, // Barra de funções do gráfico
     responsive: true,
     modeBarButtonsToAdd: [
       {
@@ -42,7 +59,7 @@ export const useChart = () => {
   };
 
   const clearChart = (setChartData) => {
-    setChartData([{ x: [], y: [], mode: 'lines', line: { color: 'black' } }]);
+    setChartData([{ x: [], y: [], mode: 'lines', line: { color: theme.palette.primary.main } }]);
   };
 
   const addDataToChart = (x, y) => {
@@ -56,7 +73,7 @@ export const useChart = () => {
 
   useEffect(() => {
     Plotly.newPlot('mychart', chartData, layout, config);
-  }, [chartData]);
+  }, [chartData, theme]);
 
   return { chartData, setChartData, clearChart, addDataToChart };
 };

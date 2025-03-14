@@ -31,7 +31,7 @@ export const AppThemeProvider = ({ children }) => {
 
   // Fornece o contexto do tema e aplica o tema usando ThemeProvider
   return (
-    <ThemeContext.Provider value={{ themeName, toggleTheme }}>
+    <ThemeContext.Provider value={{ themeName, toggleTheme, theme }}>
       <ThemeProvider theme={theme}>
         <Box width="100vw" height="100vh" bgcolor={theme.palette.background.default}>
           {children}
@@ -40,3 +40,6 @@ export const AppThemeProvider = ({ children }) => {
     </ThemeContext.Provider>
   );
 }
+
+// Adicione esta linha para exportar o ThemeContext
+export { ThemeContext };

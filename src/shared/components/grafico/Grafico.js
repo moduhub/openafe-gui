@@ -23,8 +23,6 @@ export const ChartComponent = () => {
   }, [arduinoData]);
 
   return (
-    <Box sx={{ padding: 2 }}>
-      <Box id="mychart" sx={{ height: 300, width: '100%' }}></Box>
-    </Box>
+    <Box id="mychart" sx={{ height: 300, width: '100%' }}></Box>
   );
 };

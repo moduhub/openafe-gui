@@ -53,7 +53,7 @@ export const MenuSuperior = ({ children }) => {
       </AppBar>
 
       <Box>
-        <Box>
+        <Box height="100%">
           {children} {/* Conteúdo principal */}
         </Box>
       </Box>
