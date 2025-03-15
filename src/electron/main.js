@@ -28,15 +28,16 @@ function createWindow() {
     height: 600,
     webPreferences: {
       contextIsolation: true,
-      sandbox: true,
+      sandbox: false,
       webSecurity: true,
       preload: path.join(__dirname, "./preload.js"),
     },
     icon: "modhub_azulPNG.ico",
+    autoHideMenuBar:true
   });
 
   mainWindow.loadURL('http://localhost:3000');
-  mainWindow.webContents.openDevTools();
+  //mainWindow.webContents.openDevTools();
   mainWindow.maximize();
 
   mainWindow.on('closed', () => {

@@ -13,7 +13,7 @@ export const useChart = () => {
   }]);
 
   const layout = {
-    font: { size: 15, color: theme.palette.text.primary },
+    font: { size: 14, color: theme.palette.text.primary },
     showlegend: false,
     paper_bgcolor: theme.palette.background.default,
     plot_bgcolor: theme.palette.background.paper,
@@ -40,18 +40,13 @@ export const useChart = () => {
   };
 
   const config = {
-    scrollZoom: false,
+    scrollZoom: true,
     displaylogo: false,
-    displayModeBar: false, // Barra de funções do gráfico
-    responsive: true,
+    displayModeBar: true, // Barra de funções do gráfico
+    responsive: false,
     modeBarButtonsToAdd: [
       {
         name: 'Clear Chart',
-        icon: {
-          width: 500,
-          height: 600,
-          path: 'M224 512c35.32 0 63.97-28.65 63.97-64H160.03c0 35.35 28.65 64 63.97 64z...',
-        },
         direction: 'up',
         click: () => clearChart(setChartData),
       },

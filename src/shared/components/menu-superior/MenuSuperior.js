@@ -52,10 +52,9 @@ export const MenuSuperior = ({ children }) => {
         </Toolbar>
       </AppBar>
 
-      <Box>
-        <Box height="100%">
-          {children} {/* Conteúdo principal */}
-        </Box>
+      <Box height='calc(100% - 64px)'> 
+        {/* 64px é a altura do AppBar */}
+        {children} {/* Conteúdo principal */}
       </Box>
     </>
   );

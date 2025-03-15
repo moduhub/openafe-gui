@@ -69,7 +69,7 @@ export const MenuLateral = ({ children }) => {
         </Box>
       </Drawer>    
 
-      <Box height="100%" marginTop={theme.spacing(8)}>
+      <Box height="100%">
         {children}
       </Box>
     </>
