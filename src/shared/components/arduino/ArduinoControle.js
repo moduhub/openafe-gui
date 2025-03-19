@@ -8,7 +8,6 @@ export function listarPortas() {
             (port.productId === '0043' || port.productId === '0001') // Product IDs do Arduino
           );
         });
-        console.log("Portas filtradas: ")
         console.log(filteredPorts);
         resolve(filteredPorts);
       });

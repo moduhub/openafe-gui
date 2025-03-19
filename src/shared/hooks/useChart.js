@@ -15,8 +15,8 @@ export const useChart = () => {
   const layout = {
     font: { size: 14, color: theme.palette.text.primary },
     showlegend: false,
-    paper_bgcolor: theme.palette.background.default,
-    plot_bgcolor: theme.palette.background.paper,
+    paper_bgcolor: 'transparent', // Torna o fundo principal transparente
+    plot_bgcolor: theme.palette.background.paper, 
     xaxis: { 
       title: 'Voltage (mV)', 
       linecolor: theme.palette.text.primary, 

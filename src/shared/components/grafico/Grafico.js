@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, Box, Button } from '@mui/material';
+import { Box } from '@mui/material';
 
 import { useArduinoData, useChart } from '../../hooks';
 
-export const ChartComponent = () => {
+export const ChartComponent = ({ size }) => {
   
   const { chartData, setChartData, clearChart, addDataToChart } = useChart();
   const { arduinoData, portas, setPortas, isConnected, portaSelecionada, setPortaSelecionada } = useArduinoData();
@@ -23,6 +23,6 @@ export const ChartComponent = () => {
   }, [arduinoData]);
 
   return (
-    <Box id="mychart" sx={{ height: 400, width: '100%' }}></Box>
+    <Box id="mychart" sx={{ height: "100%", width: '100%' }}></Box>
   );
 };

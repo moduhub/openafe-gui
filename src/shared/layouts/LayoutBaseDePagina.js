@@ -5,158 +5,163 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
 import MinimizeIcon from '@mui/icons-material/Minimize';
 import MaximizeIcon from '@mui/icons-material/Maximize';
+import IconButton from '@mui/material/IconButton';
 
 import { iniciarLeitura, finalizarLeitura } from '../components/arduino/ArduinoControle';
 import { ChartComponent } from '../components/grafico/Grafico';
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 
 export const LayoutBaseDePagina = ({ children }) => {
   const theme = useTheme();
 
-  const [settlingTime, setSettlingTime] = useState(1000);
-  const [startPotential, setStartPotential] = useState(-800);
-  const [endPotential, setEndPotential] = useState(0);
-  const [step, setStep] = useState(100);
-  const [scanRate, setScanRate] = useState(2);
-  const [cycles, setCycles] = useState(1);
+  const [params, setParams] = useState({
+    settlingTime: 1000,
+    startPotential: -800,
+    endPotential: 0,
+    step: 100,
+    scanRate: 2,
+    cycles: 1
+  });
   const [errorMessage, setErrorMessage] = useState('');
-  const [isMinimized, setIsMinimized] = useState(false); 
+  const [isMinimized, setIsMinimized] = useState(false);
+
+  // Can be 'small' or 'larger'
+  const [graphWidth, setGraphWidth] = useState('100%');
+  const [name, setName] = useState(''); 
+
+  // Novo estado de erros para os campos
+  const [errors, setErrors] = useState({
+    settlingTime: '',
+    startPotential: '',
+    endPotential: '',
+    step: '',
+    scanRate: '',
+    cycles: '',
+  });
+
+  const handleChange = (field) => (e) => {
+    setParams(prevState => ({
+      ...prevState,
+      [field]: Number(e.target.value)
+    }));
+
+    // Limpa o erro relacionado ao campo quando o usuário edita
+    setErrors(prevErrors => ({
+      ...prevErrors,
+      [field]: ''
+    }));
+  };
 
   const handleIniciarLeitura = () => {
-    // Função de verificação
-    const fields = [
-      { value: settlingTime, label: 'Settling Time (ms)' },
-      { value: step, label: 'Step (mV)' },
-      { value: scanRate, label: 'Scan Rate (mV/s)' },
-      { value: cycles, label: 'Cycles' }
-    ];
+    const newErrors = {};
 
-    for (const field of fields) {
-      if (!Number.isInteger(field.value) || field.value <= 0) {
-        setErrorMessage(`${field.label} deve ser um número inteiro maior que zero.`);
-        return; // Não executar iniciarLeitura caso algum campo seja inválido
-      }
+    // Valida todos os campos e acumula erros
+    if (!Number.isInteger(params.settlingTime) || params.settlingTime <= 0) {
+      newErrors.settlingTime = 'Incorrect entry.';
+    }
+    if (!Number.isInteger(params.step) || params.step <= 0) {
+      newErrors.step = 'Incorrect entry.';
+    }
+    if (!Number.isInteger(params.scanRate) || params.scanRate <= 0) {
+      newErrors.scanRate = 'Incorrect entry.';
+    }
+    if (!Number.isInteger(params.cycles) || params.cycles <= 0) {
+      newErrors.cycles = 'Incorrect entry.';
+    }
+    if (!Number.isInteger(params.startPotential)) {
+      newErrors.startPotential = 'Incorrect entry.';
+    }
+    if (!Number.isInteger(params.endPotential)) {
+      newErrors.endPotential = 'Incorrect entry.';
     }
 
-    // Não há validação para startPotential e endPotential quanto a valores negativos
-    if (!Number.isInteger(startPotential)) {
-      setErrorMessage('Start Potential deve ser um número inteiro.');
+    // Se houver erros, não prosseguir
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
-    if (!Number.isInteger(endPotential)) {
-      setErrorMessage('End Potential deve ser um número inteiro.');
-      return;
-    }
 
-    setErrorMessage(''); // Limpar mensagem de erro se tudo estiver correto
-    iniciarLeitura("$CVW",settlingTime,startPotential,endPotential,step,scanRate,cycles); // Executar a função se tudo estiver correto
+    // Se não houver erros, limpa as mensagens de erro e continua
+    setErrors({});
+    setErrorMessage('');
+    iniciarLeitura("$CVW", params.settlingTime, params.startPotential, params.endPotential, params.step, params.scanRate, params.cycles);
   };
+
+  useEffect(() => {
+    setGraphWidth('100%');
+  }, [isMinimized]);
 
   return (
     <Box height="100%" width="100%" display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
       
       {/* Menu lateral */}
       <Box 
-        width={isMinimized ? theme.spacing(12) : theme.spacing(40)}  
+        width={isMinimized ? theme.spacing(12) : theme.spacing(35)}  
         height={isMinimized ? "80%" : null}  
         display="flex"     
         flexShrink="0"
-        marginTop={isMinimized?null:theme.spacing(2)}  
-        marginBottom={isMinimized?null:theme.spacing(2)}
+        marginTop={isMinimized ? null : theme.spacing(2)}  
+        marginBottom={isMinimized ? null : theme.spacing(2)}
         transition="width 0.3s ease"
         alignItems="start"
-        position={isMinimized?"absolute":null}
-        top={isMinimized?theme.spacing(12):null}
+        //position={isMinimized ? "absolute" : "relative"}
+        top={isMinimized ? theme.spacing(12) : null}
       >
-        <Card sx={{ borderRadius: '16px'}}>
-          <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column'}}>
+        <Card sx={{ borderRadius: '16px' }}>
+          <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             
             {/* Botão de minimização */}
             <Box display="flex" justifyContent="end" flexDirection="row" width="100%">
-              <Button onClick={() => setIsMinimized(!isMinimized)} 
-                variant="outlined" 
-                width={theme.spacing(4)}
-                size="small"
-              >
+              <IconButton aria-label="delete" size="small" onClick={() => setIsMinimized(!isMinimized)}>
                 {isMinimized ? <MaximizeIcon /> : <MinimizeIcon />}
-              </Button>
+              </IconButton>
             </Box>
-            
 
-            {isMinimized && (
-              <Box minHeight="100%"></Box>
-            )}
+            {isMinimized && <Box minHeight="100%"></Box>}
 
-            {/* Exibir mensagem de erro caso algum campo esteja incorreto */}
-            {errorMessage && !isMinimized &&(
+            {/* Exibir mensagem de erro geral */}
+            {errorMessage && !isMinimized && (
               <Typography color="error" variant="body2">
                 {errorMessage}
               </Typography>
             )}
 
+            {/* Campos de entrada */}
             {!isMinimized && (
               <List>
                 <ListItem>
                   <TextField
-                    label="Settling Time (ms)"
-                    value={settlingTime}
-                    onChange={(e) => setSettlingTime(Number(e.target.value))}
-                    type="number"
+                    label="Name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    size="small"
                     fullWidth
+                    error={!!errors.name}  // Exibe erro no campo name (caso tenha)
+                    helperText={errors.name}  // Mostra a mensagem de erro
                   />
                 </ListItem>
-                <ListItem>
-                  <TextField
-                    label="Start Potential (mV)"
-                    value={startPotential}
-                    onChange={(e) => setStartPotential(Number(e.target.value))}
-                    type="number"
-                    fullWidth
-                  />
-                </ListItem>
-                <ListItem>
-                  <TextField
-                    label="End Potential (mV)"
-                    value={endPotential}
-                    onChange={(e) => setEndPotential(Number(e.target.value))}
-                    type="number"
-                    fullWidth
-                  />
-                </ListItem>
-                <ListItem>
-                  <TextField
-                    label="Step (mV)"
-                    value={step}
-                    onChange={(e) => setStep(Number(e.target.value))}
-                    type="number"
-                    fullWidth
-                  />
-                </ListItem>
-                <ListItem>
-                  <TextField
-                    label="Scan Rate (mV/s)"
-                    value={scanRate}
-                    onChange={(e) => setScanRate(Number(e.target.value))}
-                    type="number"
-                    fullWidth
-                  />
-                </ListItem>
-                <ListItem>
-                  <TextField
-                    label="Cycles"
-                    value={cycles}
-                    onChange={(e) => setCycles(Number(e.target.value))}
-                    type="number"
-                    fullWidth
-                  />
-                </ListItem>
+                {['settlingTime', 'startPotential', 'endPotential', 'step', 'scanRate', 'cycles'].map((field) => (
+                  <ListItem key={field}>
+                    <TextField
+                      label={`${field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} (ms)`}
+                      value={params[field]}
+                      onChange={handleChange(field)}
+                      type="number"
+                      size="small"
+                      fullWidth
+                      error={!!errors[field]}  // Verifica se há erro para o campo específico
+                      helperText={errors[field]}  // Exibe a mensagem de erro
+                    />
+                  </ListItem>
+                ))}
               </List>
             )}
 
+            {/* Botões de controle */}
             {!isMinimized && (
               <Box width="100%" display="flex" justifyContent="center" gap={theme.spacing(3)}>
-                <Button onClick={handleIniciarLeitura} variant="outlined"><PlayArrowIcon /></Button>
-                <Button onClick={finalizarLeitura} variant="outlined"><StopIcon /></Button>
+                <Button onClick={handleIniciarLeitura} variant="contained" color="success" size="small"><PlayArrowIcon /></Button>
+                <Button onClick={finalizarLeitura} variant="contained" color="error" size="small"><StopIcon /></Button>
               </Box>
             )}
           </CardContent>
@@ -164,12 +169,46 @@ export const LayoutBaseDePagina = ({ children }) => {
       </Box>
 
       {/* Gráfico */}
-      <Box>
-        <ChartComponent />
+      <Box width={graphWidth} height="100%">
+        <ChartComponent/>
       </Box>
 
-      {/* Controle de Datasheets */}
-      <Box width={theme.spacing(28)} maxWidth="25%"></Box>
+      {/* Controle de Datasets */}
+      <Box 
+        width={isMinimized ? theme.spacing(12) : theme.spacing(35)}  
+        height={isMinimized ? "80%" : null}  
+        display="flex"     
+        flexShrink="0"
+        marginTop={isMinimized ? null : theme.spacing(2)}  
+        marginBottom={isMinimized ? null : theme.spacing(2)}
+        transition="width 0.3s ease"
+        alignItems="start"
+        justifyContent="end"
+        top={isMinimized ? theme.spacing(12) : null}
+      >
+        <Card sx={{ borderRadius: '16px' }}>
+          <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            
+            {/* Botão de minimização */}
+            <Box display="flex" justifyContent="end" flexDirection="row" width="100%">
+              <Button
+                variant="outlined" 
+                width={theme.spacing(4)}
+                size="small"
+              >
+                {isMinimized ? <MaximizeIcon /> : <MinimizeIcon />}
+              </Button>
+            </Box>
+
+            {isMinimized && <Box minHeight="100%"></Box>}
+
+            {/* Campos de entrada */}
+
+            {/* Botões de controle */}
+          </CardContent>
+        </Card>
+      </Box>
+          
     </Box>
   );
 };
