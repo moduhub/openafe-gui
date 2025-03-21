@@ -7,7 +7,7 @@ import MenuIcon from '@mui/icons-material/Menu'; // Importando o ícone de Menu
 
 import { useDrawerContext } from '../../contexts'
 
-export const MenuLateral = ({ children }) => {
+export const DrawerMenu = ({ children }) => {
 
   const theme = useTheme();
   const { isDrawerOpen, toggleDrawerOpen } = useDrawerContext();

@@ -1,16 +1,22 @@
 import { useState, useEffect, useContext } from 'react';
 import Plotly from 'plotly.js-dist';
-import { ThemeContext } from '../contexts/ThemeContext';
 
-export const useChart = () => {
+import { ThemeContext } from '../../contexts';
+import { useDatasets } from '..';
+
+export const UseChart = () => {
   const { theme } = useContext(ThemeContext);
 
+  const { points } = useDatasets();
+
+  /*
   const [chartData, setChartData] = useState([{
     x: [],
     y: [],
     mode: 'lines',
     line: { color: theme.palette.primary.main },
   }]);
+  */
 
   const layout = {
     font: { size: 14, color: theme.palette.text.primary },
@@ -48,11 +54,12 @@ export const useChart = () => {
       {
         name: 'Clear Chart',
         direction: 'up',
-        click: () => clearChart(setChartData),
+        //click: () => clearChart(setChartData),
       },
     ],
   };
 
+  /*
   const clearChart = (setChartData) => {
     setChartData([{ x: [], y: [], mode: 'lines', line: { color: theme.palette.primary.main } }]);
   };
@@ -65,10 +72,11 @@ export const useChart = () => {
       return [newData];
     });
   };
-
+  */
+  
   useEffect(() => {
-    Plotly.newPlot('mychart', chartData, layout, config);
-  }, [chartData, theme]);
+    Plotly.newPlot('mychart', points, layout, config);
+    console.log("Pontos alterados")
+  }, [points, theme]);
 
-  return { chartData, setChartData, clearChart, addDataToChart };
 };

@@ -1,18 +1,19 @@
 import React from 'react';
-import { Button, AppBar, Toolbar, Typography, useTheme, Box, Select, MenuItem, Tooltip, Divider } from '@mui/material';
+import { Button, AppBar, Toolbar, Typography, useTheme, Box, Select, MenuItem, Tooltip } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import MenuIcon from '@mui/icons-material/Menu';
 
 import { useDrawerContext } from '../../contexts';
-import { useArduinoData } from '../../hooks';
-import { iniciarLeitura, finalizarLeitura, desconectarPorta, receberPortas, conectarPorta } from '../arduino/ArduinoControle';
+import { UseArduino } from '../../hooks';
+import { DisconnectPort, ReceivePorts, ConnectPort } from '../../../arduino';
 
-export const MenuSuperior = ({ children }) => {
-  const theme = useTheme();
-  const { isDrawerOpen, drawerOptions, toggleDrawerOpen } = useDrawerContext(); 
-  const { arduinoData, portas, setPortas, isConnected, portaSelecionada, setPortaSelecionada } = useArduinoData();
+export const TopMenu = ({ children }) => {
   
+  const theme = useTheme();
 
+  const { isDrawerOpen, drawerOptions, toggleDrawerOpen } = useDrawerContext(); 
+  const { arduinoData, setArduinoData, ports, setPorts, isConnected, setIsConnected, portSelected, setPortSelected } = UseArduino();
+  
   return (
     <>
       <AppBar position="static" sx={{ bgcolor: theme.palette.background.paper, color: theme.palette.text.primary, height: theme.spacing(8) }}>
@@ -26,23 +27,27 @@ export const MenuSuperior = ({ children }) => {
 
           <Box sx={{ flexGrow: 1 }} display="flex">
             <Select
-              value={portaSelecionada}
-              onChange={(e) => setPortaSelecionada(e.target.value)}
+              value={portSelected}
+              onChange={(e) => setPortSelected(e.target.value)}
               sx={{ mx: 2, width: 200 }}
             >
               {isConnected ? (
-                <MenuItem value="" onClick={desconectarPorta}>Desconectar</MenuItem>
+                <MenuItem value="" onClick={() => DisconnectPort(setPortSelected, setIsConnected)}>Desconectar</MenuItem>
               ) : (
                 <MenuItem value="" disabled>Não Conectado</MenuItem>
               )}
-              {portas.map((port, index) => (
-                <MenuItem key={index} value={port.path} onClick={() => conectarPorta(port.path, setPortaSelecionada)}>
+              {ports.map((port, index) => (
+                <MenuItem 
+                  key={index} 
+                  value={port.path} 
+                  onClick={() => ConnectPort(port.path, setPortSelected, setIsConnected)}
+                >
                   {port.friendlyName}
                 </MenuItem>
               ))}
             </Select>
             <Tooltip title="Recarregar">
-              <Button color="inherit" onClick={() => receberPortas(setPortas)}>
+              <Button color="inherit" onClick={() => ReceivePorts(setPorts, isConnected, setArduinoData)}>
                 <RefreshIcon />
               </Button>
             </Tooltip>
