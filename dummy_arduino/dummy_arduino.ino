@@ -28,8 +28,9 @@ void inputCVW(String str);
 // Setup
 void setup() {
   pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, LOW);  // Inicializa o LED apagado
+  digitalWrite(ledPin, LOW);
   Serial.begin(9600);
+  Serial.println("$CONNECTED");
 }
 
 // Looping
@@ -37,13 +38,16 @@ void loop() {
   if (Serial.available()) {
     comandoRecebido = Serial.readStringUntil('\n');
 
-    if (comandoRecebido.startsWith("$CVW")) {
+    if(comandoRecebido.startsWith("$RESET")) {
+      asm volatile ("  jmp 0");
+    }
+    else if (comandoRecebido.startsWith("$CVW")) {
       // Leitura do GUI
       inputCVW(comandoRecebido);
       varredura = true;
       directionStep = 1;
       x = cvwParams.startPotential;
-
+    
       // Espera para estabilização
       //delay(cvwParams.settlingTime);
 
@@ -71,9 +75,10 @@ void loop() {
           currentCycle++;  // Contabiliza o ciclo
         }
         
+        // Verifica se o processo foi finalizado por ciclos
         if (currentCycle >= cvwParams.cycles) {
           varredura = false;  // Finaliza a varredura após os ciclos definidos
-          Serial.println("Processo encerrado por ciclos");
+          Serial.println("$END,Ciclos Completos");
           digitalWrite(ledPin, LOW);  // Desliga o LED ao fim da varredura
         }
 
@@ -82,7 +87,7 @@ void loop() {
           String comando = Serial.readStringUntil('\n');
           if (comando == "$CMD,DIE*2E") {
             varredura = false;  // Finaliza a varredura
-            Serial.println("Processo encerrado por força bruta");
+            Serial.println("$END,Força Bruta");
             digitalWrite(ledPin, LOW);  // Desliga o LED
           }
         }

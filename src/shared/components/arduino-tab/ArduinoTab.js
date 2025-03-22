@@ -11,9 +11,14 @@ import { useState } from "react";
 import { useTheme } from "@mui/material";
 
 import { StartReading, FinishReading } from "../../../arduino";
+import { useArduinoContext } from '../../contexts'
 
 export const ArduinoTab = () => {
   const theme = useTheme();
+  const { 
+    isConnected,
+    isReading, handleSetIsReading  
+  } = useArduinoContext();
 
   const [params, setParams] = useState({
     settlingTime: 1000,
@@ -54,7 +59,6 @@ export const ArduinoTab = () => {
     const newErrors = {};
     let hasError = false;
 
-    // Validar campos
     if (!name.trim()) {
       newErrors.name = "Name cannot be empty.";
       hasError = true;
@@ -74,15 +78,21 @@ export const ArduinoTab = () => {
     }
 
     setErrors({});
-    StartReading(
-      "$CVW",
-      params.settlingTime,
-      params.startPotential,
-      params.endPotential,
-      params.step,
-      params.scanRate,
-      params.cycles
-    );
+
+    if(!isReading){
+      StartReading(
+        "$CVW",
+        params.settlingTime,
+        params.startPotential,
+        params.endPotential,
+        params.step,
+        params.scanRate,
+        params.cycles,
+        handleSetIsReading
+      )
+    }
+    else console.log("Não é possível iniciar, processo em andamento")
+    
   };
 
   return (
@@ -149,10 +159,24 @@ export const ArduinoTab = () => {
                 ))}
               </List>
               <Box width="100%" display="flex" justifyContent="center" gap={theme.spacing(3)}>
-                <Button onClick={handleStartReading} variant="contained" color="success" size="small">
+                <Button
+                  onClick={handleStartReading}
+                  variant="contained"
+                  color="success"
+                  size="small"
+                  disabled={isReading || !isConnected} 
+                  style={{ opacity: isReading ? 0.5 : 1 }}
+                >
                   <PlayArrowIcon />
                 </Button>
-                <Button onClick={FinishReading} variant="contained" color="error" size="small">
+                <Button
+                  onClick={FinishReading}
+                  variant="contained"
+                  color="error"
+                  size="small"
+                  disabled={!isReading} 
+                  style={{ opacity: !isReading ? 0.5 : 1 }} 
+                >
                   <StopIcon />
                 </Button>
               </Box>

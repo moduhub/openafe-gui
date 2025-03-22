@@ -9,8 +9,6 @@ export const ReceivePorts = async (setPorts) => {
               (port.productId === '0043' || port.productId === '0001') 
             );
           });
-          console.log("Portas filtradas:");
-          console.log(filteredPorts);
           resolve(filteredPorts);
         });
       } catch (error) {
