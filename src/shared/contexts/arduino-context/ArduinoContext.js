@@ -13,6 +13,7 @@ export const ArduinoProvider = ({ children }) => {
   const [portSelected, setPortSelected] = useState('')
   const [ports, setPorts] = useState([])
   const [isConnected, setIsConnected] = useState(false)
+  const [isConnecting, setIsConnecting] = useState(false)
   const [isReading, setIsReading] = useState(false)
   
   const handleSetArduinoData = useCallback((newArduinoData)=>{
@@ -27,6 +28,9 @@ export const ArduinoProvider = ({ children }) => {
   const handleSetIsConnect = useCallback((newIsConnect)=>{
     setIsConnected(newIsConnect)
   }, [])
+  const handleSetIsConnecting = useCallback((newIsConnect)=>{
+    setIsConnecting(newIsConnect)
+  }, [])
   const handleSetIsReading = useCallback((newIsReading)=>{
     setIsReading(newIsReading)
   }, [])
@@ -37,15 +41,18 @@ export const ArduinoProvider = ({ children }) => {
 
     const handleArduinoData = (data) => {
       handleSetArduinoData(data)
-      //console.log(data)
+      console.log(data)
+      console.log("Atualizado data")
     }
     const handleSerialPortOpened = (message) => {
+      handleSetIsConnecting(true)
       console.log(message)
     }
     const handleSerialPortDisconnected = (message) => {
       console.log(message)
       handleSetPortSelected('')
       handleSetIsConnect(false)
+      handleSetArduinoData('')
     }
 
     // Listeners
@@ -53,13 +60,15 @@ export const ArduinoProvider = ({ children }) => {
     window.electron.onSerialPortOpened(handleSerialPortOpened)
     window.electron.onSerialPortDisconnected(handleSerialPortDisconnected)
 
-    // Arduino Context Destructor
-    return()=>{
-      window.electron.offArduinoData(handleArduinoData)
-      window.electron.offSerialPortOpened(handleSerialPortOpened)
-      window.electron.offSerialPortDisconnected(handleSerialPortDisconnected)
-    }
   },[])
+
+  // Data Connect
+  useEffect(() => {
+    if (arduinoData.startsWith('$CONNECTED')){
+      handleSetIsConnecting(false)
+      handleSetIsConnect(true)
+    }
+  }, [arduinoData])
 
   return (
     <ArduinoContext.Provider value={{ 
@@ -67,6 +76,7 @@ export const ArduinoProvider = ({ children }) => {
       ports, handleSetPorts,
       portSelected, handleSetPortSelected, 
       isConnected, handleSetIsConnect,
+      isConnecting, handleSetIsConnecting,
       isReading, handleSetIsReading
     }}>
       {children}

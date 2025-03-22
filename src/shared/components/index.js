@@ -1,5 +1,5 @@
 export * from './top-menu/TopMenu'
 export * from './drawer-menu/DrawerMenu'
 export * from './chart/ChartComponent'
-export * from './arduino-tab/ArduinoTab'
-export * from './dataset-tab/DatasetTab'
+export * from './tab-arduino/TabArduino'
+export * from './tab-dataset/TabDataset'

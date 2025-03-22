@@ -1,7 +1,7 @@
 import { Box } from '@mui/material';
 
 import { ChartComponent } from '../components';
-import { ArduinoTab, DatasetTab } from '../components'
+import { TabArduino, TabDataset } from '../components'
 
 import { useState,useEffect } from 'react';
 
@@ -14,7 +14,7 @@ export const LayoutBaseDePagina = ({ children }) => {
     <Box height="100%" width="100%" display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
       
       {/* Menu lateral */}
-      <ArduinoTab />
+      <TabArduino />
 
       {/* Gráfico */}
       <Box width={graphWidth} height="100%">
@@ -22,7 +22,7 @@ export const LayoutBaseDePagina = ({ children }) => {
       </Box>
 
       {/* Controle de Datasets */}
-      
+      <TabDataset />
       
     </Box>
   );

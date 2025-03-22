@@ -47,6 +47,7 @@ void loop() {
       varredura = true;
       directionStep = 1;
       x = cvwParams.startPotential;
+      Serial.println("$START");
     
       // Espera para estabilização
       //delay(cvwParams.settlingTime);

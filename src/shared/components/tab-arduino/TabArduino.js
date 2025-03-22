@@ -11,14 +11,18 @@ import { useState } from "react";
 import { useTheme } from "@mui/material";
 
 import { StartReading, FinishReading } from "../../../arduino";
-import { useArduinoContext } from '../../contexts'
+import { useArduinoContext, useDatasetsContext } from '../../contexts'
 
-export const ArduinoTab = () => {
-  const theme = useTheme();
+export const TabArduino = () => {
+  const theme = useTheme()
   const { 
     isConnected,
     isReading, handleSetIsReading  
-  } = useArduinoContext();
+  } = useArduinoContext()
+  const {
+    currentName, handleCurrentName,
+    datasets,
+  } = useDatasetsContext()
 
   const [params, setParams] = useState({
     settlingTime: 1000,
@@ -29,7 +33,6 @@ export const ArduinoTab = () => {
     cycles: 1,
   });
 
-  const [name, setName] = useState("test");
   const [errors, setErrors] = useState({});
   const [isMinimized, setIsMinimized] = useState(false);
 
@@ -59,7 +62,7 @@ export const ArduinoTab = () => {
     const newErrors = {};
     let hasError = false;
 
-    if (!name.trim()) {
+    if (!currentName.trim()) {
       newErrors.name = "Name cannot be empty.";
       hasError = true;
     }
@@ -71,13 +74,27 @@ export const ArduinoTab = () => {
         hasError = true;
       }
     });
-
     if (hasError) {
       setErrors(newErrors);
       return;
     }
 
     setErrors({});
+
+    // Verificar duplicação de nomes
+    const existingNames = datasets.map((dataset) => dataset.name);
+    let newName = currentName;
+    while (existingNames.includes(newName)) {
+      const match = newName.match(/\((\d+)\)$/);
+      if (match) {
+        const count = parseInt(match[1], 10);
+        newName = `${newName.replace(/\(\d+\)$/, "")}(${(count + 1).toString().padStart(2, '0')})`;
+      } else {
+        newName = `${newName} (01)`;
+      }
+    }
+    // Atualizar o nome atual para o novo nome
+    handleCurrentName(newName);
 
     if(!isReading){
       StartReading(
@@ -133,8 +150,8 @@ export const ArduinoTab = () => {
                 <ListItem>
                   <TextField
                     label="Name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    value={currentName}
+                    onChange={(e) => handleCurrentName(e.target.value)}
                     size="small"
                     fullWidth
                     error={!!errors.name}

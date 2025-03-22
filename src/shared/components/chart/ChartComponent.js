@@ -7,9 +7,11 @@ import { useDatasetsContext } from '../../contexts/datasets-context/DatasetsCont
 
 export const ChartComponent = () => {
   const { theme } = useContext(ThemeContext)
-  const { datasets } = useDatasetsContext()
+  const { 
+    datasetSelected,
+    datasets,
+  } = useDatasetsContext()
 
-  // Erro no useMemo Corrigir
   const layout = useMemo(() => ({
     font: { size: 14, color: theme.palette.text.primary },
     showlegend: false,
@@ -32,22 +34,20 @@ export const ChartComponent = () => {
   }), [theme]);
 
   const config = useMemo(() => ({
-    scrollZoom: true,
+    scrollZoom: false,
     displaylogo: false,
-    displayModeBar: true,
+    displayModeBar: false,
     responsive: false,
   }), [])
 
   useEffect(() => {
-    console.log("Alteração no gráfico")
-    const allPoints = datasets.map(dataset => ({
-      x: dataset.points.map(point => point.x),
-      y: dataset.points.map(point => point.y),
-      mode: 'lines',
-      line: { color: theme.palette.primary.main },
-    }));
-    Plotly.newPlot('mychart', allPoints, layout, config)
-  }, [datasets, layout, config])
+    let datagraph = (datasets[datasetSelected]!=null) ? 
+      datasets[datasetSelected].data : [{ x:[null],y:[null] }]
+
+    Plotly.newPlot('mychart', datagraph , layout, config);
+    // Limpeza do gráfico ao desmontar o componente
+    //Plotly.purge('mychart');
+  }, [datasets, datasetSelected]);
 
   return (
     <Box id="mychart" sx={{ height: "100%", width: '100%' }}></Box>

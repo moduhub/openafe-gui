@@ -14,76 +14,112 @@ export const DataSetsProvider = ({ children }) => {
   const { theme } = useContext(ThemeContext);
 
   const { 
-    arduinoData, handleSetArduinoData,
-    ports, handleSetPorts,
-    isConnected, handleSetIsConnect,
-    portSelected, handleSetPortSelected, 
-    isReading, handleSetIsReading 
+    arduinoData,
+    handleSetIsConnect,
+    handleSetIsConnecting,
+    handleSetIsReading 
   } = useArduinoContext();
 
-  const [currentName, setCurrentName ] = useState("default name");
+  const [currentName, setCurrentName ] = useState("example")
   const [datasets, setDatasets]= useState([])
-
+  const [isDatasetSelected, setIsDatasetSelected] = useState(false)
+  const [datasetSelected, setDatasetSelected] = useState("")
+  
   const handleCurrentName = useCallback((newName)=>{
     setCurrentName(newName)
   }, [])
+  const handleSetDataset = useCallback((newDatasets)=>{
+    setDatasets(newDatasets)
+  }, [])
+  const handleSetIsDatasetSelected = useCallback((setIsSelected)=>{
+    setIsDatasetSelected(setIsSelected)
+  }, [])
+  const handleSetDatasetSelected = useCallback((newDatasetSelected)=>{
+    setDatasetSelected(newDatasetSelected)
+  }, [])
+  const handleDeleteDatasetSelected = (e) => {
+    handleSetDatasetSelected(0)
+    const newDataSets = [...datasets]
+    newDataSets.splice(datasetSelected, 1)
+    handleSetDataset(newDataSets)
+    if(datasets.length == 1){
+      console.log("Acabou ou datasets")
+      handleSetDatasetSelected("")
+      handleSetIsDatasetSelected(false)
+    }
+  }
 
   const setNewDataSet = (name_) => {
     setDatasets(prevDatasets => [
-      ...prevDatasets,
-      { name: name_, points: [] }
-    ]);
-  };
+      ...prevDatasets, { 
+        name: name_, 
+        data: [{ 
+          x:[] ,y:[], 
+          mode:'lines', 
+          line: { color: theme.palette.primary.main } 
+        }] 
+      }
+    ]
+  );};
 
   const addDataPoint = (voltage, current) => {
-    setDatasets(prevDatasets => {
-      const updatedDatasets = [...prevDatasets]
-      const lastDataset = updatedDatasets[updatedDatasets.length - 1]
-      if (lastDataset) {
-        lastDataset.points.push({ 
-          x: voltage, 
-          y: current, 
-          mode: 'lines', 
-          line: { color: theme.palette.primary.main }
-        });
+    setDatasets((prevDatasets) => {
+      const updatedDatasets = [...prevDatasets];
+      const lastDataset = updatedDatasets[updatedDatasets.length - 1];
+  
+      if (lastDataset && lastDataset.data && lastDataset.data[0]) {
+        if (!Array.isArray(lastDataset.data[0].x)) {
+          lastDataset.data[0].x = [];
+        }
+        if (!Array.isArray(lastDataset.data[0].y)) {
+          lastDataset.data[0].y = [];
+        }
+        lastDataset.data[0].x.push(voltage);
+        lastDataset.data[0].y.push(current);
       }
-      return updatedDatasets
-    })
-  }
+  
+      return updatedDatasets;
+    });
+  };
 
   useEffect(()=>{
-    // Data Connect
-    if (arduinoData.startsWith('$CONNECT')){
-      console.log("Conectado")
-      handleSetIsConnect(true)
-    }
     // Data graph
     if (arduinoData.startsWith('$SGL')) {
       const dataParts = arduinoData.split(',')
       if (dataParts.length >= 3) {
         const voltage = parseFloat(dataParts[1])
         const current = parseFloat(dataParts[2].split('*')[0])
-        console.log("tensão: "+voltage+" ; Corrente: "+current)
-        addDataPoint(voltage, current);
+        addDataPoint(voltage, current)
+      }
+      if(datasets[datasets.length - 1].data[0]!=null){
+        if( datasets[datasets.length - 1].data[0].x.length == 1 ){
+          if(!isDatasetSelected)
+            handleSetIsDatasetSelected(true)
+          handleSetDatasetSelected(datasets.length - 1)
+        }
       }
     }
+
     // Data start
     else if(arduinoData.startsWith('$START')){
       setNewDataSet(currentName)
-      console.log("Iniciado leitura de "+currentName)
+      console.log("Iniciado leitura de " + currentName)
     }
+    
     // Data end
     else if(arduinoData.startsWith('$END')){
       const motive = arduinoData.split(',')
       console.log("Finalizado por "+ motive[1])
       handleSetIsReading(false)
-      console.log(datasets)
     }
   },[arduinoData])
 
   return (
     <DatasetsContext.Provider value={{ 
       currentName, handleCurrentName,
+      isDatasetSelected, handleSetIsDatasetSelected,
+      datasetSelected, handleSetDatasetSelected,
+      handleDeleteDatasetSelected,
       datasets
     }}>
       {children}

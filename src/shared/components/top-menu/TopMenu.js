@@ -1,9 +1,15 @@
 import { Button, AppBar, Toolbar, Typography, useTheme, Box, Select, MenuItem, Tooltip } from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import MenuIcon from '@mui/icons-material/Menu';
+
 import { useDrawerContext } from '../../contexts';
 import { useArduinoContext } from '../../contexts';
 import { DisconnectPort, ReceivePorts, ConnectPort } from '../../../arduino';
+
+import RefreshIcon from '@mui/icons-material/Refresh';
+import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
+import CircularProgress from '@mui/material/CircularProgress'; // Para o ícone de carregamento
+
+
 
 export const TopMenu = ({ children }) => {
   const theme = useTheme();
@@ -13,6 +19,7 @@ export const TopMenu = ({ children }) => {
     ports, handleSetPorts,
     portSelected, handleSetPortSelected, 
     isConnected, handleSetIsConnect,
+    isConnecting, 
     isReading
   } = useArduinoContext();
 
@@ -31,8 +38,8 @@ export const TopMenu = ({ children }) => {
             <Select
               value={portSelected}
               onChange={(e) => handleSetPortSelected(e.target.value)}
-              sx={{ mx: 2, width: 200 }}
-            >
+              sx={{ mx: 2, width: 225 }}
+            >   
               {isConnected ? (
                 <MenuItem value="" disabled={isReading} onClick={() => DisconnectPort()}>Desconectar</MenuItem>
               ) : (
@@ -43,7 +50,9 @@ export const TopMenu = ({ children }) => {
                   key={index} 
                   value={port.path} 
                   onClick={() => ConnectPort(port.path, handleSetPortSelected)}
+                  disabled={isConnected}
                 >
+                  {isConnecting?<CircularProgress size={15} sx={{ marginRight: 1 }} />:""}
                   {port.friendlyName}
                 </MenuItem>
               ))}
