@@ -1,16 +1,18 @@
 import { Typography, Divider, Drawer, List, ListItemButton, ListItemIcon, ListItemText, useTheme } from '@mui/material';
 import { Box } from '@mui/system';
-import SettingsIcon from '@mui/icons-material/Settings'; // Importando o ícone de configurações
-import HomeIcon from '@mui/icons-material/Home'; // Importando o ícone de Home
-import BarChartIcon from '@mui/icons-material/BarChart'; // Importando o ícone de Estatísticas
-import MenuIcon from '@mui/icons-material/Menu'; // Importando o ícone de Menu
+import SettingsIcon from '@mui/icons-material/Settings';
+import HomeIcon from '@mui/icons-material/Home';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import MenuIcon from '@mui/icons-material/Menu';
+import { useNavigate } from 'react-router-dom'; // Importando o hook useNavigate
 
-import { useDrawerContext } from '../../contexts'
+import { useDrawerContext } from '../../contexts';
 
 export const DrawerMenu = ({ children }) => {
 
   const theme = useTheme();
   const { isDrawerOpen, toggleDrawerOpen } = useDrawerContext();
+  const navigate = useNavigate();
 
   return (
     <>
@@ -29,27 +31,25 @@ export const DrawerMenu = ({ children }) => {
 
             <Box marginTop={theme.spacing(4)}>
               <List component="nav">
-                <ListItemButton>
+                <ListItemButton onClick={() => navigate('/home')}>
                   <ListItemIcon>
                     <HomeIcon /> {/* Usando o ícone de Home da MUI */}
                   </ListItemIcon>
-                  <ListItemText primary="Inicio" />
+                  <ListItemText primary="Home" />
                 </ListItemButton>
               </List>
             </Box>
 
             <Box>
               <List component="nav">
-                <ListItemButton>
+                <ListItemButton onClick={() => navigate('/data-processing')}>
                   <ListItemIcon>
                     <BarChartIcon /> {/* Usando o ícone de Estatísticas da MUI */}
                   </ListItemIcon>
-                  <ListItemText primary="Estatísticas" />
+                  <ListItemText primary="Data Processing" />
                 </ListItemButton>
               </List>
             </Box>
-
-            <Divider />
 
           </Box>
 
@@ -57,11 +57,11 @@ export const DrawerMenu = ({ children }) => {
             <Divider />
             <Box>
               <List component="nav">
-                <ListItemButton>
+                <ListItemButton onClick={() => navigate('/settings')}>
                   <ListItemIcon>
                     <SettingsIcon /> {/* Usando o ícone de configurações da MUI */}
                   </ListItemIcon>
-                  <ListItemText primary="Configurações" />
+                  <ListItemText primary="Settings" />
                 </ListItemButton>
               </List>
             </Box>

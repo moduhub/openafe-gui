@@ -39,6 +39,7 @@ export const TopMenu = ({ children }) => {
               value={portSelected}
               onChange={(e) => handleSetPortSelected(e.target.value)}
               sx={{ mx: 2, width: 225 }}
+              size='small'
             >   
               {isConnected ? (
                 <MenuItem value="" disabled={isReading} onClick={() => DisconnectPort()}>Desconectar</MenuItem>
@@ -63,8 +64,8 @@ export const TopMenu = ({ children }) => {
               </Button>
             </Tooltip>
           </Box>
-          <Button color="inherit">Sobre</Button>
-          <Button>Contato</Button>
+          <Button color="inherit">About</Button>
+          <Button>Contact</Button>
         </Toolbar>
       </AppBar>
 
