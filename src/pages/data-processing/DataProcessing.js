@@ -1,7 +1,7 @@
 import React from 'react';
 import { Typography, Box } from '@mui/material';
 
-import { TabDataset } from '../../shared/components'
+import { TabDataset, TabDatasetAdavanced } from '../../shared/components'
 
 export const DataProcessing = () => {
   return (
@@ -9,7 +9,7 @@ export const DataProcessing = () => {
       height="100%" width="100%" 
       display="flex" flexDirection="row" justifyContent="space-between" alignItems="center"
     >
-      <TabDataset/>
+      <TabDatasetAdavanced/>
     </Box>
   );
 };

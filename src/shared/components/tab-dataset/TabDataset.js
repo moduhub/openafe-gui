@@ -1,14 +1,28 @@
-import { useState } from 'react'
+import { useState } from 'react';
 
-import { Box, Card, CardContent, MenuItem, List, ListItem } from '@mui/material'
-import { Button, Typography } from '@mui/material'; 
-import IconButton from '@mui/material/IconButton'
-import { Select } from '@mui/material'
-import { useTheme } from '@mui/material'
+import {
+  Box,
+  Card,
+  CardContent,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  List,
+  ListItem,
+} from '@mui/material';
+import { Button } from '@mui/material';
+import IconButton from '@mui/material/IconButton';
+import { useTheme } from '@mui/material';
+
 import { FixedSizeList } from 'react-window';
 
-import MinimizeIcon from '@mui/icons-material/Minimize'
-import MaximizeIcon from '@mui/icons-material/Maximize'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import MinimizeIcon from '@mui/icons-material/Minimize';
+import MaximizeIcon from '@mui/icons-material/Maximize';
+
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import SaveAltIcon from '@mui/icons-material/SaveAlt';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 import { useDatasetsContext } from '../../contexts'
@@ -24,6 +38,11 @@ export const TabDataset = () => {
   } = useDatasetsContext()
 
   const [isMinimized, setIsMinimized] = useState(false)
+  const [expanded, setExpanded] = useState(false)
+
+  const toggleAccordion = () => {
+    setExpanded(!expanded);
+  };
 
   const setDatasetSelected = (e) => {
     handleSetDatasetSelected(e.target.value);
@@ -63,67 +82,79 @@ export const TabDataset = () => {
           </Box>
 
           {!isMinimized && (
-            <>
-              <List>
-                <ListItem>
-                  <Select
-                    size='small'
-                    sx={{ width: 200 }}
-                    value={datasetSelected}
-                    onChange={setDatasetSelected}
-                  >
-                    {datasets.length === 0 ? (
-                    <MenuItem value="" disabled>Sem dados</MenuItem>
-                  ) : (
-                    datasets.map((dataset, i) => (
-                      <MenuItem key={i} value={i}>
-                        {dataset.name}
-                      </MenuItem>
-                    ))
-                  )}
-                  </Select>
-                </ListItem>
-                <ListItem>
-                  <Box sx={{ height: 320, width: 200 }}>
-                    {datasets.length === 0 || !datasets[datasetSelected] ? (
-                      <Box sx={{ 
-                        width: '100%', height: '100%', 
-                        display: 'flex', 
-                        alignItems: 'start', justifyContent: 'center'
-                      }}>
-                      </Box>
-                    ) : (
-                      <FixedSizeList
-                        height={320}
-                        width={200}
-                        itemSize={46}
-                        itemCount={datasets[datasetSelected].data[0].x.length}
-                        overscanCount={5}
-                      >
-                        {({ index, style }) => (
-                          <Box style={style}>
-                            {index}: [{datasets[datasetSelected].data[0].x[index]}; {datasets[datasetSelected].data[0].y[index]}]
+            <Box
+              sx={{
+                height: 440,
+                width: 248,
+                overflowY: 'auto', // Adiciona o scroll quando necessário
+                display: 'flex',
+                flexDirection: 'column',
+                
+              }}
+            >
+              {datasets.map((dataset, index) => (
+                <Accordion key={index}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    {dataset.name || `Dataset ${index + 1}`}
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Box width="100%"
+                      display="flex"
+                      marginBottom={1}
+                      justifyContent='center'
+                    >
+                      <Button><VisibilityIcon /></Button>
+                      <Button><SaveAltIcon/></Button>
+                      <Button><DeleteIcon/></Button>
+                    </Box>
+                    <Accordion>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        Parameters
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        settlingTime: {dataset.params.settlingTime}<br/>
+                        startPotential: {dataset.params.startPotential}<br/>
+                        endPotential: {dataset.params.endPotential}<br/>
+                        step: {dataset.params.step}<br/>
+                        scanRate: {dataset.params.scanRate}<br/>
+                        cycles: {dataset.params.cycles}<br/>
+                      </AccordionDetails>
+                    </Accordion>
+                    <Accordion>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        Points
+                      </AccordionSummary>
+                      <AccordionDetails>
+                      <Box sx={{ height: 150, width: "100%" }}>
+                        {datasets.length === 0 || !datasets[datasetSelected] ? (
+                          <Box sx={{ 
+                            width: '100%', height: '100%', 
+                            display: 'flex', 
+                            alignItems: 'start', justifyContent: 'center'
+                          }}>
                           </Box>
+                        ) : (
+                          <FixedSizeList
+                            height={150}
+                            width="100%"
+                            itemSize={35}
+                            itemCount={datasets[datasetSelected].data[0].x.length}
+                            overscanCount={5}
+                          >
+                            {({ index, style }) => (
+                              <Box style={style}>
+                                {index}: [{datasets[datasetSelected].data[0].x[index]}; {datasets[datasetSelected].data[0].y[index]}]
+                              </Box>
+                            )}
+                          </FixedSizeList>
                         )}
-                      </FixedSizeList>
-                    )}
-                  </Box>
-                </ListItem>
-              </List>
-              <Box width="100%" display="flex" justifyContent="end" gap={theme.spacing(3)}>
-                <Button
-                  onClick={handleDeleteDatasetSelected}
-                  variant="contained"
-                  color="error"
-                  size="small"
-                  disabled={!isDatasetSelected} 
-                  style={{ opacity: !isDatasetSelected ? 0.5 : 1 }}
-                >
-                  <DeleteIcon />
-                </Button>
-              </Box>
-            </>
-            
+                      </Box>
+                      </AccordionDetails>
+                    </Accordion>
+                  </AccordionDetails>
+                </Accordion>
+              ))}
+            </Box>
           )}
           
         </CardContent>

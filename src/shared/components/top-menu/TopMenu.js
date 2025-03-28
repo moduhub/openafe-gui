@@ -1,15 +1,12 @@
 import { Button, AppBar, Toolbar, Typography, useTheme, Box, Select, MenuItem, Tooltip } from '@mui/material';
 
-import { useDrawerContext } from '../../contexts';
-import { useArduinoContext } from '../../contexts';
+import { useDrawerContext, useArduinoContext } from '../../contexts';
 import { DisconnectPort, ReceivePorts, ConnectPort } from '../../../arduino';
 
 import RefreshIcon from '@mui/icons-material/Refresh';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import CircularProgress from '@mui/material/CircularProgress'; // Para o ícone de carregamento
-
-
 
 export const TopMenu = ({ children }) => {
   const theme = useTheme();
@@ -18,6 +15,7 @@ export const TopMenu = ({ children }) => {
     arduinoData, handleSetArduinoData,
     ports, handleSetPorts,
     portSelected, handleSetPortSelected, 
+    portConnected, handleSetPortConnected,
     isConnected, handleSetIsConnect,
     isConnecting, 
     isReading
@@ -36,7 +34,7 @@ export const TopMenu = ({ children }) => {
 
           <Box sx={{ flexGrow: 1 }} display="flex">
             <Select
-              value={portSelected}
+              value={portConnected}
               onChange={(e) => handleSetPortSelected(e.target.value)}
               sx={{ mx: 2, width: 225 }}
               size='small'

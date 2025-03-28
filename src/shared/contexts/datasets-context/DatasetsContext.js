@@ -1,7 +1,6 @@
 import React, { createContext, useCallback, useContext, useState, useEffect } from 'react'
 
-import { ThemeContext } from '..';
-import { useArduinoContext } from '..'
+import { useArduinoContext, ThemeContext, useSettingsContext } from '..'
 
 const DatasetsContext = createContext({});
 
@@ -11,22 +10,41 @@ export const useDatasetsContext = () => {
 
 export const DataSetsProvider = ({ children }) => {
 
-  const { theme } = useContext(ThemeContext);
+  const { theme } = useContext(ThemeContext)
 
   const { 
     arduinoData,
-    handleSetIsConnect,
-    handleSetIsConnecting,
     handleSetIsReading 
-  } = useArduinoContext();
+  } = useArduinoContext()
 
-  const [currentName, setCurrentName ] = useState("example")
+  const {
+    autoConnect, handleSetAutoConnect,
+    maxDatasets, handleSetMaxDatasets,
+    displayOption, handleSetDisplayOption,
+    defaultName, handleSetDefaultName,
+    deleteCache, handleSetDeleteCache,
+    unitSystem, handleSetUnitSystem,
+    tabIndex, handleSetTabIndex
+  } = useSettingsContext()
+
+  const [currentName, setCurrentName] = useState(defaultName)
+  const [currentParams, setCurrentParams] = useState({
+    settlingTime: 1000,
+    startPotential: -800,
+    endPotential: 0,
+    step: 100,
+    scanRate: 2,
+    cycles: 1,
+  })
   const [datasets, setDatasets]= useState([])
   const [isDatasetSelected, setIsDatasetSelected] = useState(false)
   const [datasetSelected, setDatasetSelected] = useState("")
   
   const handleCurrentName = useCallback((newName)=>{
     setCurrentName(newName)
+  }, [])
+  const handleCurrentParams = useCallback((newParams)=>{
+    setCurrentParams(newParams)
   }, [])
   const handleSetDataset = useCallback((newDatasets)=>{
     setDatasets(newDatasets)
@@ -43,24 +61,34 @@ export const DataSetsProvider = ({ children }) => {
     newDataSets.splice(datasetSelected, 1)
     handleSetDataset(newDataSets)
     if(datasets.length == 1){
-      console.log("Acabou ou datasets")
+      //console.log("Acabou ou datasets")
       handleSetDatasetSelected("")
       handleSetIsDatasetSelected(false)
     }
   }
 
-  const setNewDataSet = (name_) => {
+  const cacheDatasetsManager = ()=>{
+    if(datasets.length >= maxDatasets){
+      const newDataSets = [...datasets]
+      newDataSets.splice(0, 1)
+      handleSetDataset(newDataSets)
+    }
+  }
+
+  const setNewDataSet = (name_,parameters_) => {
+    cacheDatasetsManager()
     setDatasets(prevDatasets => [
       ...prevDatasets, { 
         name: name_, 
+        params: parameters_,
         data: [{ 
           x:[] ,y:[], 
           mode:'lines', 
           line: { color: theme.palette.primary.main } 
         }] 
       }
-    ]
-  );};
+    ])
+  };
 
   const addDataPoint = (voltage, current) => {
     setDatasets((prevDatasets) => {
@@ -102,25 +130,30 @@ export const DataSetsProvider = ({ children }) => {
 
     // Data start
     else if(arduinoData.startsWith('$START')){
-      setNewDataSet(currentName)
-      console.log("Iniciado leitura de " + currentName)
+      setNewDataSet(currentName, currentParams)
+      //console.log("Iniciado leitura de " + currentName)
     }
     
     // Data end
     else if(arduinoData.startsWith('$END')){
       const motive = arduinoData.split(',')
-      console.log("Finalizado por "+ motive[1])
+      //console.log("Finalizado por "+ motive[1])
       handleSetIsReading(false)
     }
   },[arduinoData])
 
+  useEffect(()=>{
+    setCurrentName(defaultName)
+  },[defaultName])
+
   return (
     <DatasetsContext.Provider value={{ 
       currentName, handleCurrentName,
+      currentParams, handleCurrentParams,
       isDatasetSelected, handleSetIsDatasetSelected,
       datasetSelected, handleSetDatasetSelected,
       handleDeleteDatasetSelected,
-      datasets
+      datasets,
     }}>
       {children}
     </DatasetsContext.Provider>

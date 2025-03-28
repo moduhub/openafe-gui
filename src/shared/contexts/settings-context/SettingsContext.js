@@ -8,9 +8,8 @@ export const useSettingsContext = () => {
 
 export const SettingsProvider = ({ children }) => {
   const [autoConnect, setAutoConnect] = useState(false);
-  const [maxDatasets, setMaxDatasets] = useState(100);
-  const [displayOption, setDisplayOption] = useState('Exibir todos');
-  const [defaultName, setDefaultName] = useState('Default');
+  const [maxDatasets, setMaxDatasets] = useState(10);
+  const [defaultName, setDefaultName] = useState('default name');
   const [deleteCache, setDeleteCache] = useState('Apagar dataset mais antigo');
   const [unitSystem, setUnitSystem] = useState('SI');
   const [tabIndex, setTabIndex] = useState(0);
@@ -20,9 +19,6 @@ export const SettingsProvider = ({ children }) => {
   }, []);
   const handleSetMaxDatasets = useCallback((newMaxDatasets) => {
     setMaxDatasets(newMaxDatasets);
-  }, []);
-  const handleSetDisplayOption = useCallback((newDisplayOption) => {
-    setDisplayOption(newDisplayOption);
   }, []);
   const handleSetDefaultName = useCallback((newDefaultName) => {
     setDefaultName(newDefaultName);
@@ -41,7 +37,6 @@ export const SettingsProvider = ({ children }) => {
     <SettingsContext.Provider value={{
       autoConnect, handleSetAutoConnect,
       maxDatasets, handleSetMaxDatasets,
-      displayOption, handleSetDisplayOption,
       defaultName, handleSetDefaultName,
       deleteCache, handleSetDeleteCache,
       unitSystem, handleSetUnitSystem,

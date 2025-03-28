@@ -20,18 +20,10 @@ export const TabArduino = () => {
     isReading, handleSetIsReading  
   } = useArduinoContext()
   const {
+    currentParams, handleCurrentParams,
     currentName, handleCurrentName,
     datasets,
   } = useDatasetsContext()
-
-  const [params, setParams] = useState({
-    settlingTime: 1000,
-    startPotential: -800,
-    endPotential: 0,
-    step: 100,
-    scanRate: 2,
-    cycles: 1,
-  });
 
   const [errors, setErrors] = useState({});
   const [isMinimized, setIsMinimized] = useState(false);
@@ -47,7 +39,7 @@ export const TabArduino = () => {
   const handleChange = (field) => (e) => {
     const value = field === "name" ? e.target.value : Number(e.target.value);
 
-    setParams((prevState) => ({
+    handleCurrentParams((prevState) => ({
       ...prevState,
       [field]: value,
     }));
@@ -67,7 +59,7 @@ export const TabArduino = () => {
       hasError = true;
     }
 
-    Object.entries(params).forEach(([field, value]) => {
+    Object.entries(currentParams).forEach(([field, value]) => {
       const error = validateField(field, value);
       if (error) {
         newErrors[field] = error;
@@ -99,12 +91,12 @@ export const TabArduino = () => {
     if(!isReading){
       StartReading(
         "$CVW",
-        params.settlingTime,
-        params.startPotential,
-        params.endPotential,
-        params.step,
-        params.scanRate,
-        params.cycles,
+        currentParams.settlingTime,
+        currentParams.startPotential,
+        currentParams.endPotential,
+        currentParams.step,
+        currentParams.scanRate,
+        currentParams.cycles,
         handleSetIsReading
       )
     }
@@ -158,13 +150,13 @@ export const TabArduino = () => {
                     helperText={errors.name}
                   />
                 </ListItem>
-                {Object.keys(params).map((field) => (
+                {Object.keys(currentParams).map((field) => (
                   <ListItem key={field}>
                     <TextField
                       label={`${field
                         .replace(/([A-Z])/g, " $1")
                         .replace(/^./, (str) => str.toUpperCase())}`}
-                      value={params[field]}
+                      value={currentParams[field]}
                       onChange={handleChange(field)}
                       type="number"
                       size="small"

@@ -21,8 +21,12 @@ async function setupSerialPort(selectedPort) {
         else console.log('Comando de reinicializacao enviado para o Arduino');
       });
     });
-    port.on('error', (err) => { console.error('Erro na porta serial:', err)});
+    port.on('error', (err) => { 
+      if (mainWindow) mainWindow.webContents.send('serial-port-opened', 'not-connected:'+err);
+      console.error('Erro na porta serial:', err)
+    });
   } catch (err) {
+    if (mainWindow) mainWindow.webContents.send('serial-port-opened', 'Erro ao abrir a porta serial:');
     console.error('Erro ao abrir a porta serial:', err);
   }
 }
@@ -42,7 +46,7 @@ function createWindow() {
   });
 
   mainWindow.loadURL('http://localhost:3000');
-  mainWindow.webContents.openDevTools();
+  //mainWindow.webContents.openDevTools();
   mainWindow.maximize();
 
   mainWindow.on('closed', () => {

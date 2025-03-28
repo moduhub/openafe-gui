@@ -22,7 +22,6 @@ export const Settings = () => {
   const {
     autoConnect, handleSetAutoConnect,
     maxDatasets, handleSetMaxDatasets,
-    displayOption, handleSetDisplayOption,
     defaultName, handleSetDefaultName,
     deleteCache, handleSetDeleteCache,
     unitSystem, handleSetUnitSystem,
@@ -30,7 +29,7 @@ export const Settings = () => {
   } = useSettingsContext();
 
   const languageOptions = ['Ingles (instável)']
-  const displayOptions = ['Exibir todos', 'Pular 2 em 2', 'Pular 5 em 5', 'Pular 10 em 10'];
+  const displayOptions= ['Exibir todos', 'Pular 2 em 2', 'Pular 5 em 5', 'Pular 10 em 10'];
   const deleteCacheOptions = ['Apagar dataset mais antigo']
   const unitOptions = ['SI'];
 
@@ -83,16 +82,6 @@ export const Settings = () => {
               margin="dense"
               size='small'
             />
-            <Typography variant="h7">
-              Quantidade de pontos mostrados no dataset:
-            </Typography>
-            <FormControl fullWidth margin="dense" size='small'>
-              <Select value={displayOption} onChange={(e) => handleSetDisplayOption(e.target.value)}>
-                {displayOptions.map((option) => (
-                  <MenuItem key={option} value={option}>{option}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
             <Typography variant="h7">
               Número máximo de datasets armazenados em cache:
             </Typography>

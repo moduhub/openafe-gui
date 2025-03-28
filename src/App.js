@@ -9,19 +9,19 @@ export const App = () => {
   return (
     <AppThemeProvider>
       <DrawerProvider>
-        <ArduinoProvider>
-          <DataSetsProvider>
-            <SettingsProvider>
-              <BrowserRouter>
-                <TopMenu>
-                  <DrawerMenu>
-                    <AppRoutes />
-                  </DrawerMenu>
-                </TopMenu>
-              </BrowserRouter>
-            </SettingsProvider>
-          </DataSetsProvider>
-        </ArduinoProvider>
+        <SettingsProvider>
+          <ArduinoProvider>
+            <DataSetsProvider>
+                <BrowserRouter>
+                  <TopMenu>
+                    <DrawerMenu>
+                      <AppRoutes />
+                    </DrawerMenu>
+                  </TopMenu>
+                </BrowserRouter>
+            </DataSetsProvider>
+          </ArduinoProvider>
+        </SettingsProvider>
       </DrawerProvider>
     </AppThemeProvider>
   );
