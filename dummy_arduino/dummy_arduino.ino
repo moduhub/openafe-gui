@@ -1,11 +1,12 @@
 #include <Arduino.h>
 #include <math.h>
 
-// Variáveis para armazenar os dados da varredura cíclica
-float x = 0;  // Potencial inicial
-float y = 0;   // Corrente inicial
+// Variables to store the cyclic scan data
+float x = 0;  // Initial potential
+float y = 0;   // End potential
+float kNoise = 0.15; // Amount of noise
 
-// Estrutura para armazenar os parâmetros da varredura
+// Structure for storing the scan parameters
 struct CVWParams {
   float settlingTime;
   float startPotential;
@@ -15,21 +16,59 @@ struct CVWParams {
   float cycles;
 };
 
-// Variáveis globais
+// Structures for storing functions and points
+struct Params {
+    Params* prev;
+    Params* next;
+    float param;
+};
+struct Coord {
+  float x;
+  float y;
+};
+struct Points {
+  Points* prev;
+  Points* next;
+  Coord coord;
+};
+struct Function {
+    Params* params;
+    int qParams;
+    Function* next;
+};
+struct Functions {
+    Function* functions;
+    Points* points;
+};
+
+// Global variables
 CVWParams cvwParams;
-bool varredura = false;
+bool scanBool = false;
 int currentCycle = 0;
-String comandoRecebido = "";
-const int ledPin = 13; // Pino do LED
+String commandReceived = "";
+const int ledPin = 13; // LED Pin
 float directionStep = 1;
 
-// Prototipação das funções
-float calcularCorrente(float* funcao_dummy, float potencial, float directionStep, float startPotential, float endPotential);
-String calcularChecksum(String s);
+// Prototyping of functions
+float calculateCurrent(
+  Functions functions_dummy, 
+  float potential, 
+  float directionStep, 
+  float startPotential, 
+  float endPotential
+);
+String calculateChecksum(String s);
 void inputCVW(String str);
-float* functionGenerator(float xo, float xf);
+Functions functionGenerator(float xo, float xf); 
 void normalizeMatrix(float* mat, int N);
 float* gaussElimination(float* mat, int N);
+void printFunction(Functions functions);
+void addFunction(
+  Function** functions, 
+  float solution[], 
+  int order
+);
+float applyNoise(float number);
 
 // Setup
 void setup() {
@@ -42,61 +81,69 @@ void setup() {
 // Looping
 void loop() {
   if (Serial.available()) {
-    comandoRecebido = Serial.readStringUntil('\n');
+    commandReceived = Serial.readStringUntil('\n');
 
-    if(comandoRecebido.startsWith("$RESET")) {
+    if(commandReceived.startsWith("$RESET")) {
       asm volatile ("  jmp 0");
     }
-    else if (comandoRecebido.startsWith("$CVW")) {
-      // Leitura do GUI
-      inputCVW(comandoRecebido);
-      varredura = true;
+    else if (commandReceived.startsWith("$CVW")) {
+      inputCVW(commandReceived);
+      scanBool = true;
       directionStep = 1;
       x = cvwParams.startPotential;
-      float* funcao_dummy = functionGenerator(cvwParams.startPotential, cvwParams.endPotential);
+      Functions functions_dummy = functionGenerator(
+        cvwParams.startPotential, 
+        cvwParams.endPotential
+      ); 
+
+      //printFunction(functions_dummy);
       Serial.println("$START");
-    
-      // Espera para estabilização
+          
+      // Waiting for stabilization
       //delay(cvwParams.settlingTime);
 
-      while (varredura) {
-        digitalWrite(ledPin, HIGH);  // Acende o LED durante a varredura
-        y = calcularCorrente(funcao_dummy, x, directionStep, cvwParams.startPotential, cvwParams.endPotential);
+      while (scanBool) {
+        digitalWrite(ledPin, HIGH);
+        y = calculateCurrent(
+          functions_dummy, 
+          x, 
+          directionStep, 
+          cvwParams.startPotential, 
+          cvwParams.endPotential
+        );
         
-        // Formata a mensagem e calcula o checksum
         String mensagem = "$SGL," + String(x, 6) + "," + String(y, 6);
-        String checksum = calcularChecksum(mensagem);
+        String checksum = calculateChecksum(mensagem);
         mensagem += "*" + checksum;
         
         Serial.println(mensagem);
 
-        // Controle tempo ( em segundos )
-        float periodoLeitura = 1000 * (cvwParams.step/cvwParams.scanRate);
-        delay(periodoLeitura);  // Controle do tempo
+        // Control time (in seconds)
+        float readingPeriod = 1000 * (cvwParams.step/cvwParams.scanRate);
+        delay(readingPeriod);
 
-        x += cvwParams.step * directionStep;  // Avança para o próximo valor de potencial
-        if (x >= cvwParams.endPotential) {
-          directionStep = -1;  // Inverte a direção da varredura
-        }
+        x += cvwParams.step * directionStep; 
+        if (x >= cvwParams.endPotential) 
+          directionStep = -1;  // Reverses the direction of the scan
         else if(x < cvwParams.startPotential){
           directionStep = 1;
-          currentCycle++;  // Contabiliza o ciclo
+          currentCycle++;  // Accounts for the cycle
         }
         
-        // Verifica se o processo foi finalizado por ciclos
+        // Verify that the process has been completed by cycles
         if (currentCycle >= cvwParams.cycles) {
-          varredura = false;  // Finaliza a varredura após os ciclos definidos
+          scanBool = false;
           Serial.println("$END,Ciclos Completos");
-          digitalWrite(ledPin, LOW);  // Desliga o LED ao fim da varredura
+          digitalWrite(ledPin, LOW);
         }
 
-        // Verifica se um comando de parada foi recebido
+        // Checks if a stop command has been received
         if (Serial.available()) {
           String comando = Serial.readStringUntil('\n');
           if (comando == "$CMD,DIE*2E") {
-            varredura = false;  // Finaliza a varredura
+            scanBool = false;  // Ends the scan
             Serial.println("$END,Força Bruta");
-            digitalWrite(ledPin, LOW);  // Desliga o LED
+            digitalWrite(ledPin, LOW);  
           }
         }
       }
@@ -104,8 +151,8 @@ void loop() {
   }
 }
 
-// Função para processar o comando $CVW e extrair os parâmetros
-// exemplo: $CVW,1000,-800,0,100,2,1*54
+// Function to process the $CVW command and extract the parameters
+// example: $CVW,1000,-800,0,100,2,1*54
 void inputCVW(String str) {
 
   int index = 0;
@@ -113,15 +160,15 @@ void inputCVW(String str) {
   int startIndex = 0;
   int endIndex = str.indexOf(',');
 
-  // Divide a string em partes usando vírgula como delimitador
+  // Splits the string into parts using comma as a delimiter
   while (endIndex >= 0) {
     elementos[index++] = str.substring(startIndex, endIndex);
     startIndex = endIndex + 1;
     endIndex = str.indexOf(',', startIndex);
   }
-  elementos[index] = str.substring(startIndex);  // Último valor após a última vírgula
+  elementos[index] = str.substring(startIndex); 
 
-  // Converte os elementos para float e atribui aos parâmetros
+  // Converts the elements to float and assigns them to the parameters
   cvwParams.settlingTime = elementos[1].toFloat();
   cvwParams.startPotential = elementos[2].toFloat();
   cvwParams.endPotential = elementos[3].toFloat();
@@ -130,172 +177,180 @@ void inputCVW(String str) {
   cvwParams.cycles = elementos[6].substring(0, elementos[6].indexOf('*')).toFloat();
 }
 
-// Função para calcular o checksum de uma string
-String calcularChecksum(String s) {
+// Function to calculate the checksum of a string
+String calculateChecksum(String s) {
   char checksum = 0;
   for (int i = 0; i < s.length(); i++) {
-    if (s[i] != '$') {  // Ignora o caractere '$'
-      checksum ^= s[i];  // Faz um XOR com o valor ASCII de cada caractere
+    if (s[i] != '$') {  
+      checksum ^= s[i]; 
     }
   }
 
-  // Converte o resultado do XOR em formato hexadecimal
+  // Converts XOR result to hexadecimal format
   char checksumHex[3];
   sprintf(checksumHex, "%02X", checksum);
 
-  return String(checksumHex);  // Retorna o checksum como string
+  return String(checksumHex);
 }
 
-// Função para calcular a corrente com base no potencial (simulação)
-float calcularCorrente(float* funcao_dummy, float potencial, float directionStep, float startPotential, float endPotential) {
+// Function to calculate current based on potential (simulation)
+float calculateCurrent(Functions functions_dummy, float potential, float directionStep, float startPotential, float endPotential) {
   float retorno = 0.0;
 
-  // Os pontos A, B, C e D estão na primeira linha de funcao_dummy
-  float xa = funcao_dummy[0];    // Ponto A
-  float xb = funcao_dummy[1];    // Ponto B
-  float xc = funcao_dummy[2];    // Ponto C
-  float xd = funcao_dummy[3];    // Ponto D
-
-  // Ida
+  // Points A, B, C, and D are in the first row of funcao_dummy
+  Points* p = functions_dummy.points;
+  float xa = p->coord.x;  
+  p = p->next;
+  float xb = p->coord.x;   
+  p = p->next;
+  float xc = p->coord.x;   
+  p = p->next;
+  float xd = p->coord.x;   
+  Function* f = functions_dummy.functions;
+  // Going
   if (directionStep == 1) {
-    // Primeira função da ida, polinômio de ordem 3
-    if (potencial >= xa && potencial < xc) {
-      float a = funcao_dummy[5];  // Coeficiente a (linha 1, coluna 0)
-      float b = funcao_dummy[6];  // Coeficiente b (linha 1, coluna 1)
-      float c = funcao_dummy[7];  // Coeficiente c (linha 1, coluna 2)
-      float d = funcao_dummy[8];  // Coeficiente d (linha 1, coluna 3)
-      retorno = a * pow(potencial, 3) + b * pow(potencial, 2) + c * potencial + d;
+    // First one-way function, polynomial of order 3
+    if (potential >= xa && potential < xc) {
+      for(int i=0; i<3; i++) f = f->next;
+      Params* param = f->params;
+      int expoente = f->qParams - 1;
+      while (param) {
+          retorno += param->param * pow(potential, expoente);
+          expoente--;
+          param = param->next;
+      }
     }
-    // Segunda função da ida, polinômio de ordem 2
-    else if (potencial >= xc && potencial < xb) {
-      float a = funcao_dummy[10]; // Coeficiente a (linha 2, coluna 0)
-      float b = funcao_dummy[11]; // Coeficiente b (linha 2, coluna 1)
-      float c = funcao_dummy[12]; // Coeficiente c (linha 2, coluna 2)
-      retorno = a * pow(potencial, 2) + b * potencial + c;
+    // Second one-way function, polynomial of order 2
+    else if (potential >= xc && potential < xb) {
+      for(int i=0; i<2; i++) f = f->next;
+      Params* param = f->params;
+      int expoente = f->qParams - 1;
+      while (param) {
+          retorno += param->param * pow(potential, expoente);
+          expoente--;
+          param = param->next;
+      }
     }
   }
-  // Volta
+  // Return
   else {
-    // Primeira função de volta, polinômio de ordem 2
-    if (potencial >= xa && potencial < xd) {
-      float a = funcao_dummy[15]; // Coeficiente a (linha 3, coluna 0)
-      float b = funcao_dummy[16]; // Coeficiente b (linha 3, coluna 1)
-      float c = funcao_dummy[17]; // Coeficiente c (linha 3, coluna 2)
-      retorno = a * pow(potencial, 2) + b * potencial + c;
+    // First back function, polynomial of order 2
+    if (potential >= xa && potential < xd) {
+      for(int i=0; i<1; i++) f = f->next;
+      Params* param = f->params;
+      int expoente = f->qParams - 1;
+      while (param) {
+          retorno += param->param * pow(potential, expoente);
+          expoente--;
+          param = param->next;
+      }
     }
-    // Segunda função de volta, polinômio de ordem 3
-    else if (potencial >= xd && potencial < xb) {
-      float a = funcao_dummy[20]; // Coeficiente a (linha 4, coluna 0)
-      float b = funcao_dummy[21]; // Coeficiente b (linha 4, coluna 1)
-      float c = funcao_dummy[22]; // Coeficiente c (linha 4, coluna 2)
-      float d = funcao_dummy[23]; // Coeficiente d (linha 4, coluna 3)
-      retorno = a * pow(potencial, 3) + b * pow(potencial, 2) + c * potencial + d;
+    // Second back function, order 3 polynomial
+    else if (potential >= xd && potential < xb) {
+      Params* param = f->params;
+      int expoente = f->qParams - 1;
+      while (param) {
+          retorno += param->param * pow(potential, expoente);
+          expoente--;
+          param = param->next;
+      }
     }
   }
+
+  // Noise calculation
+  retorno = applyNoise(retorno);
 
   return retorno;
 }
 
-
-
 //
-float* functionGenerator(float xo, float xf) {
-    float A[2] = {0.0, 0.0};
-    float B[2] = {0.0, 0.0};
-    float C[2] = {0.0, 0.0};
-    float D[2] = {0.0, 0.0};
-    float P1[2] = {0.0, 0.0};
-    float P2[2] = {0.0, 0.0};
+Functions functionGenerator(float xo, float xf) {
+  Points* points = nullptr;
+  Function* functions = nullptr;
+  
+  float b_ab = xf - xo;
+  float h_ab = b_ab / 5.0; 
+  float b_ac = b_ab * (2.0 / 3.0); 
+  float h_ac = 2.0 * h_ab; 
+  float b_cb = b_ab / 3.0; 
+  float h_cb = h_ab; 
+  float b_ad = b_cb; 
+  float h_ad = h_ab; 
+  float b_db = b_ac; 
+  float h_db = 2.0 * h_ab; 
 
-    float b_ab = xf - xo;
-    float h_ab = b_ab / 5.0; 
-    float b_ac = b_ab * (2.0 / 3.0); 
-    float h_ac = 2.0 * h_ab; 
-    float b_cb = b_ab / 3.0; 
-    float h_cb = h_ab; 
-    float b_ad = b_cb; 
-    float h_ad = h_ab; 
-    float b_db = b_ac; 
-    float h_db = 2.0 * h_ab; 
+  Coord A = { xo , 0 };
+  Coord B = { xf , h_ab };
+  Coord C = { xo+b_ac, h_ac };
+  Coord D = { xo+b_ad , -h_ac };
+  Coord P1, P2;
 
-    A[0] = xo; 
-    A[1] = 0.0;
-    B[0] = A[0] + b_ab;
-    B[1] = A[1] + h_ab;
-    C[0] = A[0] + b_ac;
-    C[1] = A[1] + h_ac;
-    D[0] = A[0] + b_ad;
-    D[1] = A[1] - h_ad;
+  Coord pointsArray[4] = {A, B, C, D};
+  for (int i = 3; i >= 0; i--) {
+      Points* novo = new Points{nullptr, points, pointsArray[i]};
+      if (points) points->prev = novo;
+      points = novo;
+  }
 
-    P1[0] = A[0] + b_ac / 4.0;
-    P1[1] = A[1] + (h_ac / 2.0);
-    P2[0] = A[0] + 3.0 * (b_ac / 4.0);
-    P2[1] = A[1] + h_ac / 3.0;
-
-    float mat0[4][5] = {
-        {pow(A[0], 3), pow(A[0], 2), A[0], 1.0, A[1]},
-        {pow(C[0], 3), pow(C[0], 2), C[0], 1.0, C[1]},
-        {pow(P1[0], 3),pow(P1[0], 2), P1[0], 1.0, P1[1]},
-        {pow(P2[0], 3), pow(P2[0], 2), P2[0], 1.0, P2[1]}
+    // First Function
+    P1.x = A.x + b_ac / 4.0;
+    P1.y = A.y + (h_ac / 2.0);
+    P2.x = A.x + 3.0 * (b_ac / 4.0);
+    P2.y = A.y + h_ac / 3.0;
+    float mat0[4][5]={
+      {pow(A.x, 3), pow(A.x, 2), A.x, 1.0, A.y},
+      {pow(C.x, 3), pow(C.x, 2), C.x, 1.0, C.y},
+      {pow(P1.x, 3),pow(P1.x, 2), P1.x, 1.0, P1.y},
+      {pow(P2.x, 3), pow(P2.x, 2), P2.x, 1.0, P2.y}
     };
     float* ptrMat0 = &mat0[0][0];
     normalizeMatrix(ptrMat0, 4);
     float* solution0 = gaussElimination(ptrMat0, 4);
+    addFunction(&functions, solution0, 4);
 
-    P1[0] = C[0] + b_cb / 3.0;
-    P1[1] = C[1] - 2.0 * (h_cb / 3.0);
+    // Second Function
+    P1.x = C.x + b_cb / 3.0;
+    P1.y = C.y - 2.0 * (h_cb / 3.0);
     float mat1[3][4] = {
-        {pow(C[0], 2), C[0], 1.0, C[1]},
-        {pow(B[0], 2), B[0], 1.0, B[1]},
-        {pow(P1[0], 2), P1[0], 1.0, P1[1]}
+        {pow(C.x, 2), C.x, 1.0, C.y},
+        {pow(B.x, 2), B.x, 1.0, B.y},
+        {pow(P1.x, 2), P1.x, 1.0, P1.y}
     };
     float* ptrMat1 = &mat1[0][0];
     normalizeMatrix(ptrMat1, 3);
     float* solution1 = gaussElimination(ptrMat1, 3);
+    addFunction(&functions, solution1, 3);
 
-    P1[0] = A[0] + 2.0 * (b_ad / 3.0);
-    P1[1] = A[1] - (h_ad / 3.0);
+    // Third Function
+    P1.x = A.x + 2.0 * (b_ad / 3.0);
+    P1.y = A.y - (h_ad / 3.0);
     float mat2[3][4] = {
-        {pow(A[0], 2), A[0], 1.0, A[1]},
-        {pow(D[0], 2), D[0], 1.0, D[1]},
-        {pow(P1[0], 2), P1[0], 1.0, P1[1]}
+        {pow(A.x, 2), A.x, 1.0, A.y},
+        {pow(D.x, 2), D.x, 1.0, D.y},
+        {pow(P1.x, 2), P1.x, 1.0, P1.y}
     };
     float* ptrMat2 = &mat2[0][0];
     normalizeMatrix(ptrMat2, 3);
     float* solution2 = gaussElimination(ptrMat2, 3);
+    addFunction(&functions, solution2, 3);
 
-    P1[0] = D[0] + b_db / 5.0;
-    P1[1] = D[1] + 3.0 * (h_db / 10.0);
-    P2[0] = D[0] + (b_db / 2.0);
-    P2[1] = D[1] + 3.0 * (h_db / 10.0);
+    // Fourth Function
+    P1.x = D.x + b_db / 5.0;
+    P1.y = D.y + 3.0 * (h_db / 10.0);
+    P2.x = D.x + (b_db / 2.0);
+    P2.y = D.y + 3.0 * (h_db / 10.0);
     float mat3[4][5] = {
-        {pow(D[0], 3), pow(D[0], 2), D[0], 1.0, D[1]},
-        {pow(B[0], 3), pow(B[0], 2), B[0], 1.0, B[1]},
-        {pow(P1[0], 3),pow(P1[0], 2), P1[0], 1.0, P1[1]},
-        {pow(P2[0], 3), pow(P2[0], 2), P2[0], 1.0, P2[1]}
+        {pow(D.x, 3), pow(D.x, 2), D.x, 1.0, D.y},
+        {pow(B.x, 3), pow(B.x, 2), B.x, 1.0, B.y},
+        {pow(P1.x, 3),pow(P1.x, 2), P1.x, 1.0, P1.y},
+        {pow(P2.x, 3), pow(P2.x, 2), P2.x, 1.0, P2.y}
     };
     float* ptrMat3 = &mat3[0][0];
     normalizeMatrix(ptrMat3, 4);
     float* solution3 = gaussElimination(ptrMat3, 4);
-
-     static float functionReturn[5][5];  // Static to persist across function calls
-
-    functionReturn[0][0] = A[0];
-    functionReturn[0][1] = B[0];
-    functionReturn[0][2] = C[0];
-    functionReturn[0][3] = D[0];
-
-    // Armazenando as soluções nas próximas linhas
-    for (int i = 0; i < 5; i++) {
-        functionReturn[1][i] = solution0[i];
-        functionReturn[2][i] = solution1[i];
-        functionReturn[3][i] = solution2[i];
-        functionReturn[4][i] = solution3[i];
-    }
-
-    return &functionReturn[0][0];
-
-    return &functionReturn[0][0];  // Retorna o ponteiro para a primeira linha da matriz
+    addFunction(&functions, solution3, 4);    
+    
+    return {functions, points};
 }
 
 //
@@ -314,7 +369,7 @@ void normalizeMatrix(float* mat, int N) {
 
 //
 float* gaussElimination(float* mat, int N) {
-    static float solution[10]; // Usar um array estático para garantir que a memória seja preservada
+    static float solution[10]; 
 
     for (int i = 0; i < N; i++) {
         int maxRow = i;
@@ -349,4 +404,64 @@ float* gaussElimination(float* mat, int N) {
     }
 
     return solution;
+}
+
+// for 4x4, N=4
+void printFunction(Functions functions) {
+
+  Serial.println("Estrutura gerada:");
+  Points* p = functions.points;
+  while (p) {
+      Serial.print("(");
+      Serial.print(p->coord.x,6);
+      Serial.print(", ");
+      Serial.print(p->coord.y,6);
+      Serial.print(") ");
+      Serial.println();
+      p = p->next;
+  }
+  Serial.println();
+  Function* f = functions.functions;
+  while (f) {
+      Params* param = f->params;
+      int expoente = f->qParams - 1;
+      Serial.print("Funcao: ");
+      while (param) {
+          Serial.print(param->param,6);
+          Serial.print("x^");
+          Serial.print(expoente);
+          if(expoente > 0) 
+            Serial.print(" + ");  
+          else
+            Serial.print(" ");
+          expoente--;
+          param = param->next;
+      }
+      Serial.println();
+      f = f->next; 
+  }
+  Serial.println();
+}
+
+//
+void addFunction(Function** functions, float solution[], int order) {
+ 
+  Function* novaFuncao = new Function{nullptr, order, *functions};
+  Params* paramHead = nullptr;
+
+  for (int j = order-1; j >= 0; j--) {
+    Params* novoParam = new Params{nullptr, paramHead, solution[j]};
+    if (paramHead) paramHead->prev = novoParam;
+    paramHead = novoParam;
+  }
+  novaFuncao->params = paramHead;
+  *functions = novaFuncao;
+}
+
+// Function that applies noise to the number n
+float applyNoise(float number) {
+  // Generates a random number between -kNoise * n and +kNoise * n
+  float ruido = ((float)rand() / RAND_MAX) * (2 * kNoise * number) - (kNoise * number);
+  // Add the noise to the number n and return the result
+  return number + ruido;
 }
