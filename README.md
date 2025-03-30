@@ -13,7 +13,7 @@ O OpenAFE GUI é uma interface gráfica para o OpenAFE, projetada para facilitar
 
 1. Clone o repositório:
 ```sh
-  git clone https://github.com/seu-usuario/openafe-gui.git
+  git clone https://github.com/moduhub/openafe-gui
 ```
 2. Navegue até o diretório do projeto:
 ```sh
