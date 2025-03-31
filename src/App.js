@@ -1,9 +1,20 @@
 import React from 'react';
 import { BrowserRouter } from "react-router-dom";
 import { AppRoutes } from './routes';
-import { AppThemeProvider, DrawerProvider } from './shared/contexts';
-import { TopMenu, DrawerMenu } from './shared/components';
-import { ArduinoProvider, DataSetsProvider, SettingsProvider } from './shared/contexts';
+import { 
+  AppThemeProvider, 
+  DrawerProvider 
+} from './shared/contexts';
+import { 
+  TopMenu, 
+  DrawerMenu 
+} from './shared/components';
+import { 
+  ArduinoProvider, 
+  DataSetsProvider, 
+  SettingsProvider, 
+  DashboardProvider 
+} from './shared/contexts';
 
 export const App = () => {
   return (
@@ -12,6 +23,7 @@ export const App = () => {
         <SettingsProvider>
           <ArduinoProvider>
             <DataSetsProvider>
+              <DashboardProvider>
                 <BrowserRouter>
                   <TopMenu>
                     <DrawerMenu>
@@ -19,6 +31,7 @@ export const App = () => {
                     </DrawerMenu>
                   </TopMenu>
                 </BrowserRouter>
+              </DashboardProvider>
             </DataSetsProvider>
           </ArduinoProvider>
         </SettingsProvider>

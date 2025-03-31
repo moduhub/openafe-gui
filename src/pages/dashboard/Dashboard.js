@@ -1,13 +1,14 @@
 import { Box } from '@mui/material';
 
-import { ChartComponent, TabArduino, TabDataset } from '../../shared/components';
+import { 
+  ChartComponent,
+  TabArduino, 
+  TabDataset 
+} from '../../shared/components';
 
 import { useState } from 'react';
 
 export const Dashboard = () => {
-
-  // Can be 'small' or 'larger'
-  const [graphWidth, setGraphWidth] = useState('100%');
 
   return (
     <Box 
@@ -18,9 +19,7 @@ export const Dashboard = () => {
       <TabArduino />
 
       {/* Gráfico */}
-      <Box width={graphWidth} height="100%">
-        <ChartComponent />
-      </Box>
+      <ChartComponent />
 
       {/* Controle de Datasets */}
       <TabDataset />

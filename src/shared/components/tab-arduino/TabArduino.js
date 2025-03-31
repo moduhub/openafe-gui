@@ -6,14 +6,23 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop'; 
 import MinimizeIcon from '@mui/icons-material/Minimize'; 
 import MaximizeIcon from '@mui/icons-material/Maximize';
+import MemoryIcon from '@mui/icons-material/Memory';
 
 import { useState } from "react";
 import { useTheme } from "@mui/material";
 
-import { StartReading, FinishReading } from "../../../arduino";
-import { useArduinoContext, useDatasetsContext } from '../../contexts'
+import { 
+  StartReading, 
+  FinishReading 
+} from "../../../arduino";
+import { 
+  useArduinoContext, 
+  useDatasetsContext,
+  useDashboardContext,
+} from '../../contexts'
 
 export const TabArduino = () => {
+
   const theme = useTheme()
   const { 
     isConnected,
@@ -24,9 +33,14 @@ export const TabArduino = () => {
     currentName, handleCurrentName,
     datasets,
   } = useDatasetsContext()
+  const {
+    tabArduinoIsMinimized: isMinimized, 
+    handleToggleTabArduinoMinimized: setIsMinimized, 
+    tabDatasetsIsMinimized: isMinimizedDataset, 
+    handleToggleTabDatasetsMinimized: setIsMinimizedDataset,
+  } = useDashboardContext()
 
   const [errors, setErrors] = useState({});
-  const [isMinimized, setIsMinimized] = useState(false);
 
   const validateField = (field, value) => {
     if (field === "name" && !value.trim()) 
@@ -99,6 +113,10 @@ export const TabArduino = () => {
         currentParams.cycles,
         handleSetIsReading
       )
+      if(!isMinimized)
+        setIsMinimized()
+      if(!isMinimizedDataset)
+        setIsMinimizedDataset()
     }
     else console.log("Não é possível iniciar, processo em andamento")
     
@@ -115,6 +133,7 @@ export const TabArduino = () => {
       transition="width 0.3s ease"
       alignItems="start"
       top={isMinimized ? theme.spacing(12) : null}
+      zIndex={2}
     >
       <Card sx={{ borderRadius: isMinimized ? "55px" : "16px" }}>
         <CardContent
@@ -132,7 +151,7 @@ export const TabArduino = () => {
               size="small"
               onClick={() => setIsMinimized(!isMinimized)}
             >
-              {isMinimized ? <MaximizeIcon /> : <MinimizeIcon />}
+              {isMinimized ? <MemoryIcon /> : <MinimizeIcon />}
             </IconButton>
           </Box>
 

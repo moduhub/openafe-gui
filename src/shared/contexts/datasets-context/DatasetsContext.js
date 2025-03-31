@@ -66,6 +66,23 @@ export const DataSetsProvider = ({ children }) => {
       handleSetIsDatasetSelected(false)
     }
   }
+  const handleDeleteDataset = (pos) => {
+    handleSetDatasetSelected(0)
+    const newDataSets = [...datasets]
+    newDataSets.splice(pos, 1)
+    handleSetDataset(newDataSets)
+    if(datasets.length == 1){
+      //console.log("Acabou ou datasets")
+      handleSetDatasetSelected("")
+      handleSetIsDatasetSelected(false)
+    }
+  }
+  /*
+  const handleDatasetIsVisible = (pos) => {
+    datasets[pos].visible = !datasets[pos].visible
+    console.log("Pos:",pos," Alterado:",datasets[pos].visible)
+  }
+  */
 
   const cacheDatasetsManager = ()=>{
     if(datasets.length >= maxDatasets){
@@ -76,18 +93,35 @@ export const DataSetsProvider = ({ children }) => {
   }
 
   const setNewDataSet = (name_,parameters_) => {
-    cacheDatasetsManager()
-    setDatasets(prevDatasets => [
-      ...prevDatasets, { 
-        name: name_, 
+    const visible_ = true; // Initialize visibility state
+    const handleSetIsVisible = () => {
+      setDatasets((prevDatasets) =>
+        prevDatasets.map((dataset) =>
+          dataset.name === name_
+            ? { ...dataset, visible: !dataset.visible }
+            : dataset
+        )
+      );
+    };
+
+    cacheDatasetsManager();
+    setDatasets((prevDatasets) => [
+      ...prevDatasets,
+      {
+        name: name_,
         params: parameters_,
-        data: [{ 
-          x:[] ,y:[], 
-          mode:'lines', 
-          line: { color: theme.palette.primary.main } 
-        }] 
-      }
-    ])
+        visible: visible_,
+        setIsVisible: handleSetIsVisible, // Save the function reference
+        data: [
+          {
+            x: [],
+            y: [],
+            mode: 'lines',
+            line: { color: theme.palette.primary.main },
+          },
+        ],
+      },
+    ]);
   };
 
   const addDataPoint = (voltage, current) => {
@@ -153,6 +187,8 @@ export const DataSetsProvider = ({ children }) => {
       isDatasetSelected, handleSetIsDatasetSelected,
       datasetSelected, handleSetDatasetSelected,
       handleDeleteDatasetSelected,
+      handleDeleteDataset,
+      //handleDatasetIsVisible,
       datasets,
     }}>
       {children}
