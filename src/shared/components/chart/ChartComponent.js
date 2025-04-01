@@ -21,7 +21,7 @@ export const ChartComponent = () => {
     showlegend: false,
     paper_bgcolor: 'transparent',
     plot_bgcolor: theme.palette.background.paper,
-    margin: { l: 20, r: 10, t: 10, b: 20 },
+    margin: { l: 30, r: 10, t: 10, b: 20 },
     xaxis: {
       title: 'Voltage (mV)',
       linecolor: theme.palette.text.primary,
@@ -69,13 +69,6 @@ export const ChartComponent = () => {
     };
   }, []);
 
-
-  const getColorForCurve = (index) => {
-  const colors = [
-    '#FF6347', '#4682B4', '#32CD32', '#FFD700', '#8A2BE2', '#FF4500', '#2E8B57'
-  ];
-  return colors[index % colors.length]; // Cicla entre as cores
-  };
   useEffect(() => {
     const datagraph = Object.keys(datasets)
       .map((key, index) => {
@@ -88,7 +81,6 @@ export const ChartComponent = () => {
             y: data[0].y,
             mode: 'lines',
             name: key, 
-            line: { color: getColorForCurve(index) }, 
           };
         }
         return null;
