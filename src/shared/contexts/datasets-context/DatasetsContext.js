@@ -1,6 +1,11 @@
 import React, { createContext, useCallback, useContext, useState, useEffect } from 'react'
 
-import { useArduinoContext, ThemeContext, useSettingsContext } from '..'
+import { 
+  useArduinoContext, 
+  ThemeContext, 
+  useSettingsContext,
+  useDashboardContext
+} from '..'
 
 const DatasetsContext = createContext({});
 
@@ -18,23 +23,23 @@ export const DataSetsProvider = ({ children }) => {
   } = useArduinoContext()
 
   const {
-    autoConnect, handleSetAutoConnect,
     maxDatasets, handleSetMaxDatasets,
-    displayOption, handleSetDisplayOption,
     defaultName, handleSetDefaultName,
-    deleteCache, handleSetDeleteCache,
-    unitSystem, handleSetUnitSystem,
-    tabIndex, handleSetTabIndex
   } = useSettingsContext()
+
+  const { 
+    tabDatasetsIsMinimized: isDatasetsMinimized, 
+    handleToggleTabDatasetsMinimized: setIsDatasetsMinimized,
+  } = useDashboardContext()
 
   const [currentName, setCurrentName] = useState(defaultName)
   const [currentParams, setCurrentParams] = useState({
     settlingTime: 1000,
     startPotential: -800,
     endPotential: 0,
-    step: 100,
-    scanRate: 2,
-    cycles: 1,
+    step: 10,
+    scanRate: 100,
+    cycles: 3,
   })
   const [datasets, setDatasets]= useState([])
   const [isDatasetSelected, setIsDatasetSelected] = useState(false)
@@ -77,12 +82,6 @@ export const DataSetsProvider = ({ children }) => {
       handleSetIsDatasetSelected(false)
     }
   }
-  /*
-  const handleDatasetIsVisible = (pos) => {
-    datasets[pos].visible = !datasets[pos].visible
-    console.log("Pos:",pos," Alterado:",datasets[pos].visible)
-  }
-  */
 
   const cacheDatasetsManager = ()=>{
     if(datasets.length >= maxDatasets){
@@ -173,6 +172,8 @@ export const DataSetsProvider = ({ children }) => {
       const motive = arduinoData.split(',')
       //console.log("Finalizado por "+ motive[1])
       handleSetIsReading(false)
+      if(isDatasetsMinimized)
+        setIsDatasetsMinimized()
     }
   },[arduinoData])
 

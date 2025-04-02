@@ -20,10 +20,10 @@ export const App = () => {
   return (
     <AppThemeProvider>
       <DrawerProvider>
-        <SettingsProvider>
-          <ArduinoProvider>
-            <DataSetsProvider>
-              <DashboardProvider>
+        <DashboardProvider>
+          <SettingsProvider>
+            <ArduinoProvider>
+              <DataSetsProvider>
                 <BrowserRouter>
                   <TopMenu>
                     <DrawerMenu>
@@ -31,10 +31,10 @@ export const App = () => {
                     </DrawerMenu>
                   </TopMenu>
                 </BrowserRouter>
-              </DashboardProvider>
-            </DataSetsProvider>
-          </ArduinoProvider>
-        </SettingsProvider>
+              </DataSetsProvider>
+            </ArduinoProvider>
+          </SettingsProvider>
+        </DashboardProvider>
       </DrawerProvider>
     </AppThemeProvider>
   );

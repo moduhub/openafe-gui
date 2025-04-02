@@ -1,5 +1,5 @@
 import { TextField, Box, Card, CardContent, List, ListItem } from '@mui/material'; 
-import { Button, Typography } from '@mui/material'; 
+import { Button } from '@mui/material'; 
 
 import IconButton from '@mui/material/IconButton'; 
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'; 
@@ -8,7 +8,7 @@ import MinimizeIcon from '@mui/icons-material/Minimize';
 import MaximizeIcon from '@mui/icons-material/Maximize';
 import MemoryIcon from '@mui/icons-material/Memory';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTheme } from "@mui/material";
 
 import { 

@@ -3,7 +3,9 @@ import Alert from '@mui/material/Alert';
 
 import React, { createContext, useCallback, useContext, useState, useEffect } from 'react'
 
-import { ReceivePorts, ConnectPort } from '../../../arduino'
+import { ReceivePorts } from '../../../arduino'
+
+import { useDashboardContext } from '..';
 
 const ArduinoContext = createContext({});
 
@@ -24,6 +26,11 @@ export const ArduinoProvider = ({ children }) => {
   const handleCloseSnackbar = () => {
     setSnackbar((prev) => ({ ...prev, open: false }));
   };
+
+  const {
+    tabArduinoIsMinimized: isArduinoMinimized, 
+    handleToggleTabArduinoMinimized: setIsArduinoMinimized,
+  } = useDashboardContext()
   
   const handleSetArduinoData = useCallback((newArduinoData)=>{
     setArduinoData(newArduinoData)
@@ -53,7 +60,7 @@ export const ArduinoProvider = ({ children }) => {
 
     const handleArduinoData = (data) => {
       handleSetArduinoData(data)
-      //console.log(data)
+      console.log(data)
     }
     const handleSerialPortOpened = (message) => {
       if(!message.startsWith("not-connected")){
@@ -85,6 +92,8 @@ export const ArduinoProvider = ({ children }) => {
       handleSetIsConnect(true)
       setSnackbar({ open: false, message: '', severity: 'info' }) // Fecha a snackbar de conexão
       setSnackbar({ open: true, message: 'Conectado com sucesso na porta '+portSelected+'!', severity: 'success' });
+      if(isArduinoMinimized)
+        setIsArduinoMinimized()
     }
   }, [arduinoData])
 

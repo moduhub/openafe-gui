@@ -48,17 +48,6 @@ export const TabDataset = () => {
     handleToggleTabDatasetsMinimized: setIsMinimized,
   }= useDashboardContext()
 
-  const [expanded, setExpanded] = useState(false)
-
-  const toggleAccordion = () => {
-    setExpanded(!expanded);
-  };
-
-  const setDatasetSelected = (e) => {
-    handleSetDatasetSelected(e.target.value);
-    handleSetIsDatasetSelected(true);
-  };
-
   return (
     <Box 
       width={isMinimized ? theme.spacing(12) : theme.spacing(35)}  

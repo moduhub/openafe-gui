@@ -4,7 +4,7 @@
 // Variables to store the cyclic scan data
 float x = 0;  // Initial potential
 float y = 0;   // End potential
-float kNoise = 0.15; // Amount of noise
+float kNoise = 15; // Amount of noise
 
 // Structure for storing the scan parameters
 struct CVWParams {
@@ -59,7 +59,9 @@ float calculateCurrent(
 );
 String calculateChecksum(String s);
 void inputCVW(String str);
-Functions functionGenerator(float xo, float xf); 
+Functions functionGenerator(
+  float xo, float xf
+); 
 void normalizeMatrix(float* mat, int N);
 float* gaussElimination(float* mat, int N);
 void printFunction(Functions functions);
@@ -76,6 +78,7 @@ void setup() {
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, LOW);
   Serial.begin(9600);
+  randomSeed(analogRead(0));
   Serial.println("$CONNECTED");
 }
 
@@ -96,8 +99,8 @@ void loop() {
         cvwParams.startPotential, 
         cvwParams.endPotential
       ); 
-
       printFunction(functions_dummy);
+      
       Serial.println("$START");
       currentCycle = 0;
           
@@ -125,21 +128,40 @@ void loop() {
         delay(readingPeriod);
 
         x += cvwParams.step * directionStep; 
-        if (x >= cvwParams.endPotential) 
+
+        if (x >= cvwParams.endPotential){ 
+          x = cvwParams.endPotential;
           directionStep = -1;  // Reverses the direction of the scan
-        else if(x < cvwParams.startPotential){
+        }
+        else if(x <= cvwParams.startPotential && directionStep==-1){
           directionStep = 1;
           currentCycle++;  // Accounts for the cycle
+          // Verify that the process has been completed by cycles
+          if (currentCycle >= cvwParams.cycles) {
+            String mensagem = "$SGL," + String(cvwParams.startPotential, 6) + "," + String(0.000000, 6);
+            String checksum = calculateChecksum(mensagem);
+            mensagem += "*" + checksum;
+            Serial.println(mensagem);
+
+            freeFunctions(functions_dummy);
+            Serial.println("$MEM,Memória limpa");
+            Serial.println("$END,Ciclos Completos");
+            currentCycle =  0;
+            digitalWrite(ledPin, LOW);
+            scanBool = false;
+          }
+          else{
+            freeFunctions(functions_dummy);
+            functions_dummy = functionGenerator(
+              cvwParams.startPotential, 
+              cvwParams.endPotential
+            ); 
+            Serial.println("$CYC,Nova função gerada");
+            printFunction(functions_dummy);
+          }
         }
         
-        // Verify that the process has been completed by cycles
-        if (currentCycle >= cvwParams.cycles) {
-          freeFunctions(functions_dummy);
-          Serial.println("$MEM,Memória limpa");
-          Serial.println("$END,Ciclos Completos");
-          digitalWrite(ledPin, LOW);
-          scanBool = false;
-        }
+        
 
         // Checks if a stop command has been received
         if (Serial.available()) {
@@ -178,9 +200,20 @@ void inputCVW(String str) {
   cvwParams.settlingTime = elementos[1].toFloat();
   cvwParams.startPotential = elementos[2].toFloat();
   cvwParams.endPotential = elementos[3].toFloat();
-  cvwParams.scanRate = elementos[4].toFloat();
-  cvwParams.step = elementos[5].toFloat();
+  cvwParams.step = elementos[4].toFloat();
+  cvwParams.scanRate = elementos[5].toFloat();
+  
   cvwParams.cycles = elementos[6].substring(0, elementos[6].indexOf('*')).toFloat();
+  Serial.print("S: ");
+  Serial.println(cvwParams.settlingTime);
+  Serial.print("I: ");
+  Serial.println(cvwParams.startPotential);
+  Serial.print("E: ");
+  Serial.println(cvwParams.endPotential);
+  Serial.print("SR: ");
+  Serial.println(cvwParams.scanRate);
+  Serial.print("S: ");
+  Serial.println(cvwParams.step);
 }
 
 // Function to calculate the checksum of a string
@@ -200,7 +233,13 @@ String calculateChecksum(String s) {
 }
 
 // Function to calculate current based on potential (simulation)
-float calculateCurrent(Functions functions_dummy, float potential, float directionStep, float startPotential, float endPotential) {
+float calculateCurrent(
+  Functions functions_dummy, 
+  float potential, 
+  float directionStep, 
+  float startPotential, 
+  float endPotential
+) {
   float retorno = 0.0;
 
   // Points A, B, C, and D are in the first row of funcao_dummy
@@ -220,7 +259,7 @@ float calculateCurrent(Functions functions_dummy, float potential, float directi
   // Going
   if (directionStep == 1) {
     // First one-way function, polynomial of order 3
-    if (potential >= xa && potential < xc) {
+    if (potential > xa && potential < xc) {
       for(int i=0; i<3; i++) f = f->next;
       Params* param = f->params;
       int expoente = f->qParams - 1;
@@ -231,7 +270,7 @@ float calculateCurrent(Functions functions_dummy, float potential, float directi
       }
     }
     // Second one-way function, polynomial of order 2
-    else if (potential >= xc && potential < xb) {
+    else if (potential >= xc) {
       for(int i=0; i<2; i++) f = f->next;
       Params* param = f->params;
       int expoente = f->qParams - 1;
@@ -245,7 +284,7 @@ float calculateCurrent(Functions functions_dummy, float potential, float directi
   // Return
   else {
     // First back function, polynomial of order 2
-    if (potential >= xa && potential < xd) {
+    if (potential > xa && potential < xd) {
       for(int i=0; i<1; i++) f = f->next;
       Params* param = f->params;
       int expoente = f->qParams - 1;
@@ -256,7 +295,7 @@ float calculateCurrent(Functions functions_dummy, float potential, float directi
       }
     }
     // Second back function, order 3 polynomial
-    else if (potential >= xd && potential < xb) {
+    else if (potential >= xd) {
       Params* param = f->params;
       int expoente = f->qParams - 1;
       while (param) {
@@ -271,28 +310,31 @@ float calculateCurrent(Functions functions_dummy, float potential, float directi
   retorno = applyNoise(retorno);
 
   return retorno;
+
 }
 
 //
-Functions functionGenerator(float xo, float xf) {
+Functions functionGenerator(
+  float xo, float xf
+) {
   Points* points = nullptr;
   Function* functions = nullptr;
   
-  float b_ab = xf - xo;
-  float h_ab = b_ab / 5.0; 
+  float b_ab = (xf - xo);
+  float h_ab = b_ab / (3.0 + 2*currentCycle); 
   float b_ac = b_ab * (2.0 / 3.0); 
-  float h_ac = 2.0 * h_ab; 
+  float h_ac = 2.0 * ( h_ab ); 
   float b_cb = b_ab / 3.0; 
   float h_cb = h_ab; 
   float b_ad = b_cb; 
-  float h_ad = h_ab; 
+  float h_ad = 5.0 * h_ac / ( 5.0 + currentCycle) ; 
   float b_db = b_ac; 
   float h_db = 2.0 * h_ab; 
 
   Coord A = { xo , 0 };
-  Coord B = { xf , h_ab };
-  Coord C = { xo+b_ac, h_ac };
-  Coord D = { xo+b_ad , -h_ac };
+  Coord B = { xo+b_ab , (b_ab/5.0) };
+  Coord C = { xo+b_ac , h_ac };
+  Coord D = { xo+b_ad , -h_ad };
 
   Coord pointsArray[4] = {A, B, C, D};
   for (int i = 0; i < 4; i++) {
@@ -305,7 +347,7 @@ Functions functionGenerator(float xo, float xf) {
   Coord AB1 = { 0 , 0 };
   Coord AB2 = { 0 , 0 };
   AB1.x = A.x + b_ac / 4.0;
-  AB1.y = A.y + (h_ac / 4.0);
+  AB1.y = A.y + (h_ac / (4.0 + currentCycle));
   AB2.x = A.x + 3.0 * (b_ac / 4.0);
   AB2.y = A.y + 2.0 * (h_ac / 2.0);
   
@@ -349,7 +391,7 @@ Functions functionGenerator(float xo, float xf) {
   // Third Function
   Coord DA = { 0 , 0 };
   DA.x = A.x + (b_ad / 3.0);
-  DA.y = A.y - (h_ad / 2.0);
+  DA.y = A.y - (h_ad / (5.0));
   
   novo = new Points{nullptr, points, DA};
   if (points) points->prev = novo;
@@ -502,7 +544,8 @@ void addFunction(Function** functions, float solution[], int order) {
 // Function that applies noise to the number n
 float applyNoise(float number) {
   // Generates a random number between -kNoise * n and +kNoise * n
-  float ruido = ((float)rand() / RAND_MAX) * (2 * kNoise * number) - (kNoise * number);
+  //float ruido = ((float)rand() / RAND_MAX) * (2 * kNoise * number) - (kNoise * number);
+  float ruido = ((float)rand() / RAND_MAX) * 2 * kNoise - kNoise;
   // Add the noise to the number n and return the result
   return number + ruido;
 }
