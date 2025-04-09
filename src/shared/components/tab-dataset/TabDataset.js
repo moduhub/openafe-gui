@@ -4,181 +4,96 @@ import {
   Box,
   Card,
   CardContent,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  List,
-  ListItem,
-  Button,
   useTheme,
   IconButton,
-  Typography
+  Tabs,
+  Tab,
 } from '@mui/material';
 
 import { FixedSizeList } from 'react-window';
 
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import MinimizeIcon from '@mui/icons-material/Minimize';
-import MaximizeIcon from '@mui/icons-material/Maximize';
-import SdStorageIcon from '@mui/icons-material/SdStorage';
-
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import SaveAltIcon from '@mui/icons-material/SaveAlt';
-import DeleteIcon from '@mui/icons-material/Delete';
+import DatasetIcon from '@mui/icons-material/Dataset';
+import BarChartIcon from '@mui/icons-material/BarChart';
+//import AnalyticsIcon from '@mui/icons-material/Analytics';
 
 import { 
   useDatasetsContext,
   useDashboardContext,
 } from '../../contexts'
 
+import {
+  TabStorage
+} from './TabStorage'
+import {
+  TabFilter
+} from './TabFilter'
+
 export const TabDataset = () => {
 
   const theme = useTheme();
-  const { 
-    isDatasetSelected, handleSetIsDatasetSelected,
-    datasetSelected, handleSetDatasetSelected,
-    handleDeleteDatasetSelected,
-    handleDeleteDataset,
-    handleDatasetIsVisible,
-    datasets
-  } = useDatasetsContext()
   const{
     tabDatasetsIsMinimized: isMinimized, 
     handleToggleTabDatasetsMinimized: setIsMinimized,
   }= useDashboardContext()
+  
+  const [tabIndex, setTabIndex] = useState(0);
+  const handleTabIndex = (_, newIndex) => {
+    if (newIndex !== undefined) {
+      setTabIndex(newIndex);
+    }
+  };
+
+  if (isMinimized) return null
 
   return (
     <Box 
-      width={isMinimized ? theme.spacing(12) : theme.spacing(35)}  
-      height={isMinimized ? "80%" : null}
+      width={theme.spacing(35)}  
       display="flex"     
       flexShrink="0"
-      marginTop={isMinimized ? null : theme.spacing(2)}  
-      marginBottom={isMinimized ? null : theme.spacing(2)}
+      marginTop={theme.spacing(2)}  
+      marginBottom={theme.spacing(2)}
       transition="width 0.3s ease"
       alignItems="start"
       justifyContent="end"
-      top={isMinimized ? theme.spacing(12) : null}
+      position="absolute"
+      top={theme.spacing(16)}
+      right={0}
       zIndex={2}
     >
-      <Card sx={{ borderRadius: isMinimized ? '55px' : '16px' }}>
-        <CardContent sx={{ 
-          height: '100%', 
-          display: 'flex', 
-          flexDirection: 'column', 
-          '&:last-child': isMinimized ? { paddingBottom: 1 } : null, 
-          padding: isMinimized ? '8px' : null 
-        }}>
-          
-          <Box display="flex" justifyContent="end" flexDirection="row" width="100%">
-            <IconButton 
-              aria-label="toggle" 
-              size="small" 
-              onClick={() => setIsMinimized(!isMinimized)}
-            >
-              {isMinimized ? <SdStorageIcon /> : <MinimizeIcon />}
-            </IconButton>
+      <Card 
+        sx={{
+          borderRadius: "16px",
+          backgroundColor: theme.palette.background.paper,
+          boxShadow: `0 2px 10px rgba(0, 0, 0, 0.2)`,
+          border: "1px solid rgba(0, 0, 0, 0.12)"
+        }}
+      >
+        <CardContent sx={{ display: 'flex', flexDirection: 'column', color: theme.palette.text.primary }}>
+          {/* Controle superior */}
+          <Box display="flex" flexDirection="row" width="100%" gap={1} justifyContent="space-between">
+            {/* Box para os Tabs, alinhados na parte inferior */}
+            <Box display="flex" alignItems="flex-start">
+              <Tabs value={tabIndex} onChange={handleTabIndex} variant="fullWidth">
+                <Tab icon={<DatasetIcon size="small" />} value={0} />
+                <Tab icon={<BarChartIcon size="small" />} value={1} />
+              </Tabs>
+            </Box>
+
+            {/* Box para o botão de minimização */}
+            <Box display="flex" justifyContent="center" height="50%" width="16px">
+              <IconButton 
+                aria-label="toggle" 
+                size="small" 
+                onClick={() => setIsMinimized(true)}
+              >
+                <MinimizeIcon />
+              </IconButton>
+            </Box>
           </Box>
 
-          {!isMinimized && (
-            <Box
-              sx={{
-                height: 440,
-                width: 248,
-                overflowY: 'auto',
-                display: 'flex',
-                flexDirection: 'column',
-                
-              }}
-            >
-              {datasets.length === 0 ? (
-                <Typography 
-                  variant="body1" 
-                  color="textSecondary" 
-                  align="center"
-                  sx={{
-                    padding: theme.spacing(2),
-                    marginTop: theme.spacing(2),
-                  }}
-                >
-                  Não há datasets em cache no momento.
-                </Typography>
-              ) : (
-                datasets.map((dataset, index) => (
-                  <Accordion key={index}>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                      {dataset.name || `Dataset ${index + 1}`}
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <Box width="100%"
-                        display="flex"
-                        marginBottom={1}
-                        justifyContent='center'
-                      >
-                        <Button
-                          onClick={()=>datasets[index].setIsVisible()}
-                        >
-                          {datasets[index].visible?<VisibilityOffIcon />:<VisibilityIcon/>}
-                        </Button>
-                        <Button><SaveAltIcon/></Button>
-                        <Button
-                          onClick={()=>{handleDeleteDataset(index)}}
-                        >
-                          <DeleteIcon/>
-                        </Button>
-                      </Box>
-                      <Accordion>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                          Parameters
-                        </AccordionSummary>
-                        <AccordionDetails>
-                          settlingTime: {dataset.params.settlingTime}<br/>
-                          startPotential: {dataset.params.startPotential}<br/>
-                          endPotential: {dataset.params.endPotential}<br/>
-                          step: {dataset.params.step}<br/>
-                          scanRate: {dataset.params.scanRate}<br/>
-                          cycles: {dataset.params.cycles}<br/>
-                        </AccordionDetails>
-                      </Accordion>
-                      <Accordion>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                          Points
-                        </AccordionSummary>
-                        <AccordionDetails>
-                        <Box sx={{ height: 150, width: "100%" }}>
-                          {datasets.length === 0 || !datasets[datasetSelected] ? (
-                            <Box sx={{ 
-                              width: '100%', height: '100%', 
-                              display: 'flex', 
-                              alignItems: 'start', justifyContent: 'center'
-                            }}>
-                            </Box>
-                          ) : (
-                            <FixedSizeList
-                              height={150}
-                              width="100%"
-                              itemSize={35}
-                              itemCount={datasets[datasetSelected].data[0].x.length}
-                              overscanCount={5}
-                            >
-                              {({ index, style }) => (
-                                <Box style={style}>
-                                  {index}: [{datasets[datasetSelected].data[0].x[index]}; {datasets[datasetSelected].data[0].y[index]}]
-                                </Box>
-                              )}
-                            </FixedSizeList>
-                          )}
-                        </Box>
-                        </AccordionDetails>
-                      </Accordion>
-                    </AccordionDetails>
-                  </Accordion>
-                ))
-              )}
-            </Box>
-          )}
-          
+          {/* Controle de exibição da guia */}
+          {tabIndex === 0 ? <TabStorage /> : <TabFilter />}
         </CardContent>
       </Card>
     </Box>

@@ -65,7 +65,7 @@ export const DataSetsProvider = ({ children }) => {
     const newDataSets = [...datasets]
     newDataSets.splice(datasetSelected, 1)
     handleSetDataset(newDataSets)
-    if(datasets.length == 1){
+    if(datasets.length === 1){
       //console.log("Acabou ou datasets")
       handleSetDatasetSelected("")
       handleSetIsDatasetSelected(false)
@@ -76,7 +76,7 @@ export const DataSetsProvider = ({ children }) => {
     const newDataSets = [...datasets]
     newDataSets.splice(pos, 1)
     handleSetDataset(newDataSets)
-    if(datasets.length == 1){
+    if(datasets.length === 1){
       //console.log("Acabou ou datasets")
       handleSetDatasetSelected("")
       handleSetIsDatasetSelected(false)
@@ -153,7 +153,7 @@ export const DataSetsProvider = ({ children }) => {
         addDataPoint(voltage, current)
       }
       if(datasets[datasets.length - 1].data[0]!=null){
-        if( datasets[datasets.length - 1].data[0].x.length == 1 ){
+        if( datasets[datasets.length - 1].data[0].x.length === 1 ){
           if(!isDatasetSelected)
             handleSetIsDatasetSelected(true)
           handleSetDatasetSelected(datasets.length - 1)
@@ -169,7 +169,7 @@ export const DataSetsProvider = ({ children }) => {
     
     // Data end
     else if(arduinoData.startsWith('$END')){
-      const motive = arduinoData.split(',')
+      //const motive = arduinoData.split(',')
       //console.log("Finalizado por "+ motive[1])
       handleSetIsReading(false)
       if(isDatasetsMinimized)

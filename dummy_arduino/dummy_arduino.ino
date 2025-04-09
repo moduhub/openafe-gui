@@ -204,16 +204,6 @@ void inputCVW(String str) {
   cvwParams.scanRate = elementos[5].toFloat();
   
   cvwParams.cycles = elementos[6].substring(0, elementos[6].indexOf('*')).toFloat();
-  Serial.print("S: ");
-  Serial.println(cvwParams.settlingTime);
-  Serial.print("I: ");
-  Serial.println(cvwParams.startPotential);
-  Serial.print("E: ");
-  Serial.println(cvwParams.endPotential);
-  Serial.print("SR: ");
-  Serial.println(cvwParams.scanRate);
-  Serial.print("S: ");
-  Serial.println(cvwParams.step);
 }
 
 // Function to calculate the checksum of a string
