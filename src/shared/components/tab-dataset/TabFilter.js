@@ -10,8 +10,16 @@ import {
     DialogContent, 
     DialogTitle,
     Select,
-    MenuItem
+    MenuItem,
+    List,
+    ListItem,
 } from '@mui/material'
+
+import Slider from '@mui/material/Slider';
+
+import CalculateIcon from '@mui/icons-material/Calculate';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
+import VisibilityIcon from '@mui/icons-material/Visibility'
 
 import { useDatasetsContext } from '../../contexts'
 
@@ -38,6 +46,9 @@ export const TabFilter = ()=>{
         if (indexToDelete !== null) handleDeleteDataset(indexToDelete)
         handleClose()
     }
+
+    const valuetext = (value) => {return `${value}°C`}
+
 
     return(
         <>
@@ -74,8 +85,9 @@ export const TabFilter = ()=>{
                     Não há datasets em cache no momento.
                 </Typography>
             ) : (
+                <>
                 <Select
-                    value={datasetSelected}
+                value={datasets.some(dataset => dataset.name === datasetSelected) ? datasetSelected : ''}
                     onChange={(e)=>handleSetDatasetSelected(e.target.value)}
                     size="small"
                     sx={{ marginTop: theme.spacing(2)}}
@@ -89,6 +101,66 @@ export const TabFilter = ()=>{
                         </MenuItem>
                     ))}
                 </Select>
+                <List sx={{marginTop:"8px   "}}>
+                    <ListItem>
+                        <Box width="50%">
+                            <Typography>Media Móvel</Typography>
+                        </Box>
+
+                        <Box 
+                            width="50%"
+                            sx={{ 
+                                display: 'flex', 
+                                flexDirection: 'row', 
+                                overflow: 'hidden', 
+                                alignItems: 'center', 
+                                bgcolor: 'background.paper', 
+                                justifyContent: 'end'
+                            }}
+                        >
+                        {[
+                            {icon: <CalculateIcon/>},
+                            {icon: <VisibilityIcon/>}
+                        ].map((btn , i) => (
+                            <Button
+                                key={i}
+                                sx={{
+                                    minWidth: 'auto',
+                                    justifyContent: 'space-between'
+                                }}
+                                width="100%"
+                            >
+                                {btn.icon}
+                            </Button>
+                        ))}
+                        </Box>
+
+                    </ListItem>
+                    <ListItem>
+                        <Box 
+                            display="flex"
+                            width="100%"
+                            alignItems="center"
+                            justifyContent="center"
+                        >
+                            <Slider
+                                aria-label="Order"
+                                defaultValue={1}
+                                getAriaValueText={valuetext}
+                                valueLabelDisplay="auto"
+                                shiftStep={1}
+                                step={1}
+                                marks min={1}
+                                max={10}
+                                sx={{width:"95%"}}
+                            />
+                        </Box> 
+                    </ListItem>
+                    
+                    
+
+                </List>
+                </>
             )}
         </Box>
         </>

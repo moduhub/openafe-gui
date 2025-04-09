@@ -42,11 +42,11 @@ function createWindow() {
       preload: path.join(__dirname, "./preload.js"),
     },
     icon: "modhub_azulPNG.ico",
-    autoHideMenuBar:false
+    autoHideMenuBar: true
   });
 
   mainWindow.loadURL('http://localhost:3000');
-  mainWindow.webContents.openDevTools();
+  //mainWindow.webContents.openDevTools();
   mainWindow.maximize();
 
   mainWindow.on('closed', () => {

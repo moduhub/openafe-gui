@@ -113,7 +113,7 @@ export const TabStorage = ()=>{
                             onClick={btn.onClick}
                             sx={{ 
                                 minWidth: 'auto', 
-                                justifyContent: 'space-between',
+                                justifyContent: 'space-between'
                             }}
                             width="100%"
                         >

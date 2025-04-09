@@ -11,10 +11,6 @@ import {
 export const ChartComponent = () => {
   const { theme } = useContext(ThemeContext);
   const { datasetSelected, datasets } = useDatasetsContext();
-  const {
-    tabArduinoIsMinimized,
-    tabDatasetsIsMinimized,
-  } = useDashboardContext();
 
   const layout = useMemo(() => ({
     font: { size: 14, color: theme.palette.text.primary },

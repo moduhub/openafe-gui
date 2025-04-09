@@ -60,7 +60,7 @@ export const ArduinoProvider = ({ children }) => {
 
     const handleArduinoData = (data) => {
       handleSetArduinoData(data)
-      console.log(data)
+      //console.log(data)
     }
     const handleSerialPortOpened = (message) => {
       if(!message.startsWith("not-connected")){
@@ -82,6 +82,12 @@ export const ArduinoProvider = ({ children }) => {
     window.electron.onSerialPortOpened(handleSerialPortOpened)
     window.electron.onSerialPortDisconnected(handleSerialPortDisconnected)
 
+    // Destructor
+    return () => {
+      window.electron.onArduinoData(null); // Remove listener
+      window.electron.onSerialPortOpened(null); // Remove listener
+      window.electron.onSerialPortDisconnected(null); // Remove listener
+    }
   },[])
 
   // Data Connect
