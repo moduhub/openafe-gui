@@ -1,25 +1,41 @@
-import { Button, AppBar, Toolbar, Typography, useTheme, Box, Select, MenuItem, Tooltip } from '@mui/material';
+import { 
+  Button, 
+  AppBar, 
+  Toolbar, 
+  Typography, 
+  useTheme, 
+  Box, 
+  Select, 
+  MenuItem, 
+  Tooltip,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText
+} from '@mui/material';
 
 import { useDrawerContext, useArduinoContext } from '../../contexts';
 import { DisconnectPort, ReceivePorts, ConnectPort } from '../../../arduino';
+import { useNavigate } from 'react-router-dom';
 
 import RefreshIcon from '@mui/icons-material/Refresh';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
+import SettingsIcon from '@mui/icons-material/Settings';
 import CircularProgress from '@mui/material/CircularProgress'; // Para o ícone de carregamento
 
 export const TopMenu = ({ children }) => {
   const theme = useTheme();
   const { toggleDrawerOpen } = useDrawerContext();
   const { 
-    arduinoData, handleSetArduinoData,
+    handleSetArduinoData,
     ports, handleSetPorts,
-    portSelected, handleSetPortSelected, 
-    portConnected, handleSetPortConnected,
-    isConnected, handleSetIsConnect,
+    handleSetPortSelected, 
+    portConnected,
+    isConnected,
     isConnecting, 
     isReading
   } = useArduinoContext();
+  const navigate = useNavigate();
 
   return (
     <>
@@ -56,14 +72,18 @@ export const TopMenu = ({ children }) => {
                 </MenuItem>
               ))}
             </Select>
-            <Tooltip title="Recarregar">
+            <Tooltip title="Reload">
               <Button color="inherit" onClick={() => ReceivePorts(handleSetPorts, isConnected, handleSetArduinoData)}>
                 <RefreshIcon />
               </Button>
             </Tooltip>
           </Box>
-          <Button color="inherit">About</Button>
-          <Button>Contact</Button>
+          <Tooltip title="Settings">
+              <Button color="inherit" onClick={() => navigate('/settings')}>
+                <SettingsIcon />
+              </Button>
+            </Tooltip>
+        
         </Toolbar>
       </AppBar>
 

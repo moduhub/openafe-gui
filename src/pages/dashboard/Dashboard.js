@@ -1,26 +1,28 @@
 import { Box } from '@mui/material';
 
-import { ChartComponent, TabArduino, TabDataset } from '../../shared/components';
-
-import { useState } from 'react';
+import { 
+  ChartComponent,
+  TabArduino, 
+  TabDataset, 
+  TabBottom,
+} from '../../shared/components';
 
 export const Dashboard = () => {
-
-  // Can be 'small' or 'larger'
-  const [graphWidth, setGraphWidth] = useState('100%');
 
   return (
     <Box 
       height="100%" width="100%" 
-      display="flex" flexDirection="row" justifyContent="space-between" alignItems="center"
+      display="flex" flexDirection="column"   
+      //justifyContent="space-between" alignItems="center"
     >
+      {/* Controle de guias */}
+      <TabBottom />
+
       {/* Menu lateral */}
       <TabArduino />
 
       {/* Gráfico */}
-      <Box width={graphWidth} height="100%">
-        <ChartComponent />
-      </Box>
+      <ChartComponent />
 
       {/* Controle de Datasets */}
       <TabDataset />

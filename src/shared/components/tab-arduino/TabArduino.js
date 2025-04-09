@@ -1,19 +1,26 @@
 import { TextField, Box, Card, CardContent, List, ListItem } from '@mui/material'; 
-import { Button, Typography } from '@mui/material'; 
+import { Button } from '@mui/material'; 
 
 import IconButton from '@mui/material/IconButton'; 
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'; 
 import StopIcon from '@mui/icons-material/Stop'; 
 import MinimizeIcon from '@mui/icons-material/Minimize'; 
-import MaximizeIcon from '@mui/icons-material/Maximize';
 
 import { useState } from "react";
 import { useTheme } from "@mui/material";
 
-import { StartReading, FinishReading } from "../../../arduino";
-import { useArduinoContext, useDatasetsContext } from '../../contexts'
+import { 
+  StartReading, 
+  FinishReading 
+} from "../../../arduino";
+import { 
+  useArduinoContext, 
+  useDatasetsContext,
+  useDashboardContext,
+} from '../../contexts'
 
 export const TabArduino = () => {
+
   const theme = useTheme()
   const { 
     isConnected,
@@ -24,9 +31,14 @@ export const TabArduino = () => {
     currentName, handleCurrentName,
     datasets,
   } = useDatasetsContext()
+  const {
+    tabArduinoIsMinimized: isMinimized, 
+    handleToggleTabArduinoMinimized: setIsMinimized, 
+    tabDatasetsIsMinimized: isMinimizedDataset, 
+    handleToggleTabDatasetsMinimized: setIsMinimizedDataset,
+  } = useDashboardContext()
 
   const [errors, setErrors] = useState({});
-  const [isMinimized, setIsMinimized] = useState(false);
 
   const validateField = (field, value) => {
     if (field === "name" && !value.trim()) 
@@ -99,31 +111,47 @@ export const TabArduino = () => {
         currentParams.cycles,
         handleSetIsReading
       )
+      if(!isMinimized)
+        setIsMinimized()
+      if(!isMinimizedDataset)
+        setIsMinimizedDataset()
     }
     else console.log("Não é possível iniciar, processo em andamento")
     
   };
+  
+  if (isMinimized) 
+    return null
 
   return (
     <Box
-      width={isMinimized ? theme.spacing(12) : theme.spacing(35)}
-      height={isMinimized ? "80%" : null}
+      width={theme.spacing(35)}
       display="flex"
       flexShrink="0"
-      marginTop={isMinimized ? null : theme.spacing(2)}
-      marginBottom={isMinimized ? null : theme.spacing(2)}
+      marginTop={theme.spacing(2)}
+      marginBottom={theme.spacing(2)}
       transition="width 0.3s ease"
       alignItems="start"
-      top={isMinimized ? theme.spacing(12) : null}
+      position="absolute"
+      top={theme.spacing(15)}
+      left={0}
+      zIndex={2}
     >
-      <Card sx={{ borderRadius: isMinimized ? "55px" : "16px" }}>
+      <Card 
+        sx={{
+          borderRadius: "16px",
+          backgroundColor: theme.palette.background.paper,
+          boxShadow: `0 2px 10px rgba(0, 0, 0, 0.2)`,
+          border: "1px solid rgba(0, 0, 0, 0.12)"
+        }}
+      >
         <CardContent
           sx={{
             height: "100%",
             display: "flex",
             flexDirection: "column",
-            "&:last-child": isMinimized ? { paddingBottom: 1 } : null,
-            padding: isMinimized ? "8px" : null,
+            padding: null,
+            color: theme.palette.text.primary, 
           }}
         >
           <Box display="flex" justifyContent="end" flexDirection="row" width="100%">
@@ -132,65 +160,62 @@ export const TabArduino = () => {
               size="small"
               onClick={() => setIsMinimized(!isMinimized)}
             >
-              {isMinimized ? <MaximizeIcon /> : <MinimizeIcon />}
+              <MinimizeIcon />
             </IconButton>
           </Box>
-
-          {!isMinimized && (
-            <>
-              <List>
-                <ListItem>
-                  <TextField
-                    label="Name"
-                    value={currentName}
-                    onChange={(e) => handleCurrentName(e.target.value)}
-                    size="small"
-                    fullWidth
-                    error={!!errors.name}
-                    helperText={errors.name}
-                  />
-                </ListItem>
-                {Object.keys(currentParams).map((field) => (
-                  <ListItem key={field}>
-                    <TextField
-                      label={`${field
-                        .replace(/([A-Z])/g, " $1")
-                        .replace(/^./, (str) => str.toUpperCase())}`}
-                      value={currentParams[field]}
-                      onChange={handleChange(field)}
-                      type="number"
-                      size="small"
-                      fullWidth
-                      error={!!errors[field]}
-                      helperText={errors[field]}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-              <Box width="100%" display="flex" justifyContent="center" gap={theme.spacing(3)}>
-                <Button
-                  onClick={handleStartReading}
-                  variant="contained"
-                  color="success"
+          
+          <List>
+            <ListItem>
+              <TextField
+                label="Name"
+                value={currentName}
+                onChange={(e) => handleCurrentName(e.target.value)}
+                size="small"
+                fullWidth
+                error={!!errors.name}
+                helperText={errors.name}
+              />
+            </ListItem>
+            {Object.keys(currentParams).map((field) => (
+              <ListItem key={field}>
+                <TextField
+                  label={`${field
+                    .replace(/([A-Z])/g, " $1")
+                    .replace(/^./, (str) => str.toUpperCase())}`}
+                  value={currentParams[field]}
+                  onChange={handleChange(field)}
+                  type="number"
                   size="small"
-                  disabled={isReading || !isConnected} 
-                  style={{ opacity: isReading ? 0.5 : 1 }}
-                >
-                  <PlayArrowIcon />
-                </Button>
-                <Button
-                  onClick={FinishReading}
-                  variant="contained"
-                  color="error"
-                  size="small"
-                  disabled={!isReading} 
-                  style={{ opacity: !isReading ? 0.5 : 1 }} 
-                >
-                  <StopIcon />
-                </Button>
-              </Box>
-            </>
-          )}
+                  fullWidth
+                  error={!!errors[field]}
+                  helperText={errors[field]}
+                />
+              </ListItem>
+            ))}
+          </List>
+          
+          <Box width="100%" display="flex" justifyContent="center" gap={theme.spacing(3)}>
+            <Button
+              onClick={handleStartReading}
+              variant="contained"
+              color="success"
+              size="small"
+              disabled={isReading || !isConnected} 
+              style={{ opacity: isReading ? 0.5 : 1 }}
+            >
+              <PlayArrowIcon />
+            </Button>
+            <Button
+              onClick={FinishReading}
+              variant="contained"
+              color="error"
+              size="small"
+              disabled={!isReading} 
+              style={{ opacity: !isReading ? 0.5 : 1 }} 
+            >
+              <StopIcon />
+            </Button>
+          </Box>
         </CardContent>
       </Card>
     </Box>

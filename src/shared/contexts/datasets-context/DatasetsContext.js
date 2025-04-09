@@ -1,6 +1,11 @@
 import React, { createContext, useCallback, useContext, useState, useEffect } from 'react'
 
-import { useArduinoContext, ThemeContext, useSettingsContext } from '..'
+import { 
+  useArduinoContext, 
+  ThemeContext, 
+  useSettingsContext,
+  useDashboardContext
+} from '..'
 
 const DatasetsContext = createContext({});
 
@@ -18,23 +23,23 @@ export const DataSetsProvider = ({ children }) => {
   } = useArduinoContext()
 
   const {
-    autoConnect, handleSetAutoConnect,
     maxDatasets, handleSetMaxDatasets,
-    displayOption, handleSetDisplayOption,
     defaultName, handleSetDefaultName,
-    deleteCache, handleSetDeleteCache,
-    unitSystem, handleSetUnitSystem,
-    tabIndex, handleSetTabIndex
   } = useSettingsContext()
+
+  const { 
+    tabDatasetsIsMinimized: isDatasetsMinimized, 
+    handleToggleTabDatasetsMinimized: setIsDatasetsMinimized,
+  } = useDashboardContext()
 
   const [currentName, setCurrentName] = useState(defaultName)
   const [currentParams, setCurrentParams] = useState({
     settlingTime: 1000,
     startPotential: -800,
     endPotential: 0,
-    step: 100,
-    scanRate: 2,
-    cycles: 1,
+    step: 10,
+    scanRate: 100,
+    cycles: 3,
   })
   const [datasets, setDatasets]= useState([])
   const [isDatasetSelected, setIsDatasetSelected] = useState(false)
@@ -60,7 +65,18 @@ export const DataSetsProvider = ({ children }) => {
     const newDataSets = [...datasets]
     newDataSets.splice(datasetSelected, 1)
     handleSetDataset(newDataSets)
-    if(datasets.length == 1){
+    if(datasets.length === 1){
+      //console.log("Acabou ou datasets")
+      handleSetDatasetSelected("")
+      handleSetIsDatasetSelected(false)
+    }
+  }
+  const handleDeleteDataset = (pos) => {
+    handleSetDatasetSelected(0)
+    const newDataSets = [...datasets]
+    newDataSets.splice(pos, 1)
+    handleSetDataset(newDataSets)
+    if(datasets.length === 1){
       //console.log("Acabou ou datasets")
       handleSetDatasetSelected("")
       handleSetIsDatasetSelected(false)
@@ -76,18 +92,35 @@ export const DataSetsProvider = ({ children }) => {
   }
 
   const setNewDataSet = (name_,parameters_) => {
-    cacheDatasetsManager()
-    setDatasets(prevDatasets => [
-      ...prevDatasets, { 
-        name: name_, 
+    const visible_ = true; // Initialize visibility state
+    const handleSetIsVisible = () => {
+      setDatasets((prevDatasets) =>
+        prevDatasets.map((dataset) =>
+          dataset.name === name_
+            ? { ...dataset, visible: !dataset.visible }
+            : dataset
+        )
+      );
+    };
+
+    cacheDatasetsManager();
+    setDatasets((prevDatasets) => [
+      ...prevDatasets,
+      {
+        name: name_,
         params: parameters_,
-        data: [{ 
-          x:[] ,y:[], 
-          mode:'lines', 
-          line: { color: theme.palette.primary.main } 
-        }] 
-      }
-    ])
+        visible: visible_,
+        setIsVisible: handleSetIsVisible, // Save the function reference
+        data: [
+          {
+            x: [],
+            y: [],
+            mode: 'lines',
+            line: { color: theme.palette.primary.main },
+          },
+        ],
+      },
+    ]);
   };
 
   const addDataPoint = (voltage, current) => {
@@ -120,7 +153,7 @@ export const DataSetsProvider = ({ children }) => {
         addDataPoint(voltage, current)
       }
       if(datasets[datasets.length - 1].data[0]!=null){
-        if( datasets[datasets.length - 1].data[0].x.length == 1 ){
+        if( datasets[datasets.length - 1].data[0].x.length === 1 ){
           if(!isDatasetSelected)
             handleSetIsDatasetSelected(true)
           handleSetDatasetSelected(datasets.length - 1)
@@ -136,9 +169,11 @@ export const DataSetsProvider = ({ children }) => {
     
     // Data end
     else if(arduinoData.startsWith('$END')){
-      const motive = arduinoData.split(',')
+      //const motive = arduinoData.split(',')
       //console.log("Finalizado por "+ motive[1])
       handleSetIsReading(false)
+      if(isDatasetsMinimized)
+        setIsDatasetsMinimized()
     }
   },[arduinoData])
 
@@ -153,6 +188,8 @@ export const DataSetsProvider = ({ children }) => {
       isDatasetSelected, handleSetIsDatasetSelected,
       datasetSelected, handleSetDatasetSelected,
       handleDeleteDatasetSelected,
+      handleDeleteDataset,
+      //handleDatasetIsVisible,
       datasets,
     }}>
       {children}

@@ -1,17 +1,29 @@
 import React from 'react';
 import { BrowserRouter } from "react-router-dom";
 import { AppRoutes } from './routes';
-import { AppThemeProvider, DrawerProvider } from './shared/contexts';
-import { TopMenu, DrawerMenu } from './shared/components';
-import { ArduinoProvider, DataSetsProvider, SettingsProvider } from './shared/contexts';
+import { 
+  AppThemeProvider, 
+  DrawerProvider 
+} from './shared/contexts';
+import { 
+  TopMenu, 
+  DrawerMenu 
+} from './shared/components';
+import { 
+  ArduinoProvider, 
+  DataSetsProvider, 
+  SettingsProvider, 
+  DashboardProvider 
+} from './shared/contexts';
 
 export const App = () => {
   return (
     <AppThemeProvider>
       <DrawerProvider>
-        <SettingsProvider>
-          <ArduinoProvider>
-            <DataSetsProvider>
+        <DashboardProvider>
+          <SettingsProvider>
+            <ArduinoProvider>
+              <DataSetsProvider>
                 <BrowserRouter>
                   <TopMenu>
                     <DrawerMenu>
@@ -19,9 +31,10 @@ export const App = () => {
                     </DrawerMenu>
                   </TopMenu>
                 </BrowserRouter>
-            </DataSetsProvider>
-          </ArduinoProvider>
-        </SettingsProvider>
+              </DataSetsProvider>
+            </ArduinoProvider>
+          </SettingsProvider>
+        </DashboardProvider>
       </DrawerProvider>
     </AppThemeProvider>
   );
