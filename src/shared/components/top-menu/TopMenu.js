@@ -8,15 +8,19 @@ import {
   Select, 
   MenuItem, 
   Tooltip,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText
+  Divider
 } from '@mui/material';
 
-import { useDrawerContext, useArduinoContext } from '../../contexts';
+import { 
+  useDrawerContext, 
+  useArduinoContext,
+  useDashboardContext
+} from '../../contexts';
 import { DisconnectPort, ReceivePorts, ConnectPort } from '../../../arduino';
 import { useNavigate } from 'react-router-dom';
 
+import SdStorageIcon from '@mui/icons-material/SdStorage';
+import MemoryIcon from '@mui/icons-material/Memory';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
@@ -24,7 +28,9 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import CircularProgress from '@mui/material/CircularProgress'; // Para o ícone de carregamento
 
 export const TopMenu = ({ children }) => {
+
   const theme = useTheme();
+
   const { toggleDrawerOpen } = useDrawerContext();
   const { 
     handleSetArduinoData,
@@ -35,7 +41,15 @@ export const TopMenu = ({ children }) => {
     isConnecting, 
     isReading
   } = useArduinoContext();
+
   const navigate = useNavigate();
+
+  const {
+    tabArduinoIsMinimized: isArduinoMinimized, 
+    handleToggleTabArduinoMinimized: setIsArduinoMinimized, 
+    tabDatasetsIsMinimized: isDatasetMinimized, 
+    handleToggleTabDatasetsMinimized: setIsMinimizedDataset,
+} = useDashboardContext();
 
   return (
     <>
@@ -78,11 +92,44 @@ export const TopMenu = ({ children }) => {
               </Button>
             </Tooltip>
           </Box>
+
+          {/* Botão Arduino */}
+          <Button 
+            variant="contained" 
+            style={{
+              marginRight: theme.spacing(2),
+              borderRadius: 0, 
+              minWidth: "120px", 
+              backgroundColor: isArduinoMinimized ? theme.palette.grey[400] : theme.palette.primary.main
+            }}
+            onClick={setIsArduinoMinimized}
+          >
+            <SdStorageIcon />
+          </Button>
+    
+          {/* Botão Datasets */}
+          <Button 
+            variant="contained" 
+            style={{
+              marginRight: theme.spacing(1),
+              borderRadius: 0, 
+              minWidth: "120px", 
+              backgroundColor: isDatasetMinimized ? theme.palette.grey[400] : theme.palette.primary.main 
+            }}
+            onClick={setIsMinimizedDataset}
+          >
+            <MemoryIcon />
+          </Button>
+
+          {/* Divider vertical */}
+          <Divider orientation="vertical" flexItem sx={{ mx: 2, marginRight: theme.spacing(4) }} />
+
+          {/* Button Settings */}
           <Tooltip title="Settings">
-              <Button color="inherit" onClick={() => navigate('/settings')}>
-                <SettingsIcon />
-              </Button>
-            </Tooltip>
+            <Button color="inherit" onClick={() => navigate('/settings')}>
+              <SettingsIcon />
+            </Button>
+          </Tooltip>
         
         </Toolbar>
       </AppBar>

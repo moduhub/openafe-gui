@@ -120,8 +120,41 @@ export const DataSetsProvider = ({ children }) => {
           },
         ],
       },
-    ]);
-  };
+    ])
+  }
+
+  // Function to create a new dataset with the given name, parameters, and points
+  const handleNewDataset = (name_, parameters_, points_) => {
+    const visible_ = true;
+    const handleSetIsVisible = () => {
+      setDatasets((prevDatasets) =>
+        prevDatasets.map((dataset) =>
+          dataset.name === name_
+            ? { ...dataset, visible: !dataset.visible }
+            : dataset
+        )
+      );
+    };
+
+    cacheDatasetsManager();
+    setDatasets((prevDatasets) => [
+      ...prevDatasets,
+      {
+        name: name_,
+        params: parameters_,
+        visible: visible_,
+        setIsVisible: handleSetIsVisible, // Save the function reference
+        data: [
+          {
+            x: points_.x,
+            y: points_.y,
+            mode: 'lines',
+            line: { color: theme.palette.primary.main },
+          },
+        ],
+      },
+    ])
+  }
 
   const addDataPoint = (voltage, current) => {
     setDatasets((prevDatasets) => {
@@ -191,6 +224,7 @@ export const DataSetsProvider = ({ children }) => {
       handleDeleteDataset,
       //handleDatasetIsVisible,
       datasets,
+      handleNewDataset,
     }}>
       {children}
     </DatasetsContext.Provider>

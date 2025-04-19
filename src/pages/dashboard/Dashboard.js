@@ -15,9 +15,6 @@ export const Dashboard = () => {
       display="flex" flexDirection="column"   
       //justifyContent="space-between" alignItems="center"
     >
-      {/* Controle de guias */}
-      <TabBottom />
-
       {/* Menu lateral */}
       <TabArduino />
 

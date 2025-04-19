@@ -94,7 +94,7 @@ export const ChartComponent = () => {
       zIndex={0}
       top='64px'
       right={0}
-      height='calc(100% - 128px)'
+      height='calc(100% - 64px)'
       width='calc(100%)'
     />
   );

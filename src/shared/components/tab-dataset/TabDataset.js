@@ -93,7 +93,7 @@ export const TabDataset = () => {
           </Box>
 
           {/* Controle de exibição da guia */}
-          {tabIndex === 0 ? <TabStorage /> : <TabFilter />}
+          {tabIndex === 0 ? <TabStorage setTabIndex_={setTabIndex} /> : <TabFilter />}
         </CardContent>
       </Card>
     </Box>
