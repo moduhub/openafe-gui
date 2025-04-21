@@ -1,16 +1,18 @@
-import React, { useEffect, useMemo, useContext } from 'react';
-import { Box } from '@mui/material';
-import Plotly from 'plotly.js-dist';
+import React, { useEffect, useMemo, useContext, useRef } from 'react'
+import { Box } from '@mui/material'
+import Plotly from 'plotly.js-dist'
 
 import {
   ThemeContext,
   useDatasetsContext,
-  useDashboardContext,
-} from '../../contexts';
+} from '../../contexts'
 
-export const ChartComponent = () => {
-  const { theme } = useContext(ThemeContext);
-  const { datasetSelected, datasets } = useDatasetsContext();
+export const ChartComponent = ({ type_ }) => {
+  const { theme } = useContext(ThemeContext)
+  const { datasets } = useDatasetsContext()
+  const chartRef = useRef(null)
+  
+  const prevLengths = useRef({})
 
   const layout = useMemo(() => ({
     font: { size: 14, color: theme.palette.text.primary },
@@ -36,66 +38,85 @@ export const ChartComponent = () => {
       automargin: false,
       title_standoff: 0,
     },
-  }), [theme]);
+    autosize: true,
+  }), [theme])
 
   const config = useMemo(() => ({
     scrollZoom: false,
     displaylogo: false,
     displayModeBar: false,
-    responsive: false,
-  }), []);
+    responsive: true,
+  }), [])
 
-  // Constructor
   useEffect(() => {
-    const updateChartSize = () => {
-      const boxElement = document.getElementById('mychart');
-      if (boxElement) {
-        const { width, height } = boxElement.getBoundingClientRect();
-        Plotly.relayout('mychart', {
-          width: Math.floor(width),
-          height: Math.floor(height),
-        });
+    const handleResize = () => {
+      const el = chartRef.current
+      if (el && el._fullLayout) Plotly.Plots.resize(el)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  useEffect(() => {
+    const el = chartRef.current
+    if (!el) return
+
+    const entries = Object.entries(datasets)
+      .filter(([_, ds]) => ds.visible && ds.data?.[0]?.x && ds.data?.[0]?.y)
+    const data = entries.map(([key, ds]) => ({
+      x: ds.data[0].x,
+      y: ds.data[0].y,
+      mode: 'lines',
+      name: key,
+    }))
+
+    prevLengths.current = entries.reduce((acc, [key, ds]) => ({
+      ...acc,
+      [key]: ds.data[0].x.length
+    }), {})
+
+    Plotly.react(el, data, layout, config)
+  }, [
+    JSON.stringify(Object.entries(datasets)
+      .filter(([_, ds]) => ds.visible)
+      .map(([key]) => key))
+  , layout, config])
+
+  useEffect(() => {
+    const el = chartRef.current
+    if (!el) return
+
+    Object.entries(datasets).forEach(([key, ds], idx) => {
+      if (!ds.visible || !ds.data?.[0]?.x) return
+
+      const xArr = ds.data[0].x
+      const yArr = ds.data[0].y
+      const prev = prevLengths.current[key] || 0
+
+      // Se vieram novos pontos
+      if (xArr.length > prev) {
+        const newX = xArr.slice(prev)
+        const newY = yArr.slice(prev)
+        Plotly.extendTraces(el, { x: [newX], y: [newY] }, [idx])
+        prevLengths.current[key] = xArr.length
       }
-    };
+    })
+  }, [datasets])
 
-    window.addEventListener('resize', updateChartSize);
-    // Destructor
-    return () => {
-      window.removeEventListener('resize', updateChartSize);
-    };
-  }, []);
-
-  useEffect(() => {
-    const datagraph = Object.keys(datasets)
-      .map((key, index) => {
-        const dataset = datasets[key];
-        const data = dataset.data;
-        
-        if (data && data.length > 0 && data[0].x && data[0].y && dataset.visible) {
-          return {
-            x: data[0].x,
-            y: data[0].y,
-            mode: 'lines',
-            name: key, 
-          };
-        }
-        return null;
-      })
-      .filter(item => item !== null); 
-
-    Plotly.newPlot('mychart', datagraph, layout, config);
-  }, [datasets, layout, config])
+  // 4) Purge apenas no unmount
+  useEffect(() => () => {
+    if (chartRef.current) Plotly.purge(chartRef.current)
+  }, [])
 
   return (
     <Box
-      id="mychart"
-      position='absolute'
-      flex='1'
-      zIndex={0}
-      top='64px'
+      ref={chartRef}
+      position="absolute"
+      top={type_.top}
       right={0}
-      height='calc(100% - 64px)'
-      width='calc(100%)'
+      height={type_.height}
+      width={type_.width}
+      zIndex={0}
     />
-  );
-};
+  )
+}

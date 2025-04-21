@@ -15,12 +15,10 @@ import {
     ListItem,
 } from '@mui/material'
 
-import Slider from '@mui/material/Slider';
+import Slider from '@mui/material/Slider'
 
-import CalculateIcon from '@mui/icons-material/Calculate';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
-import VisibilityIcon from '@mui/icons-material/Visibility'
-import AspectRatioIcon from '@mui/icons-material/AspectRatio';
+import CalculateIcon from '@mui/icons-material/Calculate'
+import AspectRatioIcon from '@mui/icons-material/AspectRatio'
 
 import { useDatasetsContext } from '../../contexts'
 
@@ -36,7 +34,7 @@ export const TabFilter = () => {
     const [open, setOpen] = useState(false)
     const [indexToDelete, setIndexToDelete] = useState(null)
 
-    const [windowSize, setWindowSize] = useState(3) // <-- Estado do slider
+    const [windowSize, setWindowSize] = useState(3)
 
     const handleClickOpen = (index) => {
         setIndexToDelete(index)
@@ -91,6 +89,14 @@ export const TabFilter = () => {
         handleNewDataset(`M.M. (${windowSize}) de ${datasetSelected}`,selectedDataset.params,movingAveragePoints);
     }
 
+    const handleOpenSettings = () => {
+        if (window.electron) {
+            window.electron.openSettingsWindow();
+        } else {
+            console.error("API do Electron não está disponível.");
+        }
+    }
+
     return (
         <>
             {/* Dialog de confirmação de exclusão */}
@@ -130,7 +136,6 @@ export const TabFilter = () => {
                 ) : (
                     <>
                         <Box 
-                            fullWidth
                             display="flex" 
                             justifyContent="space-around" 
                             alignItems="center"
@@ -152,7 +157,7 @@ export const TabFilter = () => {
                                     </MenuItem>
                                 ))}
                             </Select>
-                            <Button>
+                            <Button onClick={handleOpenSettings}>
                                 <AspectRatioIcon />
                             </Button>
                         </Box>
@@ -175,18 +180,16 @@ export const TabFilter = () => {
                                         justifyContent: 'end'
                                     }}
                                 >
-
-                                <Button
-                                    sx={{
-                                        minWidth: 'auto',
-                                        justifyContent: 'space-between'
-                                    }}
-                                    width="100%"
-                                    onClick={ handleCalculate} 
-                                >
-                                    <CalculateIcon />
-                                </Button>
-                                   
+                                    <Button
+                                        sx={{
+                                            minWidth: 'auto',
+                                            justifyContent: 'space-between'
+                                        }}
+                                        width="100%"
+                                        onClick={ handleCalculate} 
+                                    >
+                                        <CalculateIcon />
+                                    </Button>   
                                 </Box>
                             </ListItem>
 

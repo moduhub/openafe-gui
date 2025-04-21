@@ -1,10 +1,14 @@
 import React from 'react';
-import { BrowserRouter } from "react-router-dom";
+import { 
+  BrowserRouter, 
+  useLocation 
+} from "react-router-dom";
 import { AppRoutes } from './routes';
 import { 
   AppThemeProvider, 
   DrawerProvider 
 } from './shared/contexts';
+
 import { 
   TopMenu, 
   DrawerMenu 
@@ -16,26 +20,40 @@ import {
   DashboardProvider 
 } from './shared/contexts';
 
-export const App = () => {
+const AppContent = () => {
+
+  const location = useLocation();
+  const isFiltersRoute = location.pathname === "/filters";
+
   return (
     <AppThemeProvider>
-      <DrawerProvider>
-        <DashboardProvider>
-          <SettingsProvider>
-            <ArduinoProvider>
-              <DataSetsProvider>
-                <BrowserRouter>
+      <DashboardProvider>
+        <SettingsProvider>
+          <ArduinoProvider>
+            <DataSetsProvider>
+              {isFiltersRoute ? (
+                <AppRoutes />
+              ) : (
+                <DrawerProvider>
                   <TopMenu>
                     <DrawerMenu>
                       <AppRoutes />
                     </DrawerMenu>
                   </TopMenu>
-                </BrowserRouter>
-              </DataSetsProvider>
-            </ArduinoProvider>
-          </SettingsProvider>
-        </DashboardProvider>
-      </DrawerProvider>
+                </DrawerProvider>
+              )}
+            </DataSetsProvider>
+          </ArduinoProvider>
+        </SettingsProvider>
+      </DashboardProvider>
     </AppThemeProvider>
+  );
+};
+
+export const App = () => {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   );
 };
