@@ -7,7 +7,7 @@ import {
   useDatasetsContext,
 } from '../../contexts'
 
-export const ChartComponent = ({ type_ }) => {
+export const ChartComponent = ({ type_, previewData }) => {
   const { theme } = useContext(ThemeContext)
   const { datasets } = useDatasetsContext()
   const chartRef = useRef(null)
@@ -93,7 +93,6 @@ export const ChartComponent = ({ type_ }) => {
       const yArr = ds.data[0].y
       const prev = prevLengths.current[key] || 0
 
-      // Se vieram novos pontos
       if (xArr.length > prev) {
         const newX = xArr.slice(prev)
         const newY = yArr.slice(prev)
@@ -102,6 +101,49 @@ export const ChartComponent = ({ type_ }) => {
       }
     })
   }, [datasets])
+
+  useEffect(() => {
+    const el = chartRef.current
+    if (!el) return
+
+    const entries = Object.entries(datasets)
+      .filter(([_, ds]) => ds.visible && ds.data?.[0]?.x && ds.data?.[0]?.y)
+    const data = entries.map(([key, ds]) => ({
+      x: ds.data[0].x,
+      y: ds.data[0].y,
+      mode: 'lines',
+      name: key,
+    }))
+
+    // Add preview data if available
+    if (previewData && previewData.x && previewData.y) {
+      data.push({
+        x: previewData.x,
+        y: previewData.y,
+        mode: 'lines',
+        name: 'Preview',
+        line: {
+          color: theme.palette.secondary.main,
+          dash: 'dot',
+          width: 2
+        }
+      })
+    }
+
+    prevLengths.current = entries.reduce((acc, [key, ds]) => ({
+      ...acc,
+      [key]: ds.data[0].x.length
+    }), {})
+
+    Plotly.react(el, data, layout, config)
+  }, [
+    JSON.stringify(Object.entries(datasets)
+      .filter(([_, ds]) => ds.visible)
+      .map(([key]) => key)),
+    JSON.stringify(previewData), // Add dependency on previewData
+    layout, 
+    config
+  ])
 
   // 4) Purge apenas no unmount
   useEffect(() => () => {

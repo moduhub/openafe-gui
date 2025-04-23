@@ -74,7 +74,7 @@ function createWindow() {
     `)
   })
 }
-function createSettingsWindow() {
+function createSettingsWindow(settingsData) {
   if (settingsWindow) {
       settingsWindow.focus()
       return
@@ -94,7 +94,16 @@ function createSettingsWindow() {
       resizable: false
   })
 
-  settingsWindow.loadURL('http://localhost:3000/filters') 
+  // Pass datasets as query parameters
+  //const datasetsParam = encodeURIComponent(JSON.stringify(datasets))
+  //settingsWindow.loadURL(`http://localhost:3000/filters?datasets=${datasetsParam}`) 
+
+  // Load the URL without datasets parameter
+  settingsWindow.loadURL('http://localhost:3000/filters')  
+  // Wait for the window to be ready and then send the data
+  settingsWindow.webContents.on('did-finish-load', () => {
+    settingsWindow.webContents.send('settings-data', settingsData)
+  })
 
   settingsWindow.on('closed', () => {
       settingsWindow = null
@@ -144,8 +153,8 @@ ipcMain.on('send-command', (event, arg) => {
 })
 
 // Window of settings
-ipcMain.on('open-settings-window', () => {
-  createSettingsWindow()
+ipcMain.on('open-settings-window', (event, settingsData) => {
+  createSettingsWindow(settingsData)
 })
 ipcMain.on('save-settings', (event, data) => {
   console.log('Configurações salvas:', data) 

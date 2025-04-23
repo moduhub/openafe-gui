@@ -15,6 +15,8 @@ contextBridge.exposeInMainWorld('electron', {
     ipcRenderer.on('serial-port-opened', (event, message) => callback(message)),
   onSerialPortDisconnected: (callback) => 
     ipcRenderer.on('serial-port-disconnected', (event, message) => callback(message)),
-  openSettingsWindow: () => 
-    ipcRenderer.send('open-settings-window'),
+  openSettingsWindow: (datasets) => 
+    ipcRenderer.send('open-settings-window', datasets),
+  onSettingsData: (callback) =>
+    ipcRenderer.on('settings-data', (event, data) => callback(data)),
 })

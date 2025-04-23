@@ -143,7 +143,7 @@ export const DataSetsProvider = ({ children }) => {
         name: name_,
         params: parameters_,
         visible: visible_,
-        setIsVisible: handleSetIsVisible, // Save the function reference
+        setIsVisible: handleSetIsVisible,
         data: [
           {
             x: points_.x,
@@ -223,7 +223,7 @@ export const DataSetsProvider = ({ children }) => {
       handleDeleteDatasetSelected,
       handleDeleteDataset,
       //handleDatasetIsVisible,
-      datasets,
+      datasets, handleSetDataset,
       handleNewDataset,
     }}>
       {children}

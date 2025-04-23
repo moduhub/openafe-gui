@@ -23,7 +23,7 @@ import AspectRatioIcon from '@mui/icons-material/AspectRatio'
 import { useDatasetsContext } from '../../contexts'
 
 export const TabFilter = () => {
-    const theme = useTheme();
+    const theme = useTheme()
     const {
         datasets,
         datasetSelected, handleSetDatasetSelected,
@@ -54,48 +54,62 @@ export const TabFilter = () => {
     const valuetext = (value) => `${value}`
 
     const calculateMovingAverage = (x, y, windowSize) => {
-        const result = { x: [], y: [] };
+        const result = { x: [], y: [] }
         for (let i = 0; i < y.length; i++) {
-            const start = Math.max(0, i - Math.floor(windowSize / 2));
-            const end = Math.min(y.length, i + Math.floor(windowSize / 2) + 1);
-            const avg = y.slice(start, end).reduce((sum, val) => sum + val, 0) / (end - start);
-            result.x.push(x[i]);
-            result.y.push(avg);
+            const start = Math.max(0, i - Math.floor(windowSize / 2))
+            const end = Math.min(y.length, i + Math.floor(windowSize / 2) + 1)
+            const avg = y.slice(start, end).reduce((sum, val) => sum + val, 0) / (end - start)
+            result.x.push(x[i])
+            result.y.push(avg)
         }
-        return result;
+        return result
     }
 
     const handleCalculate = () => {
         if (!datasetSelected) {
-            console.error("Nenhum dataset selecionado.");
-            return;
+            console.error("Nenhum dataset selecionado.")
+            return
         }
 
-        const selectedDataset = datasets.find(dataset => dataset.name === datasetSelected);
+        const selectedDataset = datasets.find(dataset => dataset.name === datasetSelected)
         if (!selectedDataset || !selectedDataset.data || selectedDataset.data.length === 0) {
-            console.error("Dataset inválido ou vazio.");
-            return;
+            console.error("Dataset inválido ou vazio.")
+            return
         }
 
-        const x = selectedDataset.data[0].x;
-        const y = selectedDataset.data[0].y;
+        const x = selectedDataset.data[0].x
+        const y = selectedDataset.data[0].y
 
         if (!x || !y || x.length !== y.length) {
-            console.error("Dados do dataset estão incompletos ou inconsistentes.");
-            return;
+            console.error("Dados do dataset estão incompletos ou inconsistentes.")
+            return
         }
 
-        const movingAveragePoints = calculateMovingAverage(x, y, windowSize); // <-- usando windowSize
-        handleNewDataset(`M.M. (${windowSize}) de ${datasetSelected}`,selectedDataset.params,movingAveragePoints);
-    }
+        const movingAveragePoints = calculateMovingAverage(x, y, windowSize) // <-- usando windowSize
+        handleNewDataset(`M.M. (${windowSize}) de ${datasetSelected}`,selectedDataset.params,movingAveragePoints)
+    }   
 
     const handleOpenSettings = () => {
         if (window.electron) {
-            window.electron.openSettingsWindow();
+            const settingsData = {
+                datasets: datasets.map(dataset => ({
+                    name: dataset.name,
+                    data: dataset.data.map(point => ({
+                        x: Array.from(point.x),
+                        y: Array.from(point.y)
+                    })),
+                    params: {
+                        ...dataset.params,
+                    }
+                })),
+                ...(datasetSelected && { selectedDataset: datasetSelected })
+            }
+            window.electron.openSettingsWindow(settingsData)
         } else {
-            console.error("API do Electron não está disponível.");
+            console.error("API do Electron não está disponível.")
         }
     }
+
 
     return (
         <>

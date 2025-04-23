@@ -1,23 +1,43 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react';
+import {
+  Box,
+  Typography,
+  Tabs,
+  Tab,
+  Tooltip,
+  Paper,
+  Select,
+  MenuItem
+} from '@mui/material';
+
 import { 
-    Box, 
-    Slider, 
-    Typography, 
-    Button, 
-    Tabs, 
-    Tab, 
-    Tooltip,
-    Paper
-} from '@mui/material'
-import { ChartComponent } from '../../shared/components'
+    ChartComponent,
+    MovingAverage,
+    LowPass 
+} from '../../shared/components'
+
+import {
+    useDatasetsContext
+} from '../../shared/contexts'
 
 export const Filters = () => {
     const [windowSize, setWindowSize] = useState(3)
+    const [cutoffFrequency, setCutoffFrequency] = useState(50)
     const [activeTab, setActiveTab] = useState(0)
+    const [arrayFiltered, setArrayFiltered] = useState({ x: [], y: [] })
+    const [selectedDataset, setSelectedDataset] = useState("")
+    
+    const {
+        datasets, handleSetDataset
+    } = useDatasetsContext()
+    
 
     const handleSave = () => {
         if (window.electron) {
-            window.electron.sendCommand('save-settings', { windowSize })
+            window.electron.sendCommand('save-settings', { 
+                windowSize,
+                cutoffFrequency
+            })
         }
         window.close()
     }
@@ -26,6 +46,110 @@ export const Filters = () => {
         height: '100%',
         width: '100%'
     }
+
+    const handleWindowSizeChange = (newValue) => {
+        setWindowSize(newValue) 
+    }
+
+    const recreateDatasetStates = (parsedDatasets) => {
+        const datasetsWithStates = parsedDatasets.map(dataset => {
+            const visible_ = selectedDataset ? (selectedDataset == dataset.name) : false;
+            
+            const handleSetIsVisible = () => {
+                handleSetDataset(prevDatasets =>
+                    prevDatasets.map(d =>
+                        d.name === dataset.name
+                            ? { ...d, visible: !d.visible }
+                            : d
+                    )
+                )
+            }
+
+            return {
+                ...dataset,
+                visible: visible_,
+                setIsVisible: handleSetIsVisible,
+            }
+        })
+
+        return datasetsWithStates
+    }
+
+    /*
+    useEffect(() => {
+        const params = new URLSearchParams(location.search)
+        const datasetsParam = params.get('datasets')
+        if (datasetsParam) {
+            try {
+                const parsedData = JSON.parse(decodeURIComponent(datasetsParam))
+                const datasetsWithStates = recreateDatasetStates(parsedData.datasets)
+                handleSetDataset(datasetsWithStates)
+                if (parsedData.selectedDataset) {
+                    setSelectedDataset(parsedData.selectedDataset);
+                }
+            } catch (error) {
+                console.error('Error parsing datasets:', error)
+            }
+        }
+    }, [location])*/
+
+    useEffect(() => {
+        if (window.electron) {
+            window.electron.onSettingsData((settingsData) => {
+                try {
+                    const datasetsWithStates = recreateDatasetStates(settingsData.datasets)
+                    handleSetDataset(datasetsWithStates)
+                    if (settingsData.selectedDataset) {
+                        setSelectedDataset(settingsData.selectedDataset)
+                    }
+                } catch (error) {
+                    console.error('Error processing settings data:', error)
+                }
+            })
+        }
+    }, [])  
+
+    useEffect(() => {
+        console.log("Dataset selecionado:", selectedDataset)
+        if (selectedDataset) {
+            const updatedDatasets = datasets.map(dataset => ({
+                ...dataset,
+                visible: dataset.name === selectedDataset
+            }));
+            handleSetDataset(updatedDatasets)
+        }
+    }, [selectedDataset])
+
+    const filtersConfig = [
+        {
+            label: "MM",
+            tooltip: "Média Móvel",
+            component: (
+                <MovingAverage 
+                    windowSize={windowSize} 
+                    onWindowSizeChange={handleWindowSizeChange}
+                    setArrayFiltered={setArrayFiltered}
+                />
+            ),
+        },
+        {
+            label: "PB",
+            tooltip: "Passa Baixa",
+            component: (
+                <LowPass
+                    cutoffFrequency={cutoffFrequency}
+                    onCutoffFrequencyChange={setCutoffFrequency}
+                    samplingRate={1000}
+                    setArrayFiltered={setArrayFiltered}
+                />
+            ),
+        },
+        {
+            label: "PA",
+            tooltip: "Passa Alta",
+            component: <div>Filtro Passa Alta</div>,
+        },
+    ]
 
     return (
         <Box sx={{ 
@@ -36,22 +160,48 @@ export const Filters = () => {
             overflow: 'hidden'
         }}>
             {/* Tabs Header */}
-            <Paper elevation={2} sx={{ minHeight: '48px' }}>
-                <Tabs 
-                    value={activeTab} 
-                    onChange={(e, newValue) => setActiveTab(newValue)}
-                    sx={{ 
-                        minHeight: '48px',
-                        '& .MuiTab-root': { minHeight: '48px' }
-                    }}
+            <Paper
+                elevation={2}
+                sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                minHeight: '48px',
+                px: 1
+                }}
+            >
+                <Tabs
+                value={activeTab}
+                onChange={(e, newValue) => setActiveTab(newValue)}
+                sx={{
+                    minHeight: '48px',
+                    '& .MuiTab-root': { minHeight: '48px' }
+                }}
                 >
-                    <Tooltip title="Média Móvel">
-                        <Tab label="MM" />
+                {filtersConfig.map((filter, index) => (
+                    <Tooltip key={filter.label} title={filter.tooltip}>
+                    <Tab label={filter.label} />
                     </Tooltip>
-                    <Tooltip title="Passa Baixa">
-                        <Tab label="PB" />
-                    </Tooltip>
+                ))}
                 </Tabs>
+
+                {/* Select para escolher o dataset */}
+                <Select
+                value={
+                    datasets.some((dataset) => dataset.name === selectedDataset)
+                    ? selectedDataset
+                    : ''
+                }
+                onChange={(e) => setSelectedDataset(e.target.value)}
+                size="small"
+                sx={{ width: '30%' }}
+                >
+                {datasets.map((dataset, index) => (
+                    <MenuItem key={index} value={dataset.name}>
+                    {dataset.name}
+                    </MenuItem>
+                ))}
+                </Select>
             </Paper>
 
             {/* Main Content */}
@@ -68,31 +218,7 @@ export const Filters = () => {
                     flexDirection: 'column',
                     gap: 1.5
                 }}>
-                    <Typography variant="h6" sx={{ fontSize: '1rem' }}>
-                        Configurações da Média Móvel
-                    </Typography>
-                    <Typography variant="body2">
-                        Tamanho da Janela
-                    </Typography>
-                    <Slider
-                        value={windowSize}
-                        onChange={(e, newValue) => setWindowSize(newValue)}
-                        valueLabelDisplay="auto"
-                        step={1}
-                        marks
-                        min={3}
-                        max={10}
-                        sx={{ width: "100%" }}
-                    />
-                    <Button 
-                        variant="contained" 
-                        color="primary" 
-                        onClick={handleSave}
-                        size="small"
-                        sx={{ alignSelf: 'flex-start', mt: 'auto' }}
-                    >
-                        Salvar
-                    </Button>
+                    {filtersConfig[activeTab].component}
                 </Box>
 
                 {/* Right Side - Preview Chart */}
@@ -119,7 +245,10 @@ export const Filters = () => {
                         position: 'relative',  
                         height: '300px'
                     }}>
-                        <ChartComponent type_={type_chart_filters}/>
+                        <ChartComponent 
+                            type_={type_chart_filters}
+                            previewData={arrayFiltered}
+                        />
                     </Box>
                 </Box>
             </Box>
