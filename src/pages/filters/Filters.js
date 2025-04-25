@@ -13,7 +13,10 @@ import {
 import { 
     ChartComponent,
     MovingAverage,
-    LowPass 
+    LowPass, 
+    HighPass,
+    BandPass,
+    BandStop
 } from '../../shared/components'
 
 import {
@@ -22,10 +25,10 @@ import {
 
 export const Filters = () => {
     const [windowSize, setWindowSize] = useState(3)
-    const [cutoffFrequency, setCutoffFrequency] = useState(50)
     const [activeTab, setActiveTab] = useState(0)
     const [arrayFiltered, setArrayFiltered] = useState({ x: [], y: [] })
     const [selectedDataset, setSelectedDataset] = useState("")
+    const [posSelecteDataset, setPosSelectedDataset] = useState(0)
     
     const {
         datasets, handleSetDataset
@@ -36,7 +39,6 @@ export const Filters = () => {
         if (window.electron) {
             window.electron.sendCommand('save-settings', { 
                 windowSize,
-                cutoffFrequency
             })
         }
         window.close()
@@ -75,24 +77,6 @@ export const Filters = () => {
         return datasetsWithStates
     }
 
-    /*
-    useEffect(() => {
-        const params = new URLSearchParams(location.search)
-        const datasetsParam = params.get('datasets')
-        if (datasetsParam) {
-            try {
-                const parsedData = JSON.parse(decodeURIComponent(datasetsParam))
-                const datasetsWithStates = recreateDatasetStates(parsedData.datasets)
-                handleSetDataset(datasetsWithStates)
-                if (parsedData.selectedDataset) {
-                    setSelectedDataset(parsedData.selectedDataset);
-                }
-            } catch (error) {
-                console.error('Error parsing datasets:', error)
-            }
-        }
-    }, [location])*/
-
     useEffect(() => {
         if (window.electron) {
             window.electron.onSettingsData((settingsData) => {
@@ -110,15 +94,28 @@ export const Filters = () => {
     }, [])  
 
     useEffect(() => {
-        console.log("Dataset selecionado:", selectedDataset)
-        if (selectedDataset) {
-            const updatedDatasets = datasets.map(dataset => ({
-                ...dataset,
-                visible: dataset.name === selectedDataset
-            }));
-            handleSetDataset(updatedDatasets)
+        if (selectedDataset && datasets.length > 0) {
+            const datasetIndex = datasets.findIndex(dataset => dataset.name === selectedDataset)
+            
+            if (datasetIndex !== -1) {
+                setPosSelectedDataset(datasetIndex)
+                
+                const needsVisibilityUpdate = datasets.some(dataset => 
+                    (dataset.name === selectedDataset && !dataset.visible) ||
+                    (dataset.name !== selectedDataset && dataset.visible)
+                );
+    
+                if (needsVisibilityUpdate) {
+                    const updatedDatasets = datasets.map(dataset => ({
+                        ...dataset,
+                        visible: dataset.name === selectedDataset
+                    }));
+                    handleSetDataset(updatedDatasets)
+                }
+            }
         }
-    }, [selectedDataset])
+    }, [selectedDataset, datasets.length])
+    
 
     const filtersConfig = [
         {
@@ -136,10 +133,8 @@ export const Filters = () => {
             label: "PB",
             tooltip: "Passa Baixa",
             component: (
-                <LowPass
-                    cutoffFrequency={cutoffFrequency}
-                    onCutoffFrequencyChange={setCutoffFrequency}
-                    samplingRate={1000}
+                <LowPass 
+                    posSelectdataset={posSelecteDataset}
                     setArrayFiltered={setArrayFiltered}
                 />
             ),
@@ -147,8 +142,33 @@ export const Filters = () => {
         {
             label: "PA",
             tooltip: "Passa Alta",
-            component: <div>Filtro Passa Alta</div>,
+            component: (
+                <HighPass 
+                    posSelectdataset={posSelecteDataset}
+                    setArrayFiltered={setArrayFiltered}
+                />
+            ),
         },
+        {
+            label: "PF",
+            tooltip: "Passa Faixa",
+            component: (
+                <BandPass 
+                    posSelectdataset={posSelecteDataset}
+                    setArrayFiltered={setArrayFiltered}
+                />
+            ),
+        },
+        {
+            label: "RF",
+            tooltip: "Rejeita Faixa",
+            component: (
+                <BandStop 
+                    posSelectdataset={posSelecteDataset}
+                    setArrayFiltered={setArrayFiltered}
+                />
+            ),
+        }
     ]
 
     return (

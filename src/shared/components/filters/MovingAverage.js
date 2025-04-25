@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useMemo } from "react"
 import {
     Typography,
     Slider
@@ -25,18 +25,24 @@ export const MovingAverage = ({
         return result
     }
 
+    const visibleDataset = useMemo(() => 
+        datasets.find(d => d.visible)?.data?.[0], 
+        [datasets]
+    )
+
     useEffect(() => {
-        const visibleDataset = datasets.find(d => d.visible)
-        if (visibleDataset?.data?.[0]?.x && visibleDataset?.data?.[0]?.y) {
-            const { x, y } = visibleDataset.data[0]
-            if (x.length > 0 && y.length > 0) {
-                const movingAveragePoints = calculateMovingAverage(x, y, windowSize)
-                setArrayFiltered(movingAveragePoints)
-            }
-        } else {
-            setArrayFiltered({ x: [], y: [] }) // Reset quando não há dados
+        if (!visibleDataset?.x?.length || !visibleDataset?.y?.length) {
+            setArrayFiltered({ x: [], y: [] })
+            return
         }
-    }, [windowSize, datasets])
+
+        const movingAveragePoints = calculateMovingAverage(
+            visibleDataset.x,
+            visibleDataset.y,
+            windowSize
+        )
+        setArrayFiltered(movingAveragePoints)
+    }, [windowSize, visibleDataset, setArrayFiltered])
 
     return(
         <>

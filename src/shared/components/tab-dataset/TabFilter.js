@@ -13,6 +13,8 @@ import {
     MenuItem,
     List,
     ListItem,
+    Tabs,
+    Tab,
 } from '@mui/material'
 
 import Slider from '@mui/material/Slider'
@@ -35,6 +37,12 @@ export const TabFilter = () => {
     const [indexToDelete, setIndexToDelete] = useState(null)
 
     const [windowSize, setWindowSize] = useState(3)
+
+    const [activeFilterTab, setActiveFilterTab] = useState(0)
+    const [cutoffFrequency, setCutoffFrequency] = useState(50)
+    const [lowCutoffFrequency, setLowCutoffFrequency] = useState(10)
+    const [highCutoffFrequency, setHighCutoffFrequency] = useState(50)
+
 
     const handleClickOpen = (index) => {
         setIndexToDelete(index)
@@ -110,6 +118,216 @@ export const TabFilter = () => {
         }
     }
 
+    const calculateLowPass = (x, y, cutoffFreq, fs) => {
+        const result = { x: [], y: [] }
+        const dt = 1 / fs
+        const RC = 1 / (2 * Math.PI * cutoffFreq)
+        const alpha = dt / (RC + dt)
+        
+        result.x = [...x]
+        result.y = new Array(y.length)
+        result.y[0] = y[0]
+        
+        for (let i = 1; i < y.length; i++) {
+            result.y[i] = result.y[i-1] + alpha * (y[i] - result.y[i-1])
+        }
+        
+        return result
+    }
+
+    const calculateHighPass = (x, y, cutoffFreq, fs) => {
+        const result = { x: [], y: [] }
+        const dt = 1 / fs
+        const RC = 1 / (2 * Math.PI * cutoffFreq)
+        const alpha = RC / (RC + dt)
+        
+        result.x = [...x]
+        result.y = new Array(y.length)
+        result.y[0] = y[0]
+        
+        for (let i = 1; i < y.length; i++) {
+            result.y[i] = alpha * (result.y[i-1] + y[i] - y[i-1])
+        }
+        
+        return result
+    }
+
+    const calculateBandPass = (x, y, lowCutoffFreq, highCutoffFreq, fs) => {
+        const result = { x: [], y: [] }
+        const dt = 1 / fs
+        
+        const RC_high = 1 / (2 * Math.PI * lowCutoffFreq)
+        const alpha_high = dt / (RC_high + dt)
+        
+        const RC_low = 1 / (2 * Math.PI * highCutoffFreq)
+        const alpha_low = RC_low / (RC_low + dt)
+        
+        result.x = [...x]
+        result.y = new Array(y.length)
+        
+        let lowPassResult = new Array(y.length)
+        lowPassResult[0] = y[0]
+        
+        for (let i = 1; i < y.length; i++) {
+            lowPassResult[i] = lowPassResult[i-1] + alpha_high * (y[i] - lowPassResult[i-1])
+        }
+        
+        result.y[0] = lowPassResult[0]
+        
+        for (let i = 1; i < y.length; i++) {
+            result.y[i] = alpha_low * (result.y[i-1] + lowPassResult[i] - lowPassResult[i-1])
+        }
+        
+        return result
+    }
+
+    const handleCalculateFilter = () => {
+        if (!datasetSelected) return
+
+        const selectedDataset = datasets.find(dataset => dataset.name === datasetSelected)
+        if (!selectedDataset?.data?.[0]) return
+
+        const x = selectedDataset.data[0].x
+        const y = selectedDataset.data[0].y
+        const fs = selectedDataset.params.scanRate / selectedDataset.params.step
+
+        let result
+        let filterName = ''
+
+        switch(activeFilterTab) {
+            case 0: // Média Móvel
+                result = calculateMovingAverage(x, y, windowSize)
+                filterName = `M.M. (${windowSize})`
+                break
+            case 1: // Passa Baixa
+                result = calculateLowPass(x, y, cutoffFrequency, fs)
+                filterName = `PB (${cutoffFrequency}Hz)`
+                break
+            case 2: // Passa Alta
+                result = calculateHighPass(x, y, cutoffFrequency, fs)
+                filterName = `PA (${cutoffFrequency}Hz)`
+                break
+            case 3: // Passa Faixa
+                result = calculateBandPass(x, y, lowCutoffFrequency, highCutoffFrequency, fs)
+                filterName = `PF (${lowCutoffFrequency}-${highCutoffFrequency}Hz)`
+                break
+            case 4: // Rejeita Faixa
+                result = calculateBandPass(x, y, lowCutoffFrequency, highCutoffFrequency, fs)
+                filterName = `RF (${lowCutoffFrequency}-${highCutoffFrequency}Hz)`
+                break
+        }
+
+        handleNewDataset(`${filterName} de ${datasetSelected}`, selectedDataset.params, result)
+    }
+
+    const filterControls = [
+        // Média Móvel
+        <Box key="mm">
+            <Slider
+                aria-label="Tamanho da Janela"
+                value={windowSize}
+                onChange={(e, newValue) => setWindowSize(newValue)}
+                getAriaValueText={valuetext}
+                valueLabelDisplay="auto"
+                step={1}
+                marks
+                min={3}
+                max={10}
+                sx={{ width: "95%" }}
+            />
+        </Box>,
+        // Passa Baixa
+        <Box key="pb">
+            <Typography variant="body2">
+                Frequência de Corte (Hz): {cutoffFrequency}
+            </Typography>
+            <Slider
+                value={cutoffFrequency}
+                onChange={(e, newValue) => setCutoffFrequency(newValue)}
+                valueLabelDisplay="auto"
+                step={1}
+                marks
+                min={1}
+                max={100}
+                sx={{ width: "95%" }}
+            />
+        </Box>,
+        // Passa Alta
+        <Box key="pa">
+            <Typography variant="body2">
+                Frequência de Corte (Hz): {cutoffFrequency}
+            </Typography>
+            <Slider
+                value={cutoffFrequency}
+                onChange={(e, newValue) => setCutoffFrequency(newValue)}
+                valueLabelDisplay="auto"
+                step={1}
+                marks
+                min={1}
+                max={100}
+                sx={{ width: "95%" }}
+            />
+        </Box>,
+        // Passa Faixa
+        <Box key="pf">
+            <Typography variant="body2">
+                Frequência de Corte Inferior (Hz): {lowCutoffFrequency}
+            </Typography>
+            <Slider
+                value={lowCutoffFrequency}
+                onChange={(e, newValue) => setLowCutoffFrequency(Math.min(newValue, highCutoffFrequency))}
+                valueLabelDisplay="auto"
+                step={1}
+                marks
+                min={1}
+                max={100}
+                sx={{ width: "95%" }}
+            />
+            <Typography variant="body2">
+                Frequência de Corte Superior (Hz): {highCutoffFrequency}
+            </Typography>
+            <Slider
+                value={highCutoffFrequency}
+                onChange={(e, newValue) => setHighCutoffFrequency(Math.max(newValue, lowCutoffFrequency))}
+                valueLabelDisplay="auto"
+                step={1}
+                marks
+                min={1}
+                max={100}
+                sx={{ width: "95%" }}
+            />
+        </Box>,
+        // Rejeita Faixa
+        <Box key="rf">
+            <Typography variant="body2">
+                Frequência de Corte Inferior (Hz): {lowCutoffFrequency}
+            </Typography>
+            <Slider
+                value={lowCutoffFrequency}
+                onChange={(e, newValue) => setLowCutoffFrequency(Math.min(newValue, highCutoffFrequency))}
+                valueLabelDisplay="auto"
+                step={1}
+                marks
+                min={1}
+                max={100}
+                sx={{ width: "95%" }}
+            />
+            <Typography variant="body2">
+                Frequência de Corte Superior (Hz): {highCutoffFrequency}
+            </Typography>
+            <Slider
+                value={highCutoffFrequency}
+                onChange={(e, newValue) => setHighCutoffFrequency(Math.max(newValue, lowCutoffFrequency))}
+                valueLabelDisplay="auto"
+                step={1}
+                marks
+                min={1}
+                max={100}
+                sx={{ width: "95%" }}
+            />
+        </Box>
+    ]
+
 
     return (
         <>
@@ -177,58 +395,36 @@ export const TabFilter = () => {
                         </Box>
                         
                         <List sx={{ marginTop: "8px" }}>
-                            {/* Moving Average */}
-                            <ListItem>
-                                <Box width="50%">
-                                    <Typography>Media Móvel</Typography>
-                                </Box>
 
-                                <Box
-                                    width="50%"
-                                    sx={{
-                                        display: 'flex',
-                                        flexDirection: 'row',
-                                        overflow: 'hidden',
-                                        alignItems: 'center',
-                                        bgcolor: 'background.paper',
-                                        justifyContent: 'end'
-                                    }}
+                            <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 2 }}>
+                                <Tabs 
+                                    value={activeFilterTab} 
+                                    onChange={(e, newValue) => setActiveFilterTab(newValue)}
+                                    variant="scrollable"
+                                    scrollButtons="auto"
+                                    sx={{ minHeight: '36px' }}
                                 >
-                                    <Button
-                                        sx={{
-                                            minWidth: 'auto',
-                                            justifyContent: 'space-between'
-                                        }}
-                                        width="100%"
-                                        onClick={ handleCalculate} 
-                                    >
-                                        <CalculateIcon />
-                                    </Button>   
-                                </Box>
-                            </ListItem>
+                                    <Tab label="MM" sx={{ minHeight: '36px' }} />
+                                    <Tab label="PB" sx={{ minHeight: '36px' }} />
+                                    <Tab label="PA" sx={{ minHeight: '36px' }} />
+                                    <Tab label="PF" sx={{ minHeight: '36px' }} />
+                                    <Tab label="RF" sx={{ minHeight: '36px' }} />
+                                </Tabs>
+                            </Box>
 
-                            {/* Slider */}
-                            <ListItem>
-                                <Box
-                                    display="flex"
-                                    width="100%"
-                                    alignItems="center"
-                                    justifyContent="center"
+                            <Box sx={{ p: 2 }}>
+                                {filterControls[activeFilterTab]}
+                                
+                                <Button
+                                    fullWidth
+                                    variant="contained"
+                                    onClick={handleCalculateFilter}
+                                    startIcon={<CalculateIcon />}
+                                    sx={{ mt: 2 }}
                                 >
-                                    <Slider
-                                        aria-label="Tamanho da Janela"
-                                        value={windowSize} // <-- Valor controlado
-                                        onChange={(e, newValue) => setWindowSize(newValue)} // <-- Atualiza o valor
-                                        getAriaValueText={valuetext}
-                                        valueLabelDisplay="auto"
-                                        step={1}
-                                        marks
-                                        min={3}
-                                        max={10}
-                                        sx={{ width: "95%" }}
-                                    />
-                                </Box>
-                            </ListItem>
+                                    Calcular
+                                </Button>
+                            </Box>
                         </List>
                     </>
                 )}

@@ -6,25 +6,25 @@ import {
 
 import { useDatasetsContext } from '../../contexts'
 
-export const LowPass = ({posSelectdataset, setArrayFiltered}) => {
+export const HighPass = ({posSelectdataset, setArrayFiltered}) => {
     const { datasets } = useDatasetsContext()
     const [cutoffFrequency, setCutoffFrequency] = useState(50)
     
     const params = useMemo(() => datasets[posSelectdataset]?.params, [datasets, posSelectdataset])
     const samplingRate = useMemo(() => params ? params.scanRate / params.step : 1, [params])
 
-    const calculateLowPass = (x, y, cutoffFreq, fs) => {
+    const calculateHighPass = (x, y, cutoffFreq, fs) => {
         const result = { x: [], y: [] }
         const dt = 1 / fs
         const RC = 1 / (2 * Math.PI * cutoffFreq)
-        const alpha = dt / (RC + dt)
+        const alpha = RC / (RC + dt)
         
         result.x = [...x]
         result.y = new Array(y.length)
         result.y[0] = y[0]
         
         for (let i = 1; i < y.length; i++) {
-            result.y[i] = result.y[i-1] + alpha * (y[i] - result.y[i-1])
+            result.y[i] = alpha * (result.y[i-1] + y[i] - y[i-1])
         }
         
         return result
@@ -46,7 +46,7 @@ export const LowPass = ({posSelectdataset, setArrayFiltered}) => {
             return
         }
 
-        const filteredSignal = calculateLowPass(
+        const filteredSignal = calculateHighPass(
             dataset.x, 
             dataset.y, 
             cutoffFrequency, 
@@ -59,7 +59,7 @@ export const LowPass = ({posSelectdataset, setArrayFiltered}) => {
     return(
         <>
             <Typography variant="h6" sx={{ fontSize: '1rem' }}>
-                Configurações do Filtro Passa-Baixa
+                Configurações do Filtro Passa-Alta
             </Typography>
             <Typography variant="body2">
                 Frequência de Corte (Hz): {cutoffFrequency}
