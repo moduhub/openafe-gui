@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useContext, useRef } from 'react'
+import React, { useEffect, useMemo, useContext, useRef, useState } from 'react'
 import { Box } from '@mui/material'
 import Plotly from 'plotly.js-dist'
 
@@ -7,7 +7,7 @@ import {
   useDatasetsContext,
 } from '../../contexts'
 
-export const ChartComponent = ({ type_, previewData }) => {
+export const ChartComponent = ({ type_, previewData, onPointsSelected  }) => {
   const { theme } = useContext(ThemeContext)
   const { datasets } = useDatasetsContext()
   const chartRef = useRef(null)
@@ -19,24 +19,22 @@ export const ChartComponent = ({ type_, previewData }) => {
     showlegend: false,
     paper_bgcolor: 'transparent',
     plot_bgcolor: theme.palette.background.paper,
-    margin: { l: 30, r: 10, t: 10, b: 20 },
+    margin: { l: 20, r: 10, t: 10, b: 20 },
     xaxis: {
-      title: 'Voltage (mV)',
+      title: { text: 'Voltage (mV)', standoff: 15 },
       linecolor: theme.palette.text.primary,
       mirror: true,
       gridcolor: theme.palette.divider,
       zerolinecolor: theme.palette.divider,
-      automargin: false,
-      title_standoff: 0,
+      automargin: true, 
     },
     yaxis: {
-      title: 'Current (uA)',
+      title: { text: 'Current (mA)', standoff: 15 },
       linecolor: theme.palette.text.primary,
       mirror: true,
       gridcolor: theme.palette.divider,
       zerolinecolor: theme.palette.divider,
-      automargin: false,
-      title_standoff: 0,
+      automargin: true,
     },
     autosize: true,
   }), [theme])
@@ -115,7 +113,6 @@ export const ChartComponent = ({ type_, previewData }) => {
       name: key,
     }))
 
-    // Add preview data if available
     if (previewData && previewData.x && previewData.y) {
       data.push({
         x: previewData.x,
@@ -140,15 +137,43 @@ export const ChartComponent = ({ type_, previewData }) => {
     JSON.stringify(Object.entries(datasets)
       .filter(([_, ds]) => ds.visible)
       .map(([key]) => key)),
-    JSON.stringify(previewData), // Add dependency on previewData
+    JSON.stringify(previewData), 
     layout, 
     config
   ])
 
-  // 4) Purge apenas no unmount
   useEffect(() => () => {
     if (chartRef.current) Plotly.purge(chartRef.current)
   }, [])
+
+  const [selectedPoints, setSelectedPoints] = useState([])
+  useEffect(() => {
+    const el = chartRef.current
+    if (!el || !onPointsSelected) return
+  
+    const handleClick = (eventData) => {
+      if (eventData?.points?.length > 0) {
+        const point = {
+          x: eventData.points[0].x,
+          y: eventData.points[0].y,
+        }
+        setSelectedPoints(prev => {
+          const newSelection = [...prev, point]
+          if (newSelection.length === 2) {
+            onPointsSelected(newSelection)
+            return [] // reseta depois de enviar
+          }
+          return newSelection
+        })
+      }
+    }
+  
+    el.on('plotly_click', handleClick)
+  
+    return () => {
+      el.removeListener('plotly_click', handleClick)
+    }
+  }, [onPointsSelected])
 
   return (
     <Box

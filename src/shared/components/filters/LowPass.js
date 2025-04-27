@@ -1,78 +1,106 @@
 import { useEffect, useState, useMemo } from "react"
 import {
-    Typography,
-    Slider
+  Box,
+  Stack,
+  Typography,
+  Slider,
+  TextField,
+  InputAdornment
 } from '@mui/material'
 
 import { useDatasetsContext } from '../../contexts'
 
-export const LowPass = ({posSelectdataset, setArrayFiltered}) => {
-    const { datasets } = useDatasetsContext()
-    const [cutoffFrequency, setCutoffFrequency] = useState(50)
+export const LowPass = ({ setPreviewFilter }) => {
+  const { datasets } = useDatasetsContext()
+  const [cutoffFrequency, setCutoffFrequency] = useState(50)
+
+  const calculateLowPass = (x, y, cutoffFreq, fs) => {
+    const result = { x: [...x], y: [] }
+    const dt = 1 / fs
+    const RC = 1 / (2 * Math.PI * cutoffFreq)
+    const alpha = dt / (RC + dt)
+
+    result.y[0] = y[0]
+    for (let i = 1; i < y.length; i++)
+      result.y[i] = result.y[i-1] + alpha * (y[i] - result.y[i-1])
+
+    return result
+  }
+
+  const visibleDataset = useMemo(
+    () => datasets.find(d => d.visible),
+    [datasets]
+  )
+
+  useEffect(() => {
+    if (!visibleDataset?.data?.[0]?.x?.length || !visibleDataset?.data?.[0]?.y?.length) {
+      setPreviewFilter({ x: [], y: [] })
+      return
+    }
+    const { scanRate, step } = visibleDataset.params || {}
+    if (!scanRate || !step) return
+
+    const fs = scanRate / step
+
+    const filteredSignal = calculateLowPass(
+      visibleDataset.data[0].x,
+      visibleDataset.data[0].y,
+      cutoffFrequency,
+      fs
+    )
     
-    const params = useMemo(() => datasets[posSelectdataset]?.params, [datasets, posSelectdataset])
-    const samplingRate = useMemo(() => params ? params.scanRate / params.step : 1, [params])
+    setPreviewFilter(filteredSignal)
+  }, [cutoffFrequency, visibleDataset, setPreviewFilter])
 
-    const calculateLowPass = (x, y, cutoffFreq, fs) => {
-        const result = { x: [], y: [] }
-        const dt = 1 / fs
-        const RC = 1 / (2 * Math.PI * cutoffFreq)
-        const alpha = dt / (RC + dt)
-        
-        result.x = [...x]
-        result.y = new Array(y.length)
-        result.y[0] = y[0]
-        
-        for (let i = 1; i < y.length; i++) {
-            result.y[i] = result.y[i-1] + alpha * (y[i] - result.y[i-1])
-        }
-        
-        return result
-    }
+  const handleSliderChange = (_evt, newValue) => {
+    const value = Array.isArray(newValue) ? newValue[0] : newValue
+    setCutoffFrequency(value)
+  }
 
-    const handleFrequencyChange = (_, newValue) => {
-        setCutoffFrequency(newValue)
-    }
+  return (
+    <Box>
+      <Box sx={{ mt: 1, p: 2, boxShadow: 1, borderRadius: 1 }}>
+        <Stack spacing={2}>
+          <Typography variant="h6" sx={{ fontSize: '1.125rem' }}>
+            Filtro Passa-Baixa
+          </Typography>
 
-    useEffect(() => {
-        if (!datasets[posSelectdataset]?.data?.[0]) {
-            setArrayFiltered({ x: [], y: [] })
-            return
-        }
-
-        const dataset = datasets[posSelectdataset].data[0]
-        if (!dataset?.x?.length || !dataset?.y?.length) {
-            setArrayFiltered({ x: [], y: [] })
-            return
-        }
-
-        const filteredSignal = calculateLowPass(
-            dataset.x, 
-            dataset.y, 
-            cutoffFrequency, 
-            samplingRate
-        )
-        setArrayFiltered(filteredSignal)
-
-    }, [cutoffFrequency, posSelectdataset, datasets])
-
-    return(
-        <>
-            <Typography variant="h6" sx={{ fontSize: '1rem' }}>
-                Configurações do Filtro Passa-Baixa
-            </Typography>
-            <Typography variant="body2">
-                Frequência de Corte (Hz): {cutoffFrequency}
+          <Box>
+            <Typography variant="body2" gutterBottom>
+              Frequência de Corte (Hz): 
             </Typography>
             <Slider
-                value={cutoffFrequency}
-                onChange={handleFrequencyChange}
-                valueLabelDisplay="auto"
-                step={1}
-                marks
-                min={1}
-                max={100}
+              value={cutoffFrequency}
+              onChange={handleSliderChange}
+              min={1}
+              max={100}
+              step={1}
+              marks={[
+                { value: 1, label: '1Hz' },
+                { value: 50, label: '50Hz' },
+                { value: 100, label: '100Hz' },
+              ]}
+              valueLabelDisplay="auto"
             />
-        </>
-    )
+          </Box>
+
+          <TextField
+            label="Frequência de Corte"
+            type="number"
+            value={cutoffFrequency}
+            onChange={(e) => {
+              const value = Math.max(1, Number(e.target.value))
+              setCutoffFrequency(value)
+            }}
+            InputProps={{
+              endAdornment: <InputAdornment position="end">Hz</InputAdornment>,
+              inputProps: { min: 1 }
+            }}
+            size="small"
+            fullWidth
+          />
+        </Stack>
+      </Box>
+    </Box>
+  )
 }

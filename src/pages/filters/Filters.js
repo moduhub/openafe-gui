@@ -24,17 +24,18 @@ import {
 } from '../../shared/contexts'
 
 export const Filters = () => {
-    const [windowSize, setWindowSize] = useState(3)
+    
     const [activeTab, setActiveTab] = useState(0)
-    const [arrayFiltered, setArrayFiltered] = useState({ x: [], y: [] })
+    const [previewFilter, setPreviewFilter] = useState({ x: [], y: [] })
     const [selectedDataset, setSelectedDataset] = useState("")
     const [posSelecteDataset, setPosSelectedDataset] = useState(0)
+    const [selectedPoints, setSelectedPoints] = useState([])
     
     const {
         datasets, handleSetDataset
     } = useDatasetsContext()
     
-
+    /*
     const handleSave = () => {
         if (window.electron) {
             window.electron.sendCommand('save-settings', { 
@@ -42,15 +43,11 @@ export const Filters = () => {
             })
         }
         window.close()
-    }
+    }*/
 
     const type_chart_filters = {
         height: '100%',
         width: '100%'
-    }
-
-    const handleWindowSizeChange = (newValue) => {
-        setWindowSize(newValue) 
     }
 
     const recreateDatasetStates = (parsedDatasets) => {
@@ -118,57 +115,11 @@ export const Filters = () => {
     
 
     const filtersConfig = [
-        {
-            label: "MM",
-            tooltip: "Média Móvel",
-            component: (
-                <MovingAverage 
-                    windowSize={windowSize} 
-                    onWindowSizeChange={handleWindowSizeChange}
-                    setArrayFiltered={setArrayFiltered}
-                />
-            ),
-        },
-        {
-            label: "PB",
-            tooltip: "Passa Baixa",
-            component: (
-                <LowPass 
-                    posSelectdataset={posSelecteDataset}
-                    setArrayFiltered={setArrayFiltered}
-                />
-            ),
-        },
-        {
-            label: "PA",
-            tooltip: "Passa Alta",
-            component: (
-                <HighPass 
-                    posSelectdataset={posSelecteDataset}
-                    setArrayFiltered={setArrayFiltered}
-                />
-            ),
-        },
-        {
-            label: "PF",
-            tooltip: "Passa Faixa",
-            component: (
-                <BandPass 
-                    posSelectdataset={posSelecteDataset}
-                    setArrayFiltered={setArrayFiltered}
-                />
-            ),
-        },
-        {
-            label: "RF",
-            tooltip: "Rejeita Faixa",
-            component: (
-                <BandStop 
-                    posSelectdataset={posSelecteDataset}
-                    setArrayFiltered={setArrayFiltered}
-                />
-            ),
-        }
+        { label: "MM", tooltip: "Média Móvel", component: <MovingAverage setPreviewFilter={setPreviewFilter}/> },
+        { label: "PB", tooltip: "Passa Baixa", component: <LowPass setPreviewFilter={setPreviewFilter}/> },
+        { label: "PA", tooltip: "Passa Alta", component: <HighPass setPreviewFilter={setPreviewFilter}/> },
+        { label: "PF", tooltip: "Passa Faixa", component: <BandPass setPreviewFilter={setPreviewFilter}/> },
+        { label: "RF", tooltip: "Rejeita Faixa", component: <BandStop setPreviewFilter={setPreviewFilter}/> },
     ]
 
     return (
@@ -267,7 +218,8 @@ export const Filters = () => {
                     }}>
                         <ChartComponent 
                             type_={type_chart_filters}
-                            previewData={arrayFiltered}
+                            previewData={previewFilter}
+                            onPointsSelected={setSelectedPoints}
                         />
                     </Box>
                 </Box>

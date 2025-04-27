@@ -27,11 +27,10 @@ import {
   useDatasetsContext,
 } from '../../contexts'
 
-export const TabStorage = ({ setTabIndex_ }) => {
+export const TabStorage = ({ setTabIndex, updateVisibility }) => {
 
   const theme = useTheme()
   const {
-    datasetSelected,
     handleDeleteDataset, handleSetDatasetSelected,
     datasets
   } = useDatasetsContext()
@@ -52,9 +51,10 @@ export const TabStorage = ({ setTabIndex_ }) => {
   }
 
   const handleOpenTabFilter = (index) => {
-    handleSetDatasetSelected(datasets[index].name)
-    setTabIndex_(1)
-  };
+    handleSetDatasetSelected(index)
+    setTabIndex(1)
+    updateVisibility(index)
+  }
 
   return (
     <>
@@ -97,7 +97,6 @@ export const TabStorage = ({ setTabIndex_ }) => {
         ) : (
           datasets.map((dataset, index) => {
 
-            // Formatar os pontos com 4 casas decimais
             const formatPoint = (val) => Number(val).toFixed(1)
 
             const xArray = dataset.data[0].x

@@ -1,25 +1,25 @@
+import React from "react"
 import { useEffect, useState, useMemo } from "react"
 import {
+    Box,
+    Stack,
     Typography,
     Slider,
-    Stack
+    TextField,
+    InputAdornment
 } from '@mui/material'
 
 import { useDatasetsContext } from '../../contexts'
 
-export const BandStop = ({posSelectdataset, setArrayFiltered}) => {
+export const BandStop = ({ setPreviewFilter }) => {
     const { datasets } = useDatasetsContext()
     const [lowCutoffFrequency, setLowCutoffFrequency] = useState(10)
     const [highCutoffFrequency, setHighCutoffFrequency] = useState(50)
     
-    const params = useMemo(() => datasets[posSelectdataset]?.params, [datasets, posSelectdataset])
-    const samplingRate = useMemo(() => params ? params.scanRate / params.step : 1, [params])
-
     const calculateBandStop = (x, y, lowCutoffFreq, highCutoffFreq, fs) => {
         const result = { x: [], y: [] }
         const dt = 1 / fs
         
-        // Configurações dos filtros
         const RC_low = 1 / (2 * Math.PI * lowCutoffFreq)
         const RC_high = 1 / (2 * Math.PI * highCutoffFreq)
         const alpha_low = dt / (RC_low + dt)
@@ -28,7 +28,6 @@ export const BandStop = ({posSelectdataset, setArrayFiltered}) => {
         result.x = [...x]
         result.y = new Array(y.length)
         
-        // Aplicar filtro passa-baixa (frequências abaixo da frequência de corte inferior)
         let lowPassResult = new Array(y.length)
         lowPassResult[0] = y[0]
         
@@ -36,7 +35,6 @@ export const BandStop = ({posSelectdataset, setArrayFiltered}) => {
             lowPassResult[i] = lowPassResult[i-1] + alpha_low * (y[i] - lowPassResult[i-1])
         }
         
-        // Aplicar filtro passa-alta (frequências acima da frequência de corte superior)
         let highPassResult = new Array(y.length)
         highPassResult[0] = y[0]
         
@@ -44,78 +42,90 @@ export const BandStop = ({posSelectdataset, setArrayFiltered}) => {
             highPassResult[i] = alpha_high * (highPassResult[i-1] + y[i] - y[i-1])
         }
         
-        // Combinar os resultados (soma dos sinais filtrados)
         result.y = lowPassResult.map((low, i) => (low + highPassResult[i]) / 2)
         
         return result
     }
 
-    const handleLowFrequencyChange = (_, newValue) => {
-        setLowCutoffFrequency(Math.min(newValue, highCutoffFrequency))
-    }
-
-    const handleHighFrequencyChange = (_, newValue) => {
-        setHighCutoffFrequency(Math.max(newValue, lowCutoffFrequency))
-    }
+    const visibleDataset = useMemo(
+        () => datasets.find(d => d.visible),
+        [datasets]
+    )
 
     useEffect(() => {
-        if (!datasets[posSelectdataset]?.data?.[0]) {
-            setArrayFiltered({ x: [], y: [] })
+        if (!visibleDataset?.data?.[0]?.x?.length || !visibleDataset?.data?.[0]?.y?.length) {
+            setPreviewFilter({ x: [], y: [] })
             return
         }
 
-        const dataset = datasets[posSelectdataset].data[0]
-        if (!dataset?.x?.length || !dataset?.y?.length) {
-            setArrayFiltered({ x: [], y: [] })
-            return
-        }
+        const { scanRate, step } = visibleDataset.params || {}
+        if (!scanRate || !step) return
+
+        const fs = scanRate / step
 
         const filteredSignal = calculateBandStop(
-            dataset.x, 
-            dataset.y, 
+            visibleDataset.data[0].x,
+            visibleDataset.data[0].y,
             lowCutoffFrequency,
             highCutoffFrequency,
-            samplingRate
+            fs
         )
-        setArrayFiltered(filteredSignal)
 
-    }, [lowCutoffFrequency, highCutoffFrequency, posSelectdataset, datasets])
+        setPreviewFilter(filteredSignal)
 
-    return(
-        <>
-            <Typography variant="h6" sx={{ fontSize: '1rem' }}>
-                Configurações do Filtro Rejeita-Faixa
-            </Typography>
-            <Stack spacing={2}>
-                <div>
-                    <Typography variant="body2">
-                        Frequência de Corte Inferior (Hz): {lowCutoffFrequency}
+    }, [lowCutoffFrequency, highCutoffFrequency, visibleDataset, setPreviewFilter])
+
+    return (
+        <Box>
+            <Box sx={{ mt: 1, p: 2, boxShadow: 1, borderRadius: 1 }}>
+                <Stack spacing={2}>
+                    <Typography variant="h6" sx={{ fontSize: '1.125rem' }}>
+                        Filtro Rejeita-Faixa
                     </Typography>
-                    <Slider
-                        value={lowCutoffFrequency}
-                        onChange={handleLowFrequencyChange}
-                        valueLabelDisplay="auto"
-                        step={1}
-                        marks
-                        min={1}
-                        max={100}
-                    />
-                </div>
-                <div>
-                    <Typography variant="body2">
-                        Frequência de Corte Superior (Hz): {highCutoffFrequency}
-                    </Typography>
-                    <Slider
-                        value={highCutoffFrequency}
-                        onChange={handleHighFrequencyChange}
-                        valueLabelDisplay="auto"
-                        step={1}
-                        marks
-                        min={1}
-                        max={100}
-                    />
-                </div>
-            </Stack>
-        </>
+
+                    <Box>
+                        <Typography variant="body2" gutterBottom>
+                            Corte Inferior (Hz):
+                        </Typography>
+                        <TextField
+                            label="Frequência de Corte Inferior"
+                            type="number"
+                            value={lowCutoffFrequency}
+                            onChange={(e) => {
+                                const value = Math.max(1, Math.min(Number(e.target.value), highCutoffFrequency))
+                                setLowCutoffFrequency(value)
+                            }}
+                            InputProps={{
+                                endAdornment: <InputAdornment position="end">Hz</InputAdornment>,
+                                inputProps: { min: 1 }
+                            }}
+                            size="small"
+                            fullWidth
+                        />
+                    </Box>
+
+                    <Box>
+                        <Typography variant="body2" gutterBottom>
+                            Corte Superior (Hz):
+                        </Typography>
+                        <TextField
+                            label="Frequência de Corte Superior"
+                            type="number"
+                            value={highCutoffFrequency}
+                            onChange={(e) => {
+                                const value = Math.max(lowCutoffFrequency, Math.min(Number(e.target.value), 100))
+                                setHighCutoffFrequency(value)
+                            }}
+                            InputProps={{
+                                endAdornment: <InputAdornment position="end">Hz</InputAdornment>,
+                                inputProps: { min: 1 }
+                            }}
+                            size="small"
+                            fullWidth
+                        />
+                    </Box>
+                </Stack>
+            </Box>
+        </Box>
     )
 }

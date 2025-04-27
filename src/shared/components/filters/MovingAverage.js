@@ -1,66 +1,92 @@
-import React, { useEffect, useMemo } from "react"
+import React, { useState, useEffect, useMemo } from "react"
 import {
-    Typography,
-    Slider
+  Box,
+  Stack,
+  Typography,
+  Slider,
+  TextField,
+  InputAdornment
 } from '@mui/material'
 
 import { useDatasetsContext } from '../../contexts'
 
-export const MovingAverage = ({ 
-    windowSize, 
-    onWindowSizeChange,
-    setArrayFiltered 
-}) => {
-    const { datasets } = useDatasetsContext()
+export const MovingAverage = ({ setPreviewFilter }) => {
+  const { datasets } = useDatasetsContext()
+  const [windowSize, setWindowSize] = useState(3)
 
-    const calculateMovingAverage = (x, y, windowSize) => {
-        const result = { x: [], y: [] }
-        for (let i = 0; i < y.length; i++) {
-            const start = Math.max(0, i - Math.floor(windowSize / 2))
-            const end = Math.min(y.length, i + Math.floor(windowSize / 2) + 1)
-            const avg = y.slice(start, end).reduce((sum, val) => sum + val, 0) / (end - start)
-            result.x.push(x[i])
-            result.y.push(avg)
-        }
-        return result
+  const calculateMovingAverage = (x, y, window) => {
+    const result = { x: [], y: [] }
+    const half = Math.floor(window / 2)
+    for (let i = 0; i < y.length; i++) {
+      const start = Math.max(0, i - half)
+      const end = Math.min(y.length, i + half + 1)
+      const slice = y.slice(start, end)
+      const avg = slice.reduce((sum, v) => sum + v, 0) / slice.length
+      result.x.push(x[i])
+      result.y.push(avg)
+    }
+    return result
+  }
+
+  const visible = useMemo(
+    () => datasets.find(d => d.visible)?.data?.[0] || { x: [], y: [] },
+    [datasets]
+  )
+
+  const maxWindow = useMemo(
+    () => Math.min(21, visible.x.length || 21),
+    [visible.x.length]
+  )
+
+  useEffect(() => {
+    if (!visible.x.length || !visible.y.length) {
+      setPreviewFilter({ x: [], y: [] })
+      return
     }
 
-    const visibleDataset = useMemo(() => 
-        datasets.find(d => d.visible)?.data?.[0], 
-        [datasets]
-    )
+    const adjusted = Math.min(windowSize, maxWindow)
+    if (adjusted !== windowSize) {
+      setWindowSize(adjusted)
+      return
+    }
 
-    useEffect(() => {
-        if (!visibleDataset?.x?.length || !visibleDataset?.y?.length) {
-            setArrayFiltered({ x: [], y: [] })
-            return
-        }
+    const filtered = calculateMovingAverage(visible.x, visible.y, adjusted)
+    setPreviewFilter(filtered)
+  }, [windowSize, visible, maxWindow, setPreviewFilter])
 
-        const movingAveragePoints = calculateMovingAverage(
-            visibleDataset.x,
-            visibleDataset.y,
-            windowSize
-        )
-        setArrayFiltered(movingAveragePoints)
-    }, [windowSize, visibleDataset, setArrayFiltered])
+  const handleSlider = (_e, val) => {
+    setWindowSize(Math.min(Array.isArray(val) ? val[0] : val, maxWindow))
+  }
 
-    return(
-        <>
-            <Typography variant="h6" sx={{ fontSize: '1rem' }}>
-                Configurações da Média Móvel
-            </Typography>
-            <Typography variant="body2">
-                Tamanho da janela: {windowSize}
+  return (
+    <Box>
+      <Box sx={{ mt: 1, p: 2, boxShadow: 1, borderRadius: 1 }}>
+        <Stack spacing={2}>
+          <Typography variant="h6" sx={{ fontSize: '1.125rem' }}>
+            Filtro Média Móvel
+          </Typography>
+
+          <Box>
+            <Typography variant="body2" gutterBottom>
+              Tamanho da janela: {windowSize}
             </Typography>
             <Slider
-                value={windowSize}
-                onChange={(e, newValue) => onWindowSizeChange(newValue)}
-                valueLabelDisplay="auto"
-                step={1}
-                marks
-                min={3}
-                max={10}
+              value={windowSize}
+              onChange={handleSlider}
+              min={3}
+              max={maxWindow}
+              step={2}
+              marks={[
+                { value: 3, label: '3' },
+                { value: Math.ceil(maxWindow / 2), label: `${Math.ceil(maxWindow / 2)}` },
+                { value: maxWindow, label: `${maxWindow}` },
+              ]}
+              valueLabelDisplay="auto"
+              disabled={maxWindow < 3}
             />
-        </>
-    )
+          </Box>
+        </Stack>
+      </Box>
+    </Box>
+  )
 }

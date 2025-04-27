@@ -10,16 +10,13 @@ import {
   Tab,
 } from '@mui/material';
 
-import { FixedSizeList } from 'react-window';
-
 import MinimizeIcon from '@mui/icons-material/Minimize';
 import DatasetIcon from '@mui/icons-material/Dataset';
 import BarChartIcon from '@mui/icons-material/BarChart';
-//import AnalyticsIcon from '@mui/icons-material/Analytics';
 
 import { 
-  useDatasetsContext,
   useDashboardContext,
+  useDatasetsContext
 } from '../../contexts'
 
 import {
@@ -29,20 +26,31 @@ import {
   TabFilter
 } from './TabFilter'
 
-export const TabDataset = () => {
+export const TabDataset = ({ setPreviewData , previewData }) => {
 
   const theme = useTheme();
   const{
     tabDatasetsIsMinimized: isMinimized, 
     handleToggleTabDatasetsMinimized: setIsMinimized,
   }= useDashboardContext()
+  const{
+    datasets, datasetSelected,
+  } = useDatasetsContext()
   
   const [tabIndex, setTabIndex] = useState(0);
   const handleTabIndex = (_, newIndex) => {
     if (newIndex !== undefined) {
-      setTabIndex(newIndex);
+      setTabIndex(newIndex)
+      setPreviewData({ x: [], y: [] })
     }
-  };
+  }
+
+  const updateVisibility = (pos) => {
+    datasets.forEach( (ds, i) => 
+    i === pos ? 
+      !ds.visible && ds.setIsVisible() : ds.visible && ds.setIsVisible()
+    )
+  }
 
   if (isMinimized) return null
 
@@ -93,7 +101,18 @@ export const TabDataset = () => {
           </Box>
 
           {/* Controle de exibição da guia */}
-          {tabIndex === 0 ? <TabStorage setTabIndex_={setTabIndex} /> : <TabFilter />}
+          {tabIndex === 0 ? 
+            <TabStorage 
+              setTabIndex={setTabIndex} 
+              updateVisibility={updateVisibility}
+            /> 
+            : 
+            <TabFilter 
+              setPreviewData={setPreviewData} 
+              previewData={previewData} 
+              setTabIndex={setTabIndex}
+              updateVisibility={updateVisibility}
+            />}
         </CardContent>
       </Card>
     </Box>
