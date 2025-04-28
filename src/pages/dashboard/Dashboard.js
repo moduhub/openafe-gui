@@ -5,6 +5,7 @@ import {
   ChartComponent,
   TabArduino, 
   TabDataset, 
+  InterpolationDialog
 } from '../../shared/components'
 
 export const Dashboard = () => {
@@ -18,11 +19,27 @@ export const Dashboard = () => {
   }
 
   const [selectedPoints, setSelectedPoints] = useState([])
-  useEffect(()=>{
-    console.log(selectedPoints)
-  },[selectedPoints])
+  const [openDialog, setOpenDialog] = useState(false)
+
+  useEffect(() => {
+    if (selectedPoints.length > 0) {
+      setOpenDialog(true)
+    }
+  }, [selectedPoints])
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false)
+    setSelectedPoints([])
+  }
 
   return (
+    <>
+    <InterpolationDialog 
+      open={openDialog}
+      onClose={handleCloseDialog}
+      selectedPoints={selectedPoints}
+    />
+
     <Box 
       height="100%" width="100%" 
       display="flex" flexDirection="column"
@@ -44,5 +61,6 @@ export const Dashboard = () => {
       />
       
     </Box>
+    </>
   )
 }

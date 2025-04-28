@@ -25,9 +25,9 @@ import {
 } from '..'
 
 export const TabFilter = ({ 
-    setPreviewData, previewData, 
-    setTabIndex ,
-    updateVisibility
+    setPreviewData, 
+    previewData, 
+    setTabIndex
 }) => {
     const theme = useTheme()
     const [selectedFilter, setSelectedFilter] = useState('')
@@ -35,7 +35,9 @@ export const TabFilter = ({
         datasets,
         datasetSelected, 
         handleNewDataset,
-        handleSetDatasetSelected
+        handleSetDatasetSelected,
+        toggleDatasetVisibility,
+        showOnlyDataset,
     } = useDatasetsContext()
 
     const filtersConfig = [
@@ -94,7 +96,7 @@ export const TabFilter = ({
 
     const handleUpdateVisibility = (e) => {
         handleSetDatasetSelected(e.target.value)
-        updateVisibility(e.target.value)
+        showOnlyDataset(e.target.value)
     }
     
     return (
@@ -145,9 +147,7 @@ export const TabFilter = ({
                         </Button>
                     </Box>
 
-                    
-                        <Box sx={{ mt: 2, px: 2 }}>
-                            
+                        <Box sx={{ mt: 2, px: 2 }}>                            
                             <Select
                                 size="small"
                                 fullWidth

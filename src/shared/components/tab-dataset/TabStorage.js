@@ -8,10 +8,10 @@ import {
   Button,
   useTheme,
   Typography,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle
+  Select, 
+  MenuItem, 
+  FormControl, 
+  InputLabel
 } from '@mui/material'
 
 import { FixedSizeList } from 'react-window'
@@ -27,51 +27,62 @@ import {
   useDatasetsContext,
 } from '../../contexts'
 
-export const TabStorage = ({ setTabIndex, updateVisibility }) => {
+import {
+  DeleteDialog, 
+  useDeleteDialog,
+  InterpolationComponent
+} from '..'
+
+export const TabStorage = ({ setTabIndex }) => {
 
   const theme = useTheme()
   const {
-    handleDeleteDataset, handleSetDatasetSelected,
-    datasets
+    handleDeleteDataset, 
+    handleSetDatasetSelected,
+    datasets,
+    toggleDatasetVisibility,
+    showOnlyDataset,
   } = useDatasetsContext()
 
-  const [open, setOpen] = useState(false)
-  const [indexToDelete, setIndexToDelete] = useState(null)
-  const handleClickOpen = (index) => {
-    setIndexToDelete(index)
-    setOpen(true)
-  }
-  const handleClose = () => {
-    setOpen(false)
-    setIndexToDelete(null)
-  }
+  const { openDialog, index, open, close } = useDeleteDialog()
+
   const handleDelete = () => {
-    if (indexToDelete !== null) handleDeleteDataset(indexToDelete)
-    handleClose()
+    if (index !== null) handleDeleteDataset(index)
+    close()
   }
 
   const handleOpenTabFilter = (index) => {
     handleSetDatasetSelected(index)
     setTabIndex(1)
-    updateVisibility(index)
+    showOnlyDataset(index)
+  }
+
+  const [interpolationType, setInterpolationType] = useState('')
+  const [point1Index, setPoint1Index] = useState('')
+  const [point2Index, setPoint2Index] = useState('')
+  const handleInterpolationTypeChange = (e) => {
+    setInterpolationType(e.target.value)
+  }
+  const handlePoint1Change = (e) => {
+    setPoint1Index(e.target.value)
+    console.log("Alterado 1")
+  }
+  const handlePoint2Change = (e) => {
+    setPoint2Index(e.target.value)
+    console.log("Alterado 2")
+  }
+  const handleCalculate = () => {
+    console.log(`Interpolando: [${point1Index} ; ${point2Index}] ${interpolationType}`)
+    // Aqui você chama sua função de interpolação
   }
 
   return (
     <>
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>Confirmar exclusão</DialogTitle>
-        <DialogContent>
-          <p>Você tem certeza de que deseja excluir este item?</p>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} color="secondary">
-            Cancelar
-          </Button>
-          <Button onClick={handleDelete} color="primary">
-            Excluir
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <DeleteDialog
+        open={openDialog}
+        onClose={close}
+        onDelete={handleDelete}
+      />
 
       <Box
         sx={{
@@ -98,20 +109,8 @@ export const TabStorage = ({ setTabIndex, updateVisibility }) => {
           datasets.map((dataset, index) => {
 
             const formatPoint = (val) => Number(val).toFixed(1)
-
             const xArray = dataset.data[0].x
             const yArray = dataset.data[0].y
-
-            let maxIndex = 0
-            let minIndex = 0
-            for (let i = 1; i < yArray.length; i++) {
-              if (yArray[i] > yArray[maxIndex]) maxIndex = i
-              if (yArray[i] < yArray[minIndex]) minIndex = i
-            }
-            const criticalPoints = [
-              { index: maxIndex, x: xArray[maxIndex], y: yArray[maxIndex] },
-              { index: minIndex, x: xArray[minIndex], y: yArray[minIndex] }
-            ]
 
             return (
               <Accordion key={index}>
@@ -127,9 +126,9 @@ export const TabStorage = ({ setTabIndex, updateVisibility }) => {
                     overflow="hidden"
                   >
                     {[
-                      { onClick: () => datasets[index].setIsVisible(), icon: datasets[index].visible ? <VisibilityOffIcon /> : <VisibilityIcon /> },
+                      { onClick: () => toggleDatasetVisibility(index), icon: datasets[index].visible ? <VisibilityOffIcon /> : <VisibilityIcon /> },
                       { icon: <SaveAltIcon /> },
-                      { onClick: () => handleClickOpen(index), icon: <DeleteIcon /> },
+                      { onClick: () => open(index), icon: <DeleteIcon /> },
                       { onClick: () => handleOpenTabFilter(index), icon: <StartIcon /> }
                     ].map((btn, i) => (
                       <Button
@@ -185,17 +184,12 @@ export const TabStorage = ({ setTabIndex, updateVisibility }) => {
                     </AccordionDetails>
                   </Accordion>
 
-                  {/* Critical Points */}
                   <Accordion>
                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                      Critical Points
+                      Interpolação
                     </AccordionSummary>
                     <AccordionDetails>
-                      {criticalPoints.map((pt, i) => (
-                        <Box key={i}>
-                          {pt.index}: [{formatPoint(pt.x)}; {formatPoint(pt.y)}]
-                        </Box>
-                      ))}
+                      <InterpolationComponent xArray={xArray} yArray={yArray} />
                     </AccordionDetails>
                   </Accordion>
                 </AccordionDetails>

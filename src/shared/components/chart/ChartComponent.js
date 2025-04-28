@@ -147,33 +147,70 @@ export const ChartComponent = ({ type_, previewData, onPointsSelected  }) => {
   }, [])
 
   const [selectedPoints, setSelectedPoints] = useState([])
+  const [selectedDataset, setSelectedDataset] = useState(null)
+
   useEffect(() => {
     const el = chartRef.current
     if (!el || !onPointsSelected) return
-  
+
     const handleClick = (eventData) => {
       if (eventData?.points?.length > 0) {
-        const point = {
-          x: eventData.points[0].x,
-          y: eventData.points[0].y,
+        const point = eventData.points[0]
+        const currentDataset = point.data.name
+
+        if (!selectedDataset || currentDataset === selectedDataset) {
+          setSelectedPoints(prev => {
+            if (prev.length < 2) {
+              return [...prev, {
+                x: point.x,
+                y: point.y,
+                dataset: currentDataset
+              }]
+            }
+            return prev
+          })
+          setSelectedDataset(currentDataset)
         }
-        setSelectedPoints(prev => {
-          const newSelection = [...prev, point]
-          if (newSelection.length === 2) {
-            onPointsSelected(newSelection)
-            return [] // reseta depois de enviar
-          }
-          return newSelection
-        })
       }
     }
-  
+
     el.on('plotly_click', handleClick)
-  
+    /*
     return () => {
       el.removeListener('plotly_click', handleClick)
-    }
+    }*/
   }, [onPointsSelected])
+  useEffect(() => {
+    const el = chartRef.current
+    if (!el || selectedPoints.length === 0) return
+
+    const lastTrace = el.data.find(trace => trace.name === 'Selected Points')
+    if (lastTrace) {
+      const traceIndex = el.data.indexOf(lastTrace)
+      Plotly.deleteTraces(el, [traceIndex])
+    }
+
+    Plotly.addTraces(el, [{
+      x: selectedPoints.map(p => p.x),
+      y: selectedPoints.map(p => p.y),
+      mode: 'markers',
+      marker: {
+        size: 10,
+        color: theme.palette.secondary.main,
+        symbol: 'x'
+      },
+      name: 'Selected Points',
+      showlegend: false
+    }])
+
+    if (selectedPoints.length === 2) {
+      onPointsSelected(selectedPoints)
+      setTimeout(() => {
+        setSelectedPoints([])
+        setSelectedDataset(null)
+      }, 100)
+    }
+  }, [selectedPoints, theme])
 
   return (
     <Box

@@ -7,7 +7,7 @@ import {
   useDashboardContext
 } from '..'
 
-const DatasetsContext = createContext({});
+const DatasetsContext = createContext({})
 
 export const useDatasetsContext = () => {
   return useContext(DatasetsContext)
@@ -38,8 +38,8 @@ export const DataSetsProvider = ({ children }) => {
     startPotential: -800,
     endPotential: 0,
     step: 10,
-    scanRate: 100,
-    cycles: 3,
+    scanRate: 1000,
+    cycles: 1,
   })
   const [datasets, setDatasets]= useState([])
   const [isDatasetSelected, setIsDatasetSelected] = useState(false)
@@ -92,7 +92,7 @@ export const DataSetsProvider = ({ children }) => {
   }
 
   const setNewDataSet = (name_,parameters_) => {
-    const visible_ = true; // Initialize visibility state
+    const visible_ = true // Initialize visibility state
     const handleSetIsVisible = () => {
       setDatasets((prevDatasets) =>
         prevDatasets.map((dataset) =>
@@ -100,17 +100,17 @@ export const DataSetsProvider = ({ children }) => {
             ? { ...dataset, visible: !dataset.visible }
             : dataset
         )
-      );
-    };
+      )
+    }
 
-    cacheDatasetsManager();
+    cacheDatasetsManager()
     setDatasets((prevDatasets) => [
       ...prevDatasets,
       {
         name: name_,
         params: parameters_,
         visible: visible_,
-        setIsVisible: handleSetIsVisible, // Save the function reference
+        setIsVisible: handleSetIsVisible, 
         data: [
           {
             x: [],
@@ -123,9 +123,8 @@ export const DataSetsProvider = ({ children }) => {
     ])
   }
 
-  // Function to create a new dataset with the given name, parameters, and points
   const handleNewDataset = (name_, parameters_, points_) => {
-    const visible_ = true;
+    const visible_ = true
     const handleSetIsVisible = () => {
       setDatasets((prevDatasets) =>
         prevDatasets.map((dataset) =>
@@ -133,10 +132,10 @@ export const DataSetsProvider = ({ children }) => {
             ? { ...dataset, visible: !dataset.visible }
             : dataset
         )
-      );
-    };
+      )
+    }
 
-    cacheDatasetsManager();
+    cacheDatasetsManager()
     setDatasets((prevDatasets) => [
       ...prevDatasets,
       {
@@ -158,23 +157,33 @@ export const DataSetsProvider = ({ children }) => {
 
   const addDataPoint = (voltage, current) => {
     setDatasets((prevDatasets) => {
-      const updatedDatasets = [...prevDatasets];
-      const lastDataset = updatedDatasets[updatedDatasets.length - 1];
+      const updatedDatasets = [...prevDatasets]
+      const lastDataset = updatedDatasets[updatedDatasets.length - 1]
   
       if (lastDataset && lastDataset.data && lastDataset.data[0]) {
         if (!Array.isArray(lastDataset.data[0].x)) {
-          lastDataset.data[0].x = [];
+          lastDataset.data[0].x = []
         }
         if (!Array.isArray(lastDataset.data[0].y)) {
-          lastDataset.data[0].y = [];
+          lastDataset.data[0].y = []
         }
-        lastDataset.data[0].x.push(voltage);
-        lastDataset.data[0].y.push(current);
+        lastDataset.data[0].x.push(voltage)
+        lastDataset.data[0].y.push(current)
       }
   
-      return updatedDatasets;
-    });
-  };
+      return updatedDatasets
+    })
+  }
+
+  const toggleDatasetVisibility = useCallback((pos) => {
+    datasets[pos].setIsVisible(!datasets[pos].visible)
+  })
+  const showOnlyDataset = useCallback((pos) => {
+    datasets.forEach( (ds, i) => 
+      i === pos ? 
+        !ds.visible && ds.setIsVisible() : ds.visible && ds.setIsVisible()
+    )
+  })
 
   useEffect(()=>{
     // Data graph
@@ -225,9 +234,11 @@ export const DataSetsProvider = ({ children }) => {
       //handleDatasetIsVisible,
       datasets, handleSetDataset,
       handleNewDataset,
+      toggleDatasetVisibility,
+      showOnlyDataset,
     }}>
       {children}
     </DatasetsContext.Provider>
-  );
-};
+  )
+}
 

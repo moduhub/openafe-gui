@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from 'react'
 
 import {
   Box,
@@ -8,11 +8,11 @@ import {
   IconButton,
   Tabs,
   Tab,
-} from '@mui/material';
+} from '@mui/material'
 
-import MinimizeIcon from '@mui/icons-material/Minimize';
-import DatasetIcon from '@mui/icons-material/Dataset';
-import BarChartIcon from '@mui/icons-material/BarChart';
+import MinimizeIcon from '@mui/icons-material/Minimize'
+import DatasetIcon from '@mui/icons-material/Dataset'
+import BarChartIcon from '@mui/icons-material/BarChart'
 
 import { 
   useDashboardContext,
@@ -28,28 +28,24 @@ import {
 
 export const TabDataset = ({ setPreviewData , previewData }) => {
 
-  const theme = useTheme();
+  const theme = useTheme()
   const{
     tabDatasetsIsMinimized: isMinimized, 
     handleToggleTabDatasetsMinimized: setIsMinimized,
   }= useDashboardContext()
   const{
-    datasets, datasetSelected,
+    datasetSelected,
+    showOnlyDataset
   } = useDatasetsContext()
   
-  const [tabIndex, setTabIndex] = useState(0);
+  const [tabIndex, setTabIndex] = useState(0)
   const handleTabIndex = (_, newIndex) => {
     if (newIndex !== undefined) {
       setTabIndex(newIndex)
       setPreviewData({ x: [], y: [] })
+      if(newIndex == 1) showOnlyDataset(datasetSelected)
     }
-  }
-
-  const updateVisibility = (pos) => {
-    datasets.forEach( (ds, i) => 
-    i === pos ? 
-      !ds.visible && ds.setIsVisible() : ds.visible && ds.setIsVisible()
-    )
+    
   }
 
   if (isMinimized) return null
@@ -78,9 +74,7 @@ export const TabDataset = ({ setPreviewData , previewData }) => {
         }}
       >
         <CardContent sx={{ display: 'flex', flexDirection: 'column', color: theme.palette.text.primary }}>
-          {/* Controle superior */}
           <Box display="flex" flexDirection="row" width="100%" gap={1} justifyContent="space-between">
-            {/* Box para os Tabs, alinhados na parte inferior */}
             <Box display="flex" alignItems="flex-start">
               <Tabs value={tabIndex} onChange={handleTabIndex} variant="fullWidth">
                 <Tab icon={<DatasetIcon size="small" />} value={0} />
@@ -88,7 +82,6 @@ export const TabDataset = ({ setPreviewData , previewData }) => {
               </Tabs>
             </Box>
 
-            {/* Box para o botão de minimização */}
             <Box display="flex" justifyContent="center" height="50%" width="16px">
               <IconButton 
                 aria-label="toggle" 
@@ -100,18 +93,15 @@ export const TabDataset = ({ setPreviewData , previewData }) => {
             </Box>
           </Box>
 
-          {/* Controle de exibição da guia */}
           {tabIndex === 0 ? 
             <TabStorage 
               setTabIndex={setTabIndex} 
-              updateVisibility={updateVisibility}
             /> 
             : 
             <TabFilter 
               setPreviewData={setPreviewData} 
               previewData={previewData} 
               setTabIndex={setTabIndex}
-              updateVisibility={updateVisibility}
             />}
         </CardContent>
       </Card>
