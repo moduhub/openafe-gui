@@ -8,6 +8,8 @@ import {
   InterpolationDialog
 } from '../../shared/components'
 
+import { useDatasetsContext } from '../../shared/contexts'
+
 export const Dashboard = () => {
 
   let type_chart_dashboard = {
@@ -36,6 +38,13 @@ export const Dashboard = () => {
     setOpenDialog(false)
     setSelectedPoints([])
   }
+
+  const { datasets, datasetSelected } = useDatasetsContext()
+  useEffect(() => {
+    if (datasets?.[datasetSelected]?.interpolations) {
+      console.log("nova interpolação adicionada:", datasets)
+    }
+  }, [datasets])
 
   return (
     <>

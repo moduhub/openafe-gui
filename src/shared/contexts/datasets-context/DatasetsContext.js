@@ -91,8 +91,9 @@ export const DataSetsProvider = ({ children }) => {
     }
   }
 
-  const setNewDataSet = (name_,parameters_) => {
+  const setNewDataSet = (name_, parameters_) => {
     const visible_ = true
+  
     const handleSetIsVisible = () => {
       setDatasets((prevDatasets) =>
         prevDatasets.map((dataset) =>
@@ -102,7 +103,21 @@ export const DataSetsProvider = ({ children }) => {
         )
       )
     }
-
+  
+    const addInterpolation = (interpolation) => {
+      setDatasets((prevDatasets) =>
+        prevDatasets.map((dataset) =>
+          dataset.name === name_
+            ? {
+                ...dataset,
+                interpolations: [...dataset.interpolations, interpolation],
+              }
+            : dataset
+        )
+      )
+    }
+    
+  
     cacheDatasetsManager()
     setDatasets((prevDatasets) => [
       ...prevDatasets,
@@ -110,7 +125,9 @@ export const DataSetsProvider = ({ children }) => {
         name: name_,
         params: parameters_,
         visible: visible_,
-        setIsVisible: handleSetIsVisible, 
+        setIsVisible: handleSetIsVisible,
+        addInterpolation: addInterpolation,
+        interpolations: [],
         data: [
           {
             x: [],
@@ -184,7 +201,7 @@ export const DataSetsProvider = ({ children }) => {
         !ds.visible && ds.setIsVisible() : ds.visible && ds.setIsVisible()
     )
   })
-
+  
   useEffect(()=>{
     // Data graph
     if (arduinoData.startsWith('$SGL')) {

@@ -29,7 +29,7 @@ export const ChartComponent = ({ type_, previewData, onPointsSelected, interpola
       automargin: true, 
     },
     yaxis: {
-      title: { text: 'Current (mA)', standoff: 15 },
+      title: { text: 'Current (uA)', standoff: 15 },
       linecolor: theme.palette.text.primary,
       mirror: true,
       gridcolor: theme.palette.divider,
@@ -233,48 +233,47 @@ export const ChartComponent = ({ type_, previewData, onPointsSelected, interpola
   }, [selectedPoints, theme])
 
   useEffect(() => {
-    const el = chartRef.current;
-    if (!el) return;
+    const el = chartRef.current
+    if (!el) return
   
     const entries = Object.entries(datasets)
-      .filter(([_, ds]) => ds.visible && ds.data?.[0]?.x && ds.data?.[0]?.y);
+      .filter(([_, ds]) => ds.visible && ds.data?.[0]?.x && ds.data?.[0]?.y)
     const data = entries.map(([key, ds]) => ({
       x: ds.data[0].x,
       y: ds.data[0].y,
-      mode: 'lines',
+      mode: "lines",
       name: key,
-    }));
+    }))
   
     if (previewData && previewData.x && previewData.y) {
       data.push({
         x: previewData.x,
         y: previewData.y,
-        mode: 'lines',
-        name: 'Preview',
+        mode: "lines",
+        name: "Preview",
         line: {
           color: theme.palette.secondary.main,
-          dash: 'dot',
+          dash: "dot",
           width: 2,
         },
-      });
+      })
     }
   
-    // Adicionar a curva de interpolação
     if (interpolationParams.interpolatedX.length > 0) {
       data.push({
         x: interpolationParams.interpolatedX,
         y: interpolationParams.interpolatedY,
-        mode: 'lines',
+        mode: "lines",
         name: `Interpolation (Degree ${interpolationParams.order})`,
         line: {
           color: theme.palette.info.main,
-          dash: 'dot',
+          dash: "dot",
           width: 2,
         },
-      });
+      })
     }
   
-    Plotly.react(el, data, layout, config);
+    Plotly.react(el, data, layout, config)
   }, [datasets, previewData, interpolationParams, layout, config])
 
   return (

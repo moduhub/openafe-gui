@@ -1,37 +1,37 @@
-import React, { createContext, useCallback, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useState } from 'react'
 
-const SettingsContext = createContext({});
+const SettingsContext = createContext({})
 
 export const useSettingsContext = () => {
-  return useContext(SettingsContext);
+  return useContext(SettingsContext)
 }
 
 export const SettingsProvider = ({ children }) => {
-  const [autoConnect, setAutoConnect] = useState(false);
-  const [maxDatasets, setMaxDatasets] = useState(10);
-  const [defaultName, setDefaultName] = useState('captura');
-  const [deleteCache, setDeleteCache] = useState('Apagar dataset mais antigo');
-  const [unitSystem, setUnitSystem] = useState('SI');
-  const [tabIndex, setTabIndex] = useState(0);
+  const [autoConnect, setAutoConnect] = useState(false)
+  const [maxDatasets, setMaxDatasets] = useState(10)
+  const [defaultName, setDefaultName] = useState('captura')
+  const [deleteCache, setDeleteCache] = useState('Apagar dataset mais antigo')
+  const [unitSystem, setUnitSystem] = useState('SI')
+  const [tabIndex, setTabIndex] = useState(0)
 
   const handleSetAutoConnect = useCallback((newAutoConnect) => {
-    setAutoConnect(newAutoConnect);
-  }, []);
+    setAutoConnect(newAutoConnect)
+  }, [])
   const handleSetMaxDatasets = useCallback((newMaxDatasets) => {
-    setMaxDatasets(newMaxDatasets);
-  }, []);
+    setMaxDatasets(newMaxDatasets)
+  }, [])
   const handleSetDefaultName = useCallback((newDefaultName) => {
-    setDefaultName(newDefaultName);
-  }, []);
+    setDefaultName(newDefaultName)
+  }, [])
   const handleSetDeleteCache = useCallback((newDeleteCache) => {
-    setDeleteCache(newDeleteCache);
-  }, []);
+    setDeleteCache(newDeleteCache)
+  }, [])
   const handleSetUnitSystem = useCallback((newUnitSystem) => {
-    setUnitSystem(newUnitSystem);
-  }, []);
+    setUnitSystem(newUnitSystem)
+  }, [])
   const handleSetTabIndex = useCallback((newTabIndex) => {
-    setTabIndex(newTabIndex);
-  }, []);
+    setTabIndex(newTabIndex)
+  }, [])
 
   return (
     <SettingsContext.Provider value={{
@@ -44,5 +44,5 @@ export const SettingsProvider = ({ children }) => {
     }}>
       {children}
     </SettingsContext.Provider>
-  );
-};
+  )
+}
