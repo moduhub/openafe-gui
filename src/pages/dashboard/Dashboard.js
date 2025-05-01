@@ -10,16 +10,21 @@ import {
 
 export const Dashboard = () => {
 
-  const [previewData, setPreviewData] = useState({ x: [], y: [] })
-
   let type_chart_dashboard = {
     top : '64px',
     height : 'calc(100% - 64px)',
     width : '100%'
   }
 
+  const [previewData, setPreviewData] = useState({ x: [], y: [] })
   const [selectedPoints, setSelectedPoints] = useState([])
   const [openDialog, setOpenDialog] = useState(false)
+  const [interpolationParams, setInterpolationParams] = useState({
+    order: 1,
+    coefficients: [],
+    interpolatedX: [],
+    interpolatedY: [],
+  })
 
   useEffect(() => {
     if (selectedPoints.length > 0) {
@@ -38,6 +43,7 @@ export const Dashboard = () => {
       open={openDialog}
       onClose={handleCloseDialog}
       selectedPoints={selectedPoints}
+      setInterpolationParams={setInterpolationParams}
     />
 
     <Box 
@@ -52,6 +58,7 @@ export const Dashboard = () => {
         type_={type_chart_dashboard} 
         previewData={previewData}
         onPointsSelected={setSelectedPoints}
+        interpolationParams={interpolationParams}
       />
 
       {/* Controle de Datasets */}

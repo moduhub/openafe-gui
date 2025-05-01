@@ -154,7 +154,6 @@ export const TabFilter = ({
                                 value={selectedFilter}
                                 onChange={(e) => setSelectedFilter(e.target.value)}
                                 renderValue={renderSelected}
-                                SelectProps={{ displayEmpty: true }}
                                 labelId="filtro-label"
                                 displayEmpty
                             >

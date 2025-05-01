@@ -92,7 +92,7 @@ export const DataSetsProvider = ({ children }) => {
   }
 
   const setNewDataSet = (name_,parameters_) => {
-    const visible_ = true // Initialize visibility state
+    const visible_ = true
     const handleSetIsVisible = () => {
       setDatasets((prevDatasets) =>
         prevDatasets.map((dataset) =>

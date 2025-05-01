@@ -7,9 +7,9 @@ import {
   useDatasetsContext,
 } from '../../contexts'
 
-export const ChartComponent = ({ type_, previewData, onPointsSelected  }) => {
+export const ChartComponent = ({ type_, previewData, onPointsSelected, interpolationParams }) => {
   const { theme } = useContext(ThemeContext)
-  const { datasets } = useDatasetsContext()
+  const { datasets, handleSetDatasetSelected } = useDatasetsContext()
   const chartRef = useRef(null)
   
   const prevLengths = useRef({})
@@ -154,63 +154,128 @@ export const ChartComponent = ({ type_, previewData, onPointsSelected  }) => {
     if (!el || !onPointsSelected) return
 
     const handleClick = (eventData) => {
-      if (eventData?.points?.length > 0) {
-        const point = eventData.points[0]
-        const currentDataset = point.data.name
+        if (eventData?.points?.length > 0) {
+            const point = eventData.points[0]
+            const currentDataset = point.data.name
+            const datasetColor = point.fullData.line?.color || theme.palette.secondary.main
 
-        if (!selectedDataset || currentDataset === selectedDataset) {
-          setSelectedPoints(prev => {
-            if (prev.length < 2) {
-              return [...prev, {
-                x: point.x,
-                y: point.y,
-                dataset: currentDataset
-              }]
-            }
-            return prev
-          })
-          setSelectedDataset(currentDataset)
+            setSelectedPoints(prev => {
+                // Se o dataset for diferente, reinicia o array
+                if (prev.length > 0 && prev[0].dataset !== currentDataset) {
+                    setSelectedDataset(currentDataset)
+                    return [{
+                        x: point.x,
+                        y: point.y,
+                        dataset: currentDataset,
+                        color: datasetColor
+                    }]
+                }
+
+                // Verifica se o ponto já foi selecionado
+                const isDuplicate = prev.some(p => p.x === point.x && p.y === point.y)
+                if (!isDuplicate && prev.length < 2) {
+                    return [...prev, {
+                        x: point.x,
+                        y: point.y,
+                        dataset: currentDataset,
+                        color: datasetColor
+                    }]
+                }
+
+                return prev
+            })
+
+            // Atualiza o dataset selecionado
+            setSelectedDataset(currentDataset)
         }
-      }
     }
 
     el.on('plotly_click', handleClick)
-    /*
     return () => {
       el.removeListener('plotly_click', handleClick)
-    }*/
-  }, [onPointsSelected])
+    }
+  }, [onPointsSelected, selectedDataset, theme])
+  
   useEffect(() => {
     const el = chartRef.current
-    if (!el || selectedPoints.length === 0) return
+    if (!el) return
 
     const lastTrace = el.data.find(trace => trace.name === 'Selected Points')
     if (lastTrace) {
-      const traceIndex = el.data.indexOf(lastTrace)
-      Plotly.deleteTraces(el, [traceIndex])
+        const traceIndex = el.data.indexOf(lastTrace)
+        Plotly.deleteTraces(el, [traceIndex])
     }
 
-    Plotly.addTraces(el, [{
-      x: selectedPoints.map(p => p.x),
-      y: selectedPoints.map(p => p.y),
-      mode: 'markers',
-      marker: {
-        size: 10,
-        color: theme.palette.secondary.main,
-        symbol: 'x'
-      },
-      name: 'Selected Points',
-      showlegend: false
-    }])
+    if (selectedPoints.length > 0) {
+        Plotly.addTraces(el, [{
+            x: selectedPoints.map(p => p.x),
+            y: selectedPoints.map(p => p.y),
+            mode: 'markers',
+            marker: {
+                size: 10,
+                color: selectedPoints[0]?.color || theme.palette.secondary.main,
+                symbol: 'x'
+            },
+            name: 'Selected Points',
+            showlegend: false
+        }])
+    }
 
     if (selectedPoints.length === 2) {
-      onPointsSelected(selectedPoints)
-      setTimeout(() => {
-        setSelectedPoints([])
-        setSelectedDataset(null)
-      }, 100)
+        onPointsSelected(selectedPoints)
+        handleSetDatasetSelected(selectedDataset)
+
+        setTimeout(() => {
+            setSelectedPoints([])
+            setSelectedDataset(null)
+        }, 100)
     }
   }, [selectedPoints, theme])
+
+  useEffect(() => {
+    const el = chartRef.current;
+    if (!el) return;
+  
+    const entries = Object.entries(datasets)
+      .filter(([_, ds]) => ds.visible && ds.data?.[0]?.x && ds.data?.[0]?.y);
+    const data = entries.map(([key, ds]) => ({
+      x: ds.data[0].x,
+      y: ds.data[0].y,
+      mode: 'lines',
+      name: key,
+    }));
+  
+    if (previewData && previewData.x && previewData.y) {
+      data.push({
+        x: previewData.x,
+        y: previewData.y,
+        mode: 'lines',
+        name: 'Preview',
+        line: {
+          color: theme.palette.secondary.main,
+          dash: 'dot',
+          width: 2,
+        },
+      });
+    }
+  
+    // Adicionar a curva de interpolação
+    if (interpolationParams.interpolatedX.length > 0) {
+      data.push({
+        x: interpolationParams.interpolatedX,
+        y: interpolationParams.interpolatedY,
+        mode: 'lines',
+        name: `Interpolation (Degree ${interpolationParams.order})`,
+        line: {
+          color: theme.palette.info.main,
+          dash: 'dot',
+          width: 2,
+        },
+      });
+    }
+  
+    Plotly.react(el, data, layout, config);
+  }, [datasets, previewData, interpolationParams, layout, config])
 
   return (
     <Box

@@ -9,7 +9,7 @@ export const useSettingsContext = () => {
 export const SettingsProvider = ({ children }) => {
   const [autoConnect, setAutoConnect] = useState(false);
   const [maxDatasets, setMaxDatasets] = useState(10);
-  const [defaultName, setDefaultName] = useState('default name');
+  const [defaultName, setDefaultName] = useState('captura');
   const [deleteCache, setDeleteCache] = useState('Apagar dataset mais antigo');
   const [unitSystem, setUnitSystem] = useState('SI');
   const [tabIndex, setTabIndex] = useState(0);
