@@ -1,85 +1,116 @@
 import { useState } from 'react'
+
 import {
-  Box, FormControl, InputLabel, Select, MenuItem, Button
+  Box,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Button,
+  useTheme,
+  Typography,
 } from '@mui/material'
 
-export const InterpolationComponent = ({ xArray, yArray }) => {
-  const [interpolationType, setInterpolationType] = useState('')
-  const [point1Index, setPoint1Index] = useState('')
-  const [point2Index, setPoint2Index] = useState('')
+import { FixedSizeList } from 'react-window'
 
-  const formatPoint = (val) => Number(val).toFixed(1)
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
+import VisibilityIcon from '@mui/icons-material/Visibility'
+import DeleteIcon from '@mui/icons-material/Delete'
 
-  const handleInterpolationTypeChange = (e) => {
-    setInterpolationType(e.target.value)
-  }
+import {
+  useDatasetsContext,
+} from '../../contexts'
 
-  const handlePoint1Change = (e) => {
-    setPoint1Index(e.target.value)
-    console.log("Alterado 1")
-  }
+import {
+  DeleteDialog, 
+  useDeleteDialog,
+} from '..'
 
-  const handlePoint2Change = (e) => {
-    setPoint2Index(e.target.value)
-    console.log("Alterado 2")
-  }
-
-  const handleCalculate = () => {
-    console.log(`Interpolando: [${point1Index}  ${point2Index}] ${interpolationType}`)
-    // Aqui você chama sua função de interpolação
-  }
+export const InterpolationComponent = ({ 
+  dataset, 
+  datasetIndex, 
+  onToggleVisibility, 
+  onDeleteInterpolation 
+}) => {
+  
+  const theme = useTheme()
 
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
-      <FormControl fullWidth>
-        <InputLabel id="interpolation-type-label">Tipo de Interpolação</InputLabel>
-        <Select
-          labelId="interpolation-type-label"
-          value={interpolationType}
-          label="Tipo de Interpolação"
-          onChange={handleInterpolationTypeChange}
-        >
-          <MenuItem value="polinomial">Polinomial</MenuItem>
-          <MenuItem value="gaussiana">Gaussiana</MenuItem>
-          <MenuItem value="exponencial">Exponencial</MenuItem>
-        </Select>
-      </FormControl>
+    <>
+      {dataset.interpolations && dataset.interpolations.length > 0 ? (
+        dataset.interpolations.map((interpolation, i) => (
+          <Accordion key={i} width="100%">
+           <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              sx={{
+                color: interpolation.isVisible ? 'inherit' : 'gray', 
+              }}
+            >
+              {interpolation.name || `${interpolation.type} ${i + 1}`}
+            </AccordionSummary>
+            <AccordionDetails>
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                marginBottom={2}
+              >
+                <Button
+                  onClick={() => onToggleVisibility(datasetIndex, i)}
+                  size="small"
+                  startIcon={
+                    interpolation.isVisible ? <VisibilityOffIcon /> : <VisibilityIcon />
+                  }
+                  //disabled = {dataset.visible ? false : true}
+                >
+                </Button>
+                <Button
+                  onClick={() => onDeleteInterpolation(datasetIndex, i)} 
+                  size="small"
+                  startIcon={<DeleteIcon />}
+                >
+                </Button>
+              </Box>
 
-      <FormControl fullWidth>
-        <InputLabel id="point1-label">Ponto 1</InputLabel>
-        <Select
-          labelId="point1-label"
-          value={point1Index}
-          label="Ponto 1"
-          onChange={handlePoint1Change}
-        >
-          {xArray.map((_, idx) => (
-            <MenuItem key={idx} value={idx}>
-              {idx}: ({formatPoint(xArray[idx])}, {formatPoint(yArray[idx])})
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+              
+              <Typography variant="body2" gutterBottom>
+                Tipo: {interpolation.type}<br />
+                Ordem: {interpolation.order}<br />
+                Coeficientes: {interpolation.coefficients.join(", ")}
+              </Typography>
 
-      <FormControl fullWidth>
-        <InputLabel id="point2-label">Ponto 2</InputLabel>
-        <Select
-          labelId="point2-label"
-          value={point2Index}
-          label="Ponto 2"
-          onChange={handlePoint2Change}
-        >
-          {xArray.map((_, idx) => (
-            <MenuItem key={idx} value={idx}>
-              {idx}: ({formatPoint(xArray[idx])}, {formatPoint(yArray[idx])})
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-
-      <Button variant="contained" onClick={handleCalculate}>
-        Calcular
-      </Button>
-    </Box>
+              
+              <Accordion>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  Pontos
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Box sx={{ height: 150, width: "100%" }}>
+                    <FixedSizeList
+                      height={150}
+                      width="100%"
+                      itemSize={35}
+                      itemCount={interpolation.data[0].x.length}
+                      overscanCount={5}
+                    >
+                      {({ index, style }) => (
+                        <Box style={style}>
+                          {index}: [
+                          {Number(interpolation.data[0].x[index]).toFixed(1)}{" "}
+                          {Number(interpolation.data[0].y[index]).toFixed(1)}]
+                        </Box>
+                      )}
+                    </FixedSizeList>
+                  </Box>
+                </AccordionDetails>
+              </Accordion>
+            </AccordionDetails>
+          </Accordion>
+        ))
+      ) : (
+        <>
+        </>
+      )}
+    </>
   )
 }

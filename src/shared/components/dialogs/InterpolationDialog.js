@@ -22,14 +22,13 @@ export const InterpolationDialog = ({
   open,
   onClose,
   selectedPoints,
-  setInterpolationParams,
 }) => {
-  const { datasets, datasetSelected, handleAddInterpolation } = useDatasetsContext()
+  const { datasets, datasetSelected } = useDatasetsContext()
 
   const params = datasets?.[datasetSelected]?.params || {}
   const start  = params.startPotential ?? 0
   const end    = params.endPotential   ?? 0
-  const step   = params.step           ?? 0
+  const step   = params.step           ?? 1
   const delta = end - start
   const minStart = start - 0.5 * delta
   const maxEnd = end + 0.5 * delta
@@ -40,9 +39,25 @@ export const InterpolationDialog = ({
   const [polynomialOrder, setPolynomialOrder] = useState(1)
 
   const handleInterpolationTypeChange = (event) => {
-    setInterpolationType(event.target.value)
+    const type = event.target.value;
+    setInterpolationType(type)
+    updateData()
+  }
 
-    if (event.target.value === "polinomial") updateInterpolationData()
+  const updateData = () => {
+    if (!selectedPoints || selectedPoints.length < 2) return
+    const xValues = datasets?.[datasetSelected]?.data[0]?.x || []
+    const yValues = datasets?.[datasetSelected]?.data[0]?.y || []
+    const [p1, p2] = selectedPoints
+    const idx1 = xValues.findIndex((x, i) => x === p1?.x && yValues[i] === p1?.y)
+    const idx2 = xValues.findIndex((x, i) => x === p2?.x && yValues[i] === p2?.y)
+    if (idx1 === -1 || idx2 === -1) return
+
+    setPoints([idx1, idx2])
+    setRange({
+      min: xValues[idx1],
+      max: xValues[idx2],
+    })
   }
 
   const handleRangeChange = (key) => (_, newValue) => {
@@ -63,23 +78,17 @@ export const InterpolationDialog = ({
         range
       )
 
-      setInterpolationParams({
-        order: polynomialOrder,
-        coefficients: result.coefficients,
-        interpolatedX: result.interpolatedX,
-        interpolatedY: result.interpolatedY,
-      })
-
       const newInterpolation = {
         type: 'polynomial',
         order: polynomialOrder,
         coefficients: result.coefficients,
+        isVisible: true,
         data: [{
           x: result.interpolatedX,
           y: result.interpolatedY,
           mode: 'lines',
           line: { 
-            color: '#000000', // You can customize the color
+            //color: '#000000', // You can customize the color
             dash: 'dot'  // Makes the line dashed to distinguish from original data
           },
           name: `Interpolação ${polynomialOrder}° grau`
@@ -92,32 +101,13 @@ export const InterpolationDialog = ({
     handleCloseDialog()
   }
 
-  const updateInterpolationData = () => {
-    if (!selectedPoints || selectedPoints.length < 2) return
-
-    const xValues = datasets?.[datasetSelected]?.data[0]?.x || []
-    const [p1, p2] = selectedPoints
-
-    const idx1 = xValues.findIndex((x) => x === p1?.x)
-    const idx2 = xValues.findIndex((x) => x === p2?.x)
-
-    if (idx1 === -1 || idx2 === -1) return
-
-    const orderedPoints = idx1 < idx2 ? [idx1, idx2] : [idx2, idx1]
-    setPoints(orderedPoints)
-  }
-
   const handleCloseDialog = () => {
     setInterpolationType("")
     setPoints([])
-    setRange({ min: -1000, max: 200 })
+    setRange({ min: points[0].x, max: points[1].x })
     setPolynomialOrder(1)
     onClose()
   }
-
-  useEffect(() => {
-    setRange({ min: start, max: end })
-  }, [start, end])
 
   return (
     <Dialog open={open} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
@@ -125,6 +115,16 @@ export const InterpolationDialog = ({
         Interpolação em {datasets?.[datasetSelected]?.name || "conjunto desconhecido"}
       </DialogTitle>
       <DialogContent>
+        
+        <Box sx={{ mb: 2 }}>
+          <Typography>
+            Ponto 1: {selectedPoints?.[0] ? `(${selectedPoints[0].x}, ${selectedPoints[0].y})` : "Não selecionado"}
+          </Typography>
+          <Typography>
+            Ponto 2: {selectedPoints?.[1] ? `(${selectedPoints[1].x}, ${selectedPoints[1].y})` : "Não selecionado"}
+          </Typography>
+        </Box>
+
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2, my: 2 }}>
           <FormControl fullWidth>
             <InputLabel>Tipo de Interpolação</InputLabel>
@@ -137,6 +137,7 @@ export const InterpolationDialog = ({
             </Select>
           </FormControl>
         </Box>
+
         {interpolationType === "polinomial" && (
           <Box sx={{ mt: 2 }}>
           <Typography gutterBottom>Ordem do Polinômio:</Typography>

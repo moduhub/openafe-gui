@@ -19,14 +19,13 @@ export const DataSetsProvider = ({ children }) => {
 
   const { 
     arduinoData,
-    handleSetIsReading 
+    handleSetIsReading ,
   } = useArduinoContext()
-
   const {
+    priorityMode,
     maxDatasets, handleSetMaxDatasets,
     defaultName, handleSetDefaultName,
   } = useSettingsContext()
-
   const { 
     tabDatasetsIsMinimized: isDatasetsMinimized, 
     handleToggleTabDatasetsMinimized: setIsDatasetsMinimized,
@@ -60,6 +59,7 @@ export const DataSetsProvider = ({ children }) => {
   const handleSetDatasetSelected = useCallback((newDatasetSelected)=>{
     setDatasetSelected(newDatasetSelected)
   }, [])
+
   const handleDeleteDatasetSelected = (e) => {
     handleSetDatasetSelected(0)
     const newDataSets = [...datasets]
@@ -71,6 +71,7 @@ export const DataSetsProvider = ({ children }) => {
       handleSetIsDatasetSelected(false)
     }
   }
+  
   const handleDeleteDataset = (pos) => {
     handleSetDatasetSelected(0)
     const newDataSets = [...datasets]
@@ -174,19 +175,24 @@ export const DataSetsProvider = ({ children }) => {
 
   const addDataPoint = (voltage, current) => {
     setDatasets((prevDatasets) => {
-      const updatedDatasets = [...prevDatasets]
-      const lastDataset = updatedDatasets[updatedDatasets.length - 1]
+      const updatedDatasets = prevDatasets.map((dataset, index) => {
+        if (index === prevDatasets.length - 1) {
+          const newData = dataset.data ? [...dataset.data] : []
+          if (!newData[0]) newData[0] = { x: [], y: [] }
   
-      if (lastDataset && lastDataset.data && lastDataset.data[0]) {
-        if (!Array.isArray(lastDataset.data[0].x)) {
-          lastDataset.data[0].x = []
+          return {
+            ...dataset,
+            data: [
+              {
+                ...newData[0],
+                x: [...newData[0].x, voltage],
+                y: [...newData[0].y, current],
+              },
+            ],
+          }
         }
-        if (!Array.isArray(lastDataset.data[0].y)) {
-          lastDataset.data[0].y = []
-        }
-        lastDataset.data[0].x.push(voltage)
-        lastDataset.data[0].y.push(current)
-      }
+        return dataset
+      })
   
       return updatedDatasets
     })
@@ -195,6 +201,7 @@ export const DataSetsProvider = ({ children }) => {
   const toggleDatasetVisibility = useCallback((pos) => {
     datasets[pos].setIsVisible(!datasets[pos].visible)
   })
+
   const showOnlyDataset = useCallback((pos) => {
     datasets.forEach( (ds, i) => 
       i === pos ? 
@@ -216,6 +223,8 @@ export const DataSetsProvider = ({ children }) => {
           if(!isDatasetSelected)
             handleSetIsDatasetSelected(true)
           handleSetDatasetSelected(datasets.length - 1)
+          if (priorityMode) 
+            showOnlyDataset(datasets.length - 1)
         }
       }
     }
@@ -239,6 +248,8 @@ export const DataSetsProvider = ({ children }) => {
   useEffect(()=>{
     setCurrentName(defaultName)
   },[defaultName])
+
+
 
   return (
     <DatasetsContext.Provider value={{ 

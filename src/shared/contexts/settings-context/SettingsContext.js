@@ -7,6 +7,7 @@ export const useSettingsContext = () => {
 }
 
 export const SettingsProvider = ({ children }) => {
+  const [priorityMode, setPriorityMode] = useState(true)
   const [autoConnect, setAutoConnect] = useState(false)
   const [maxDatasets, setMaxDatasets] = useState(10)
   const [defaultName, setDefaultName] = useState('captura')
@@ -14,6 +15,9 @@ export const SettingsProvider = ({ children }) => {
   const [unitSystem, setUnitSystem] = useState('SI')
   const [tabIndex, setTabIndex] = useState(0)
 
+  const handleSetPriorityMode = useCallback((newPiorityMode) => {
+    setPriorityMode(newPiorityMode)
+  }, [])
   const handleSetAutoConnect = useCallback((newAutoConnect) => {
     setAutoConnect(newAutoConnect)
   }, [])
@@ -35,6 +39,7 @@ export const SettingsProvider = ({ children }) => {
 
   return (
     <SettingsContext.Provider value={{
+      priorityMode, handleSetPriorityMode,
       autoConnect, handleSetAutoConnect,
       maxDatasets, handleSetMaxDatasets,
       defaultName, handleSetDefaultName,

@@ -7,7 +7,7 @@ import {
   useDatasetsContext,
 } from '../../contexts'
 
-export const ChartComponent = ({ type_, previewData, onPointsSelected, interpolationParams }) => {
+export const ChartComponent = ({ type_, previewData, onPointsSelected }) => {
   const { theme } = useContext(ThemeContext)
   const { datasets, handleSetDatasetSelected } = useDatasetsContext()
   const chartRef = useRef(null)
@@ -84,8 +84,21 @@ export const ChartComponent = ({ type_, previewData, onPointsSelected, interpola
     const el = chartRef.current
     if (!el) return
 
-    Object.entries(datasets).forEach(([key, ds], idx) => {
+    // 1) Filtra apenas os datasets visíveis que tenham dados
+    const entries = Object.entries(datasets)
+      .filter(([_, ds]) => ds.visible && ds.data?.[0]?.x)
+
+    // 2) Cria um array só com as chaves, na mesma ordem do trace em el.data
+    const visibleKeys = entries.map(([key]) => key)
+
+    // 3) Para cada dataset (ainda percorremos todos, mas
+    //    só estreamos aqueles visíveis)
+    Object.entries(datasets).forEach(([key, ds]) => {
       if (!ds.visible || !ds.data?.[0]?.x) return
+
+      // 4) Agora usamos visibleKeys, não Object.keys(datasets)
+      const traceIndex = visibleKeys.indexOf(key)
+      if (traceIndex === -1) return
 
       const xArr = ds.data[0].x
       const yArr = ds.data[0].y
@@ -94,7 +107,13 @@ export const ChartComponent = ({ type_, previewData, onPointsSelected, interpola
       if (xArr.length > prev) {
         const newX = xArr.slice(prev)
         const newY = yArr.slice(prev)
-        Plotly.extendTraces(el, { x: [newX], y: [newY] }, [idx])
+
+        Plotly.extendTraces(
+          el,
+          { x: [newX], y: [newY] },
+          [traceIndex]
+        )
+
         prevLengths.current[key] = xArr.length
       }
     })
@@ -149,47 +168,48 @@ export const ChartComponent = ({ type_, previewData, onPointsSelected, interpola
   const [selectedPoints, setSelectedPoints] = useState([])
   const [selectedDataset, setSelectedDataset] = useState(null)
 
+  // Points Selecting
   useEffect(() => {
     const el = chartRef.current
     if (!el || !onPointsSelected) return
-
+  
     const handleClick = (eventData) => {
-        if (eventData?.points?.length > 0) {
-            const point = eventData.points[0]
-            const currentDataset = point.data.name
-            const datasetColor = point.fullData.line?.color || theme.palette.secondary.main
+      if (eventData?.points?.length > 0) {
+        const point = eventData.points[0]
+  
+        if (point.data.name.startsWith("Interpolação")) return
 
-            setSelectedPoints(prev => {
-                // Se o dataset for diferente, reinicia o array
-                if (prev.length > 0 && prev[0].dataset !== currentDataset) {
-                    setSelectedDataset(currentDataset)
-                    return [{
-                        x: point.x,
-                        y: point.y,
-                        dataset: currentDataset,
-                        color: datasetColor
-                    }]
-                }
-
-                // Verifica se o ponto já foi selecionado
-                const isDuplicate = prev.some(p => p.x === point.x && p.y === point.y)
-                if (!isDuplicate && prev.length < 2) {
-                    return [...prev, {
-                        x: point.x,
-                        y: point.y,
-                        dataset: currentDataset,
-                        color: datasetColor
-                    }]
-                }
-
-                return prev
-            })
-
-            // Atualiza o dataset selecionado
+        const currentDataset = point.data.name
+        const datasetColor = point.fullData.line?.color || theme.palette.secondary.main
+  
+        setSelectedPoints((prev) => {
+          if (prev.length > 0 && prev[0].dataset !== currentDataset) {
             setSelectedDataset(currentDataset)
-        }
+            return [{
+              x: point.x,
+              y: point.y,
+              dataset: currentDataset,
+              color: datasetColor,
+            }]
+          }
+  
+          const isDuplicate = prev.some(p => p.x === point.x && p.y === point.y)
+          if (!isDuplicate && prev.length < 2) {
+            return [...prev, {
+              x: point.x,
+              y: point.y,
+              dataset: currentDataset,
+              color: datasetColor,
+            }]
+          }
+  
+          return prev
+        })
+  
+        setSelectedDataset(currentDataset)
+      }
     }
-
+  
     el.on('plotly_click', handleClick)
     return () => {
       el.removeListener('plotly_click', handleClick)
@@ -232,20 +252,50 @@ export const ChartComponent = ({ type_, previewData, onPointsSelected, interpola
     }
   }, [selectedPoints, theme])
 
+  // Interpolations
   useEffect(() => {
     const el = chartRef.current
     if (!el) return
   
+    // Pega todos os datasets que tenham dados válidos
     const entries = Object.entries(datasets)
-      .filter(([_, ds]) => ds.visible && ds.data?.[0]?.x && ds.data?.[0]?.y)
-    const data = entries.map(([key, ds]) => ({
-      x: ds.data[0].x,
-      y: ds.data[0].y,
-      mode: "lines",
-      name: key,
-    }))
+      .filter(([_, ds]) => ds.data?.[0]?.x && ds.data?.[0]?.y)
+ 
+    const data = []
   
-    if (previewData && previewData.x && previewData.y) {
+    entries.forEach(([key, ds]) => {
+      // Adiciona apenas o dataset principal se estiver visível
+      if (ds.visible) {
+        data.push({
+          x: ds.data[0].x,
+          y: ds.data[0].y,
+          mode: "lines",
+          name: key,
+          line: {
+            dash: "solid",
+            width: 2,
+          }
+        })
+      }
+  
+      // Adiciona todas as interpolações visíveis, independente do pai
+      if (ds.interpolations?.length > 0) {
+        ds.interpolations
+          .filter(interp => interp.isVisible)
+          .forEach(interp => {
+            data.push({
+              x: interp.data[0].x,
+              y: interp.data[0].y,
+              mode: interp.data[0].mode,
+              name: interp.data[0].name,
+              line: interp.data[0].line,
+            })
+          })
+      }
+    })
+  
+    // Adiciona os dados de preview de filtro, se existirem
+    if (previewData?.x && previewData?.y) {
       data.push({
         x: previewData.x,
         y: previewData.y,
@@ -259,22 +309,11 @@ export const ChartComponent = ({ type_, previewData, onPointsSelected, interpola
       })
     }
   
-    if (interpolationParams.interpolatedX.length > 0) {
-      data.push({
-        x: interpolationParams.interpolatedX,
-        y: interpolationParams.interpolatedY,
-        mode: "lines",
-        name: `Interpolation (Degree ${interpolationParams.order})`,
-        line: {
-          color: theme.palette.info.main,
-          dash: "dot",
-          width: 2,
-        },
-      })
-    }
-  
+    // Atualiza o gráfico
     Plotly.react(el, data, layout, config)
-  }, [datasets, previewData, interpolationParams, layout, config])
+  }, [datasets, previewData, layout, config])
+  
+  
 
   return (
     <Box

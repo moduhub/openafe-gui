@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 import {
   Box,
@@ -8,14 +8,11 @@ import {
   Button,
   useTheme,
   Typography,
-  Select, 
-  MenuItem, 
-  FormControl, 
-  InputLabel
 } from '@mui/material'
 
 import { FixedSizeList } from 'react-window'
 
+import RecordingIcon from '@mui/icons-material/FiberManualRecord'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 import VisibilityIcon from '@mui/icons-material/Visibility'
@@ -25,6 +22,7 @@ import StartIcon from '@mui/icons-material/Start'
 
 import {
   useDatasetsContext,
+  useArduinoContext
 } from '../../contexts'
 
 import {
@@ -39,10 +37,14 @@ export const TabStorage = ({ setTabIndex }) => {
   const {
     handleDeleteDataset, 
     handleSetDatasetSelected,
-    datasets,
+    datasets, handleSetDataset,
     toggleDatasetVisibility,
     showOnlyDataset,
+    datasetSelected
   } = useDatasetsContext()
+  const {
+    isReading
+  } = useArduinoContext()
 
   const { openDialog, index, open, close } = useDeleteDialog()
 
@@ -50,30 +52,34 @@ export const TabStorage = ({ setTabIndex }) => {
     if (index !== null) handleDeleteDataset(index)
     close()
   }
-
   const handleOpenTabFilter = (index) => {
     handleSetDatasetSelected(index)
     setTabIndex(1)
     showOnlyDataset(index)
   }
 
-  const [interpolationType, setInterpolationType] = useState('')
-  const [point1Index, setPoint1Index] = useState('')
-  const [point2Index, setPoint2Index] = useState('')
-  const handleInterpolationTypeChange = (e) => {
-    setInterpolationType(e.target.value)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState({ datasetIndex: null, interpolationIndex: null })
+
+  const openDeleteDialog = (datasetIndex, interpolationIndex) => {
+    setDeleteTarget({ datasetIndex, interpolationIndex })
+    setDeleteDialogOpen(true)
   }
-  const handlePoint1Change = (e) => {
-    setPoint1Index(e.target.value)
-    console.log("Alterado 1")
+
+  const handleDeleteInterpolation = () => {
+    const { datasetIndex, interpolationIndex } = deleteTarget
+    if (datasetIndex !== null && interpolationIndex !== null) {
+      const updatedDatasets = [...datasets]
+      updatedDatasets[datasetIndex].interpolations.splice(interpolationIndex, 1)
+      handleSetDataset(updatedDatasets) 
+      setDeleteDialogOpen(false)
+    }
   }
-  const handlePoint2Change = (e) => {
-    setPoint2Index(e.target.value)
-    console.log("Alterado 2")
-  }
-  const handleCalculate = () => {
-    console.log(`Interpolando: [${point1Index} ; ${point2Index}] ${interpolationType}`)
-    // Aqui você chama sua função de interpolação
+  const handleToggleInterpolationVisibility = (datasetIndex, interpolationIndex) => {
+    const updatedDatasets = [...datasets]
+    const interpolation = updatedDatasets[datasetIndex].interpolations[interpolationIndex]
+    interpolation.isVisible = !interpolation.isVisible
+    handleSetDataset(updatedDatasets) 
   }
 
   return (
@@ -82,6 +88,11 @@ export const TabStorage = ({ setTabIndex }) => {
         open={openDialog}
         onClose={close}
         onDelete={handleDelete}
+      />
+      <DeleteDialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onDelete={handleDeleteInterpolation}
       />
 
       <Box
@@ -112,11 +123,38 @@ export const TabStorage = ({ setTabIndex }) => {
             const xArray = dataset.data[0].x
             const yArray = dataset.data[0].y
 
+            const isCurrentDataset = isReading && datasetSelected === index;
+
             return (
               <Accordion key={index}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  {dataset.name || `Dataset ${index + 1}`}
+
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon />}
+                  sx={{
+                    color: dataset.visible ? 'inherit' : 'gray',
+                    px: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Box sx={{ display: 'inline-flex', alignItems: 'center', flexGrow: 1 }}>
+                    <Typography variant="body1">
+                      {dataset.name || `Dataset ${index + 1}`}
+                    </Typography>
+                    {isCurrentDataset && (
+                      <RecordingIcon
+                        fontSize="small"
+                        sx={{
+                          color: 'red',
+                          ml: 1,
+                          verticalAlign: 'middle',
+                          lineHeight: 0,  
+                        }}
+                      />
+                    )}
+                  </Box>
                 </AccordionSummary>
+
                 <AccordionDetails>
                   <Box
                     width="100%"
@@ -126,22 +164,38 @@ export const TabStorage = ({ setTabIndex }) => {
                     overflow="hidden"
                   >
                     {[
-                      { onClick: () => toggleDatasetVisibility(index), icon: datasets[index].visible ? <VisibilityOffIcon /> : <VisibilityIcon /> },
-                      { icon: <SaveAltIcon /> },
-                      { onClick: () => open(index), icon: <DeleteIcon /> },
-                      { onClick: () => handleOpenTabFilter(index), icon: <StartIcon /> }
+                      { 
+                        onClick: () => toggleDatasetVisibility(index), 
+                        icon: datasets[index].visible ? <VisibilityOffIcon /> : <VisibilityIcon />, 
+                        disabled: isReading
+                      },
+                      { 
+                        icon: <SaveAltIcon />,
+                        disabled: isReading
+                      },
+                      { 
+                        onClick: () => open(index), 
+                        icon: <DeleteIcon />,
+                        disabled: isReading 
+                      },
+                      { 
+                        onClick: () => handleOpenTabFilter(index), 
+                        icon: <StartIcon />,
+                        disabled: isReading
+                      }
                     ].map((btn, i) => (
-                      <Button
-                        key={i}
-                        onClick={btn.onClick}
-                        sx={{
-                          minWidth: 'auto',
-                          justifyContent: 'space-between'
-                        }}
-                        width="100%"
-                      >
-                        {btn.icon}
-                      </Button>
+                    <Button
+                      key={i}
+                      onClick={btn.onClick}
+                      disabled={btn.disabled}            
+                      sx={{
+                        minWidth: 'auto',
+                        justifyContent: 'space-between',
+                        width: '100%'
+                      }}
+                    >
+                      {btn.icon}
+                    </Button>
                     ))}
                   </Box>
 
@@ -176,7 +230,7 @@ export const TabStorage = ({ setTabIndex }) => {
                         >
                           {({ index, style }) => (
                             <Box style={style}>
-                              {index}: [{formatPoint(xArray[index])}; {formatPoint(yArray[index])}]
+                              {index}: [{formatPoint(xArray[index])} {formatPoint(yArray[index])}]
                             </Box>
                           )}
                         </FixedSizeList>
@@ -184,14 +238,13 @@ export const TabStorage = ({ setTabIndex }) => {
                     </AccordionDetails>
                   </Accordion>
 
-                  <Accordion>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                      Interpolação
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <InterpolationComponent xArray={xArray} yArray={yArray} />
-                    </AccordionDetails>
-                  </Accordion>
+                  <InterpolationComponent
+                    dataset={dataset}
+                    datasetIndex={index} 
+                    onToggleVisibility={handleToggleInterpolationVisibility}
+                    onDeleteInterpolation={openDeleteDialog} 
+                  />
+
                 </AccordionDetails>
               </Accordion>
             )

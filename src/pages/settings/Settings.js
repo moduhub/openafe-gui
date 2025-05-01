@@ -20,6 +20,7 @@ import { useAppThemeContext, useSettingsContext } from '../../shared/contexts';
 export const Settings = () => {
   const { toggleTheme, themeName } = useAppThemeContext();
   const {
+    priorityMode, handleSetPriorityMode,
     autoConnect, handleSetAutoConnect,
     maxDatasets, handleSetMaxDatasets,
     defaultName, handleSetDefaultName,
@@ -47,9 +48,13 @@ export const Settings = () => {
             </Typography>
             <Box marginBottom={2} marginTop={2}><Divider/></Box>
             <FormControlLabel margin="dense"
+              control={<Switch checked={priorityMode} onChange={()=>handleSetPriorityMode(!priorityMode)} />}
+              label="Modo prioridade(foco na leitura de dados atual)"
+            /> <br/>
+            <FormControlLabel margin="dense"
               control={<Switch checked={themeName == 'dark'} onChange={toggleTheme} />}
               label="Tema escuro (instável)"
-            />
+            /> <br/>
             <FormControlLabel margin="dense"
               control={<Switch checked={autoConnect} onChange={(e) => handleSetAutoConnect(e.target.checked)} />}
               label="Conexão automática com Arduino (não está funcionando)"

@@ -1,18 +1,18 @@
-import { TextField, Box, Card, CardContent, List, ListItem } from '@mui/material'; 
-import { Button } from '@mui/material'; 
+import { TextField, Box, Card, CardContent, List, ListItem } from '@mui/material' 
+import { Button } from '@mui/material' 
 
-import IconButton from '@mui/material/IconButton'; 
-import PlayArrowIcon from '@mui/icons-material/PlayArrow'; 
-import StopIcon from '@mui/icons-material/Stop'; 
-import MinimizeIcon from '@mui/icons-material/Minimize'; 
+import IconButton from '@mui/material/IconButton' 
+import PlayArrowIcon from '@mui/icons-material/PlayArrow' 
+import StopIcon from '@mui/icons-material/Stop' 
+import MinimizeIcon from '@mui/icons-material/Minimize' 
 
-import { useState } from "react";
-import { useTheme } from "@mui/material";
+import { useState } from "react"
+import { useTheme } from "@mui/material"
 
 import { 
   StartReading, 
   FinishReading 
-} from "../../../arduino";
+} from "../../../arduino"
 import { 
   useArduinoContext, 
   useDatasetsContext,
@@ -29,7 +29,7 @@ export const TabArduino = () => {
   const {
     currentParams, handleCurrentParams,
     currentName, handleCurrentName,
-    datasets,
+    datasets, showOnlyDataset
   } = useDatasetsContext()
   const {
     tabArduinoIsMinimized: isMinimized, 
@@ -38,67 +38,66 @@ export const TabArduino = () => {
     handleToggleTabDatasetsMinimized: setIsMinimizedDataset,
   } = useDashboardContext()
 
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState({})
 
   const validateField = (field, value) => {
     if (field === "name" && !value.trim()) 
-      return "Name cannot be empty.";
+      return "Name cannot be empty."
     if (Number.isNaN(value)) 
-      return "Invalid entry.";
-    return "";
-  };
+      return "Invalid entry."
+    return ""
+  }
 
   const handleChange = (field) => (e) => {
-    const value = field === "name" ? e.target.value : Number(e.target.value);
+    const value = field === "name" ? e.target.value : Number(e.target.value)
 
     handleCurrentParams((prevState) => ({
       ...prevState,
       [field]: value,
-    }));
+    }))
 
     setErrors((prevErrors) => ({
       ...prevErrors,
       [field]: validateField(field, value),
-    }));
-  };
+    }))
+  }
 
   const handleStartReading = () => {
-    const newErrors = {};
-    let hasError = false;
+    const newErrors = {}
+    let hasError = false
 
     if (!currentName.trim()) {
-      newErrors.name = "Name cannot be empty.";
-      hasError = true;
+      newErrors.name = "Name cannot be empty."
+      hasError = true
     }
 
     Object.entries(currentParams).forEach(([field, value]) => {
-      const error = validateField(field, value);
+      const error = validateField(field, value)
       if (error) {
-        newErrors[field] = error;
-        hasError = true;
+        newErrors[field] = error
+        hasError = true
       }
-    });
+    })
     if (hasError) {
-      setErrors(newErrors);
-      return;
+      setErrors(newErrors)
+      return
     }
 
-    setErrors({});
+    setErrors({})
 
-    // Verificar duplicação de nomes
-    const existingNames = datasets.map((dataset) => dataset.name);
-    let newName = currentName;
+    const existingNames = datasets.map((dataset) => dataset.name)
+    let newName = currentName
     while (existingNames.includes(newName)) {
-      const match = newName.match(/\((\d+)\)$/);
+      const match = newName.match(/\((\d+)\)$/)
       if (match) {
-        const count = parseInt(match[1], 10);
-        newName = `${newName.replace(/\(\d+\)$/, "")}(${(count + 1).toString().padStart(2, '0')})`;
+        const count = parseInt(match[1], 10)
+        newName = `${newName.replace(/\(\d+\)$/, "")}(${(count + 1).toString().padStart(2, '0')})`
       } else {
-        newName = `${newName} (01)`;
+        newName = `${newName} (01)`
       }
     }
-    // Atualizar o nome atual para o novo nome
-    handleCurrentName(newName);
+    
+    handleCurrentName(newName)
 
     if(!isReading){
       StartReading(
@@ -114,11 +113,10 @@ export const TabArduino = () => {
       if(!isMinimized)
         setIsMinimized()
       if(!isMinimizedDataset)
-        setIsMinimizedDataset()
+        setIsMinimizedDataset()      
     }
     else console.log("Não é possível iniciar, processo em andamento")
-    
-  };
+  }
   
   if (isMinimized) 
     return null
@@ -219,5 +217,5 @@ export const TabArduino = () => {
         </CardContent>
       </Card>
     </Box>
-  );
-};
+  )
+}
