@@ -10,8 +10,6 @@ import {
   Typography,
 } from '@mui/material'
 
-import { FixedSizeList } from 'react-window'
-
 import RecordingIcon from '@mui/icons-material/FiberManualRecord'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
@@ -28,7 +26,9 @@ import {
 import {
   DeleteDialog, 
   useDeleteDialog,
-  InterpolationComponent
+  InterpolationComponent,
+  ParametersComponent,
+  PointsComponent
 } from '..'
 
 export const TabStorage = ({ setTabIndex }) => {
@@ -119,7 +119,7 @@ export const TabStorage = ({ setTabIndex }) => {
         ) : (
           datasets.map((dataset, index) => {
 
-            const formatPoint = (val) => Number(val).toFixed(1)
+            const formatPoint = (val) => Number(val).toFixed(2)
             const xArray = dataset.data[0].x
             const yArray = dataset.data[0].y
 
@@ -138,7 +138,7 @@ export const TabStorage = ({ setTabIndex }) => {
                   }}
                 >
                   <Box sx={{ display: 'inline-flex', alignItems: 'center', flexGrow: 1 }}>
-                    <Typography variant="body1">
+                    <Typography variant="h6">
                       {dataset.name || `Dataset ${index + 1}`}
                     </Typography>
                     {isCurrentDataset && (
@@ -200,43 +200,16 @@ export const TabStorage = ({ setTabIndex }) => {
                   </Box>
 
                   {/* Parameters */}
-                  <Accordion>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                      Parameters
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      settlingTime: {dataset.params.settlingTime}<br />
-                      startPotential: {dataset.params.startPotential}<br />
-                      endPotential: {dataset.params.endPotential}<br />
-                      step: {dataset.params.step}<br />
-                      scanRate: {dataset.params.scanRate}<br />
-                      cycles: {dataset.params.cycles}<br />
-                    </AccordionDetails>
-                  </Accordion>
+                  <ParametersComponent 
+                    dataset={dataset}
+                  />
 
                   {/* Points */}
-                  <Accordion>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                      Points
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <Box sx={{ height: 150, width: "100%" }}>
-                        <FixedSizeList
-                          height={150}
-                          width="100%"
-                          itemSize={35}
-                          itemCount={xArray.length}
-                          overscanCount={5}
-                        >
-                          {({ index, style }) => (
-                            <Box style={style}>
-                              {index}: [{formatPoint(xArray[index])} {formatPoint(yArray[index])}]
-                            </Box>
-                          )}
-                        </FixedSizeList>
-                      </Box>
-                    </AccordionDetails>
-                  </Accordion>
+                  <PointsComponent
+                    formatPoint={formatPoint}
+                    xArray={xArray}
+                    yArray={yArray}
+                  />
 
                   <InterpolationComponent
                     dataset={dataset}

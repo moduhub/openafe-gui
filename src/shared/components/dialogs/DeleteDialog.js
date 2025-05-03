@@ -1,7 +1,28 @@
-import { useState } from "react"
-import { Dialog, DialogActions, DialogContent, DialogTitle, Button } from '@mui/material'
+import { useState, useEffect } from "react"
+
+import { 
+  Dialog, 
+  DialogActions, 
+  DialogContent, 
+  DialogTitle, 
+  Button 
+} from "@mui/material"
 
 export const DeleteDialog = ({ open, onClose, onDelete }) => {
+  
+  // Gerencia o atributo inert no root para acessibilidade
+  useEffect(() => {
+    const root = document.querySelector("#root")
+    if (open) {
+      root?.setAttribute("inert", "true")
+    } else {
+      root?.removeAttribute("inert")
+    }
+    return () => {
+      root?.removeAttribute("inert")
+    }
+  }, [open])
+
   const handleConfirmDelete = () => {
     onDelete()
     onClose()
@@ -17,7 +38,7 @@ export const DeleteDialog = ({ open, onClose, onDelete }) => {
         <Button onClick={onClose} color="secondary">
           Cancelar
         </Button>
-        <Button onClick={handleConfirmDelete} color="primary">
+        <Button onClick={handleConfirmDelete} color="primary" variant="contained">
           Excluir
         </Button>
       </DialogActions>

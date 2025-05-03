@@ -10,9 +10,12 @@ import {
 export const ChartComponent = ({ type_, previewData, onPointsSelected }) => {
   const { theme } = useContext(ThemeContext)
   const { datasets, handleSetDatasetSelected } = useDatasetsContext()
-  const chartRef = useRef(null)
   
+  const chartRef = useRef(null)
   const prevLengths = useRef({})
+
+  const [selectedPoints, setSelectedPoints] = useState([])
+  const [selectedDataset, setSelectedDataset] = useState(null)
 
   const layout = useMemo(() => ({
     font: { size: 14, color: theme.palette.text.primary },
@@ -84,19 +87,14 @@ export const ChartComponent = ({ type_, previewData, onPointsSelected }) => {
     const el = chartRef.current
     if (!el) return
 
-    // 1) Filtra apenas os datasets visíveis que tenham dados
     const entries = Object.entries(datasets)
       .filter(([_, ds]) => ds.visible && ds.data?.[0]?.x)
 
-    // 2) Cria um array só com as chaves, na mesma ordem do trace em el.data
     const visibleKeys = entries.map(([key]) => key)
 
-    // 3) Para cada dataset (ainda percorremos todos, mas
-    //    só estreamos aqueles visíveis)
     Object.entries(datasets).forEach(([key, ds]) => {
       if (!ds.visible || !ds.data?.[0]?.x) return
 
-      // 4) Agora usamos visibleKeys, não Object.keys(datasets)
       const traceIndex = visibleKeys.indexOf(key)
       if (traceIndex === -1) return
 
@@ -164,9 +162,6 @@ export const ChartComponent = ({ type_, previewData, onPointsSelected }) => {
   useEffect(() => () => {
     if (chartRef.current) Plotly.purge(chartRef.current)
   }, [])
-
-  const [selectedPoints, setSelectedPoints] = useState([])
-  const [selectedDataset, setSelectedDataset] = useState(null)
 
   // Points Selecting
   useEffect(() => {
@@ -257,14 +252,12 @@ export const ChartComponent = ({ type_, previewData, onPointsSelected }) => {
     const el = chartRef.current
     if (!el) return
   
-    // Pega todos os datasets que tenham dados válidos
     const entries = Object.entries(datasets)
       .filter(([_, ds]) => ds.data?.[0]?.x && ds.data?.[0]?.y)
  
     const data = []
   
     entries.forEach(([key, ds]) => {
-      // Adiciona apenas o dataset principal se estiver visível
       if (ds.visible) {
         data.push({
           x: ds.data[0].x,
@@ -278,7 +271,6 @@ export const ChartComponent = ({ type_, previewData, onPointsSelected }) => {
         })
       }
   
-      // Adiciona todas as interpolações visíveis, independente do pai
       if (ds.interpolations?.length > 0) {
         ds.interpolations
           .filter(interp => interp.isVisible)
@@ -294,7 +286,6 @@ export const ChartComponent = ({ type_, previewData, onPointsSelected }) => {
       }
     })
   
-    // Adiciona os dados de preview de filtro, se existirem
     if (previewData?.x && previewData?.y) {
       data.push({
         x: previewData.x,
@@ -309,11 +300,8 @@ export const ChartComponent = ({ type_, previewData, onPointsSelected }) => {
       })
     }
   
-    // Atualiza o gráfico
     Plotly.react(el, data, layout, config)
   }, [datasets, previewData, layout, config])
-  
-  
 
   return (
     <Box

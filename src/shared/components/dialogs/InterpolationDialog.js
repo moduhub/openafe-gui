@@ -16,19 +16,18 @@ import {
 
 import { useDatasetsContext } from "../../contexts"
 
-import { calculatePolynomialInterpolation } from "../../math-functions/"
+import { 
+  calculatePolynomialInterpolation,
+  calculateGaussianInterpolation,
+} from "../../math-functions/"
 
-export const InterpolationDialog = ({
-  open,
-  onClose,
-  selectedPoints,
-}) => {
+export const InterpolationDialog = ({ open, onClose, selectedPoints }) => {
   const { datasets, datasetSelected } = useDatasetsContext()
 
   const params = datasets?.[datasetSelected]?.params || {}
-  const start  = params.startPotential ?? 0
-  const end    = params.endPotential   ?? 0
-  const step   = params.step           ?? 1
+  const start = params.startPotential ?? 0
+  const end = params.endPotential ?? 0
+  const step = params.step ?? 1
   const delta = end - start
   const minStart = start - 0.5 * delta
   const maxEnd = end + 0.5 * delta
@@ -38,10 +37,23 @@ export const InterpolationDialog = ({
   const [range, setRange] = useState({ min: start, max: end })
   const [polynomialOrder, setPolynomialOrder] = useState(1)
 
+  // Gerencia atributo inert para acessibilidade
+  useEffect(() => {
+    const root = document.querySelector("#root")
+    if (open) {
+      root?.setAttribute("inert", "true")
+      updateData()
+    } else {
+      root?.removeAttribute("inert")
+    }
+    return () => {
+      root?.removeAttribute("inert")
+    }
+  }, [open])
+
   const handleInterpolationTypeChange = (event) => {
-    const type = event.target.value;
+    const type = event.target.value
     setInterpolationType(type)
-    updateData()
   }
 
   const updateData = () => {
@@ -69,32 +81,48 @@ export const InterpolationDialog = ({
   }
 
   const handleConfirmInterpolation = () => {
-    if (interpolationType === "polinomial" && selectedPoints.length === 2) {
-      const result = calculatePolynomialInterpolation(
+    let result
+    if (interpolationType === "polinomial" && points.length === 2) {
+      result = calculatePolynomialInterpolation(
         points,
         datasets,
         datasetSelected,
         polynomialOrder,
         range
       )
+    } else if (interpolationType === "gaussiana" && points.length === 2) {
+      result = calculateGaussianInterpolation(
+        points,
+        datasets,
+        datasetSelected,
+        range
+      )
+    }
 
+    if (result) {
       const newInterpolation = {
-        type: 'polynomial',
-        order: polynomialOrder,
-        coefficients: result.coefficients,
+        type: interpolationType,
+        order: interpolationType === "polinomial" ? polynomialOrder : undefined,
+        sigma: interpolationType === "gaussiana" ? result.sigma : undefined,
+        mu: interpolationType === "gaussiana" ? result.mu : undefined,
+        amplitude: interpolationType === "gaussiana" ? result.amplitude : undefined,
+        coefficients: result.coefficients ?? undefined,
+        weights: result.weights ?? undefined,
         isVisible: true,
-        data: [{
-          x: result.interpolatedX,
-          y: result.interpolatedY,
-          mode: 'lines',
-          line: { 
-            //color: '#000000', // You can customize the color
-            dash: 'dot'  // Makes the line dashed to distinguish from original data
+        data: [
+          {
+            x: result.interpolatedX,
+            y: result.interpolatedY,
+            mode: "lines",
+            line: { dash: "dot" },
+            name:
+              interpolationType === "polinomial"
+                ? `Interpolação ${polynomialOrder}° grau`
+                : `Interpolação Gaussiana (σ=${result.sigma})`,
           },
-          name: `Interpolação ${polynomialOrder}° grau`
-        }]
+        ],
       }
-  
+
       datasets[datasetSelected]?.addInterpolation(newInterpolation)
     }
 
@@ -104,7 +132,7 @@ export const InterpolationDialog = ({
   const handleCloseDialog = () => {
     setInterpolationType("")
     setPoints([])
-    setRange({ min: points[0].x, max: points[1].x })
+    setRange({ min: start, max: end })
     setPolynomialOrder(1)
     onClose()
   }
@@ -115,7 +143,6 @@ export const InterpolationDialog = ({
         Interpolação em {datasets?.[datasetSelected]?.name || "conjunto desconhecido"}
       </DialogTitle>
       <DialogContent>
-        
         <Box sx={{ mb: 2 }}>
           <Typography>
             Ponto 1: {selectedPoints?.[0] ? `(${selectedPoints[0].x}, ${selectedPoints[0].y})` : "Não selecionado"}
@@ -134,42 +161,67 @@ export const InterpolationDialog = ({
               onChange={handleInterpolationTypeChange}
             >
               <MenuItem value="polinomial">Polinomial</MenuItem>
+              <MenuItem value="gaussiana">Gaussiana</MenuItem>
             </Select>
           </FormControl>
         </Box>
 
         {interpolationType === "polinomial" && (
           <Box sx={{ mt: 2 }}>
-          <Typography gutterBottom>Ordem do Polinômio:</Typography>
-          <Slider
-            value={polynomialOrder}
-            onChange={handleOrderChange}
-            min={1}
-            max={5}
-            step={1}
-            valueLabelDisplay="auto"
-            sx={{ mb: 2 }}
-          />
-          <Typography gutterBottom>Intervalo de X:</Typography>
-          <Slider
-            value={range.min}
-            onChange={handleRangeChange("min")}
-            min={minStart}
-            max={maxEnd}
-            step={step}
-            valueLabelDisplay="auto"
-            sx={{ mb: 2 }}
-          />
-          <Slider
-            value={range.max}
-            onChange={handleRangeChange("max")}
-            min={minStart}
-            max={maxEnd}
-            step={step}
-            valueLabelDisplay="auto"
-          />
-        </Box>
+            <Typography gutterBottom>Ordem do Polinômio:</Typography>
+            <Slider
+              value={polynomialOrder}
+              onChange={handleOrderChange}
+              min={1}
+              max={5}
+              step={1}
+              valueLabelDisplay="auto"
+              sx={{ mb: 2 }}
+            />
+            <Typography gutterBottom>Intervalo de X:</Typography>
+            <Slider
+              value={range.min}
+              onChange={handleRangeChange("min")}
+              min={minStart}
+              max={maxEnd}
+              step={step}
+              valueLabelDisplay="auto"
+              sx={{ mb: 2 }}
+            />
+            <Slider
+              value={range.max}
+              onChange={handleRangeChange("max")}
+              min={minStart}
+              max={maxEnd}
+              step={step}
+              valueLabelDisplay="auto"
+            />
+          </Box>
         )}
+
+        {interpolationType === "gaussiana" && (
+          <Box sx={{ mb: 3 }}>
+            <Typography gutterBottom>Intervalo de X:</Typography>
+            <Slider
+              value={range.min}
+              onChange={handleRangeChange("min")}
+              min={minStart}
+              max={maxEnd}
+              step={step}
+              valueLabelDisplay="auto"
+              sx={{ mb: 1 }}
+            />
+            <Slider
+              value={range.max}
+              onChange={handleRangeChange("max")}
+              min={minStart}
+              max={maxEnd}
+              step={step}
+              valueLabelDisplay="auto"
+            />
+          </Box>
+        )}
+
       </DialogContent>
       <DialogActions>
         <Button onClick={handleCloseDialog} color="secondary">

@@ -208,6 +208,22 @@ export const DataSetsProvider = ({ children }) => {
         !ds.visible && ds.setIsVisible() : ds.visible && ds.setIsVisible()
     )
   })
+
+  const addDatasetParam = (datasetName, paramName, paramValue) => {
+    setDatasets((prevDatasets) =>
+      prevDatasets.map((dataset) =>
+        dataset.name === datasetName
+          ? {
+              ...dataset,
+              params: {
+                ...dataset.params,
+                [paramName]: paramValue,
+              },
+            }
+          : dataset
+      )
+    )
+  }
   
   useEffect(()=>{
     // Data graph
@@ -264,6 +280,7 @@ export const DataSetsProvider = ({ children }) => {
       handleNewDataset,
       toggleDatasetVisibility,
       showOnlyDataset,
+      addDatasetParam,
     }}>
       {children}
     </DatasetsContext.Provider>

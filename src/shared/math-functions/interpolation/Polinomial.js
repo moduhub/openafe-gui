@@ -1,9 +1,15 @@
-export const calculatePolynomialInterpolation = (points, datasets, datasetSelected, degree, range) => {
+export const calculatePolynomialInterpolation = (
+  points, 
+  datasets, 
+  datasetSelected, 
+  degree, 
+  range
+) => {
   const xValues = datasets[datasetSelected].data[0].x
   const yValues = datasets[datasetSelected].data[0].y
 
   let [idx1, idx2] = points
-  if (idx1 > idx2) [idx1, idx2] = [idx2, idx1] // Sort indices here
+  if (idx1 > idx2) [idx1, idx2] = [idx2, idx1] 
 
   const xSlice = xValues.slice(idx1, idx2 + 1)
   const ySlice = yValues.slice(idx1, idx2 + 1)
