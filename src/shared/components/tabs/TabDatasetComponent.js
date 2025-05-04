@@ -21,10 +21,10 @@ import {
 
 import {
   TabStorage
-} from './TabStorage'
+} from './TabStorageComponent'
 import {
   TabFilter
-} from './TabFilter'
+} from './TabFilterComponent'
 
 export const TabDataset = ({ setPreviewData , previewData }) => {
 

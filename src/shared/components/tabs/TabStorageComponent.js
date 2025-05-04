@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 
 import {
   Box,
@@ -18,6 +18,8 @@ import SaveAltIcon from '@mui/icons-material/SaveAlt'
 import DeleteIcon from '@mui/icons-material/Delete'
 import StartIcon from '@mui/icons-material/Start'
 
+import ImportExportIcon from '@mui/icons-material/ImportExport';
+
 import {
   useDatasetsContext,
   useArduinoContext
@@ -28,7 +30,8 @@ import {
   useDeleteDialog,
   InterpolationComponent,
   ParametersComponent,
-  PointsComponent
+  PointsComponent,
+  ImportExportDialog
 } from '..'
 
 export const TabStorage = ({ setTabIndex }) => {
@@ -46,21 +49,26 @@ export const TabStorage = ({ setTabIndex }) => {
     isReading
   } = useArduinoContext()
 
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState({ datasetIndex: null, interpolationIndex: null })
   const { openDialog, index, open, close } = useDeleteDialog()
+  const [importExportDialogOpen, setImportExportDialogOpen] = useState(false)
+  const [importExportType, setImportExportType] = useState(0)
+  const [importExportDefaultIndex, setImportExportDefaultIndex] = useState(null)
+
+  let lastDataset
 
   const handleDelete = () => {
     if (index !== null) handleDeleteDataset(index)
     close()
   }
+
   const handleOpenTabFilter = (index) => {
     handleSetDatasetSelected(index)
     setTabIndex(1)
     showOnlyDataset(index)
   }
-
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [deleteTarget, setDeleteTarget] = useState({ datasetIndex: null, interpolationIndex: null })
-
+  
   const openDeleteDialog = (datasetIndex, interpolationIndex) => {
     setDeleteTarget({ datasetIndex, interpolationIndex })
     setDeleteDialogOpen(true)
@@ -75,6 +83,7 @@ export const TabStorage = ({ setTabIndex }) => {
       setDeleteDialogOpen(false)
     }
   }
+
   const handleToggleInterpolationVisibility = (datasetIndex, interpolationIndex) => {
     const updatedDatasets = [...datasets]
     const interpolation = updatedDatasets[datasetIndex].interpolations[interpolationIndex]
@@ -82,6 +91,18 @@ export const TabStorage = ({ setTabIndex }) => {
     handleSetDataset(updatedDatasets) 
   }
 
+
+  const handleOpenImportExportDialog = () => {
+    setImportExportType(0) // tipo: importar
+    setImportExportDefaultIndex(null)
+    setImportExportDialogOpen(true)
+  }
+  const handleOpenExportDialogWithIndex = (index) => {
+    setImportExportType(1) // tipo: exportar
+    setImportExportDefaultIndex(index)
+    setImportExportDialogOpen(true)
+  }
+  
   return (
     <>
       <DeleteDialog
@@ -94,16 +115,34 @@ export const TabStorage = ({ setTabIndex }) => {
         onClose={() => setDeleteDialogOpen(false)}
         onDelete={handleDeleteInterpolation}
       />
+      <ImportExportDialog
+        open={importExportDialogOpen}
+        onClose={() => setImportExportDialogOpen(false)}
+        type={importExportType}
+        defaultIndex={importExportDefaultIndex}
+      />
+
 
       <Box
         sx={{
-          height: 440,
-          width: 248,
+          height: 440, width: 248,
           overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
         }}
       >
+        <Box sx={{ mb: 2, mt: 2 }}>
+          <Button
+            onClick={() => handleOpenImportExportDialog()}
+            variant="contained"
+            color="primary"
+            startIcon={<ImportExportIcon />}
+            fullWidth
+          >
+            Importar / Exportar
+          </Button>
+        </Box>
+
         {datasets.length === 0 ? (
           <Typography
             variant="body1"
@@ -125,9 +164,8 @@ export const TabStorage = ({ setTabIndex }) => {
 
             const isCurrentDataset = isReading && datasetSelected === index;
 
-            return (
+            return (  
               <Accordion key={index}>
-
                 <AccordionSummary
                   expandIcon={<ExpandMoreIcon />}
                   sx={{
@@ -170,9 +208,10 @@ export const TabStorage = ({ setTabIndex }) => {
                         disabled: isReading
                       },
                       { 
+                        onClick: () => handleOpenExportDialogWithIndex(index),
                         icon: <SaveAltIcon />,
                         disabled: isReading
-                      },
+                      },                      
                       { 
                         onClick: () => open(index), 
                         icon: <DeleteIcon />,
@@ -211,6 +250,7 @@ export const TabStorage = ({ setTabIndex }) => {
                     yArray={yArray}
                   />
 
+                  {/* Interpolation */}
                   <InterpolationComponent
                     dataset={dataset}
                     datasetIndex={index} 
@@ -219,7 +259,7 @@ export const TabStorage = ({ setTabIndex }) => {
                   />
 
                 </AccordionDetails>
-              </Accordion>
+              </Accordion>  
             )
           })
         )}
