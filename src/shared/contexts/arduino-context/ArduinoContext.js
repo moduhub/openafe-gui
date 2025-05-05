@@ -84,9 +84,9 @@ export const ArduinoProvider = ({ children }) => {
 
     // Destructor
     return () => {
-      window.electron.onArduinoData(null); // Remove listener
-      window.electron.onSerialPortOpened(null); // Remove listener
-      window.electron.onSerialPortDisconnected(null); // Remove listener
+      window.electron.onArduinoData(null)
+      window.electron.onSerialPortOpened(null)
+      window.electron.onSerialPortDisconnected(null)
     }
   },[])
 
@@ -96,7 +96,7 @@ export const ArduinoProvider = ({ children }) => {
       handleSetPortConnected(portSelected)
       handleSetIsConnecting(false)
       handleSetIsConnect(true)
-      setSnackbar({ open: false, message: '', severity: 'info' }) // Fecha a snackbar de conexão
+      setSnackbar({ open: false, message: '', severity: 'info' }) 
       setSnackbar({ open: true, message: 'Conectado com sucesso na porta '+portSelected+'!', severity: 'success' });
       if(isArduinoMinimized)
         setIsArduinoMinimized()

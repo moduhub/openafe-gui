@@ -8,6 +8,10 @@ import {
   InterpolationDialog
 } from '../../shared/components'
 
+import { 
+  useDashboardContext 
+} from '../../shared/contexts'
+
 export const Dashboard = () => {
 
   let type_chart_dashboard = {
@@ -16,19 +20,26 @@ export const Dashboard = () => {
     width : '100%'
   }
 
+  const {
+    tabArduinoIsMinimized, handleToggleTabArduinoMinimized,
+    tabDatasetsIsMinimized, handleToggleTabDatasetsMinimized
+  } = useDashboardContext()
+
   const [previewData, setPreviewData] = useState({ x: [], y: [] })
   const [selectedPoints, setSelectedPoints] = useState([])
   const [openDialog, setOpenDialog] = useState(false)
 
   useEffect(() => {
-    if (selectedPoints.length > 0) {
+    if (selectedPoints.length == 2 && !openDialog) {
       setOpenDialog(true)
+      if(!tabArduinoIsMinimized) handleToggleTabArduinoMinimized()
+      if(!tabDatasetsIsMinimized) handleToggleTabDatasetsMinimized()
     }
   }, [selectedPoints])
 
   const handleCloseDialog = () => {
     setOpenDialog(false)
-    setSelectedPoints([])
+    setSelectedPoints([]) 
   }
 
   return (
@@ -50,7 +61,8 @@ export const Dashboard = () => {
       <ChartComponent 
         type_={type_chart_dashboard} 
         previewData={previewData}
-        onPointsSelected={setSelectedPoints}
+        setSelectedPoints={setSelectedPoints}
+        selectedPoints={selectedPoints}
       />
 
       {/* Controle de Datasets */}

@@ -49,7 +49,7 @@ export const InterpolationDialog = ({ open, onClose, selectedPoints }) => {
     return () => {
       root?.removeAttribute("inert")
     }
-  }, [open])
+  }, [open, selectedPoints])
 
   const handleInterpolationTypeChange = (event) => {
     const type = event.target.value

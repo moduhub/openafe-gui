@@ -7,15 +7,15 @@ import {
   useDatasetsContext,
 } from '../../contexts'
 
-export const ChartComponent = ({ type_, previewData, onPointsSelected }) => {
+export const ChartComponent = ({ type_, previewData, setSelectedPoints, selectedPoints }) => {
   const { theme } = useContext(ThemeContext)
   const { datasets, handleSetDatasetSelected } = useDatasetsContext()
   
   const chartRef = useRef(null)
   const prevLengths = useRef({})
 
-  const [selectedPoints, setSelectedPoints] = useState([])
-  const [selectedDataset, setSelectedDataset] = useState(null)
+  //const [selectedPoints, setSelectedPoints] = useState([])
+  //const [selectedDataset, setSelectedDataset] = useState(null)
 
   const layout = useMemo(() => ({
     font: { size: 14, color: theme.palette.text.primary },
@@ -65,10 +65,10 @@ export const ChartComponent = ({ type_, previewData, onPointsSelected }) => {
     const entries = Object.entries(datasets)
       .filter(([_, ds]) => ds.visible && ds.data?.[0]?.x && ds.data?.[0]?.y)
     const data = entries.map(([key, ds]) => ({
-      x: ds.data[0].x,
-      y: ds.data[0].y,
-      mode: 'lines',
-      name: key,
+        x: ds.data[0].x,
+        y: ds.data[0].y,
+        mode: 'lines',
+        name: key,
     }))
 
     prevLengths.current = entries.reduce((acc, [key, ds]) => ({
@@ -83,6 +83,7 @@ export const ChartComponent = ({ type_, previewData, onPointsSelected }) => {
       .map(([key]) => key))
   , layout, config])
 
+  // 2) ExtendTraces para novos pontos nos datasets
   useEffect(() => {
     const el = chartRef.current
     if (!el) return
@@ -117,20 +118,46 @@ export const ChartComponent = ({ type_, previewData, onPointsSelected }) => {
     })
   }, [datasets])
 
+  // 3) Re-render quando previewData mudar (também com interpolações)
   useEffect(() => {
     const el = chartRef.current
     if (!el) return
 
     const entries = Object.entries(datasets)
-      .filter(([_, ds]) => ds.visible && ds.data?.[0]?.x && ds.data?.[0]?.y)
-    const data = entries.map(([key, ds]) => ({
-      x: ds.data[0].x,
-      y: ds.data[0].y,
-      mode: 'lines',
-      name: key,
-    }))
+      .filter(([_, ds]) => ds.data?.[0]?.x && ds.data?.[0]?.y)
 
-    if (previewData && previewData.x && previewData.y) {
+    const data = []
+
+    entries.forEach(([key, ds]) => {
+      if (ds.visible) {
+        data.push({
+          x: ds.data[0].x,
+          y: ds.data[0].y,
+          mode: "lines",
+          name: key,
+          line: {
+            dash: "solid",
+            width: 2,
+          }
+        })
+      }
+
+      if (ds.interpolations?.length > 0) {
+        ds.interpolations
+          .filter(interp => interp.isVisible)
+          .forEach(interp => {
+            data.push({
+              x: interp.data[0].x,
+              y: interp.data[0].y,
+              mode: interp.data[0].mode,
+              name: interp.data[0].name,
+              line: interp.data[0].line,
+            })
+          })
+      }
+    })
+
+    if (previewData?.x && previewData?.y) {
       data.push({
         x: previewData.x,
         y: previewData.y,
@@ -150,158 +177,91 @@ export const ChartComponent = ({ type_, previewData, onPointsSelected }) => {
     }), {})
 
     Plotly.react(el, data, layout, config)
-  }, [
-    JSON.stringify(Object.entries(datasets)
-      .filter(([_, ds]) => ds.visible)
-      .map(([key]) => key)),
-    JSON.stringify(previewData), 
-    layout, 
-    config
-  ])
+  },  [ datasets, layout, config ])
 
+  // Cleanup on unmount
   useEffect(() => () => {
     if (chartRef.current) Plotly.purge(chartRef.current)
   }, [])
 
-  // Points Selecting
-  useEffect(() => {
-    const el = chartRef.current
-    if (!el || !onPointsSelected) return
-  
-    const handleClick = (eventData) => {
-      if (eventData?.points?.length > 0) {
-        const point = eventData.points[0]
-  
-        if (point.data.name.startsWith("Interpolação")) return
-
-        const currentDataset = point.data.name
-        const datasetColor = point.fullData.line?.color || theme.palette.secondary.main
-  
-        setSelectedPoints((prev) => {
-          if (prev.length > 0 && prev[0].dataset !== currentDataset) {
-            setSelectedDataset(currentDataset)
-            return [{
-              x: point.x,
-              y: point.y,
-              dataset: currentDataset,
-              color: datasetColor,
-            }]
-          }
-  
-          const isDuplicate = prev.some(p => p.x === point.x && p.y === point.y)
-          if (!isDuplicate && prev.length < 2) {
-            return [...prev, {
-              x: point.x,
-              y: point.y,
-              dataset: currentDataset,
-              color: datasetColor,
-            }]
-          }
-  
-          return prev
-        })
-  
-        setSelectedDataset(currentDataset)
-      }
-    }
-  
-    el.on('plotly_click', handleClick)
-    return () => {
-      el.removeListener('plotly_click', handleClick)
-    }
-  }, [onPointsSelected, selectedDataset, theme])
-  
+  // 4) Captura de cliques
   useEffect(() => {
     const el = chartRef.current
     if (!el) return
 
-    const lastTrace = el.data.find(trace => trace.name === 'Selected Points')
-    if (lastTrace) {
-        const traceIndex = el.data.indexOf(lastTrace)
-        Plotly.deleteTraces(el, [traceIndex])
+    const handleClick = (eventData) => {
+      if (!eventData?.points?.length) return
+      const pt = eventData.points[0]
+      if (pt.data.name.startsWith('Interpolação')) return
+
+      setSelectedPoints(prev => {
+        if (prev.length && prev[0].dataset !== pt.data.name) {
+          return [{ x: pt.x, y: pt.y, dataset: pt.data.name, color: pt.fullData.line?.color || theme.palette.secondary.main }]
+        }
+        const dup = prev.some(p => p.x === pt.x && p.y === pt.y)
+        if (!dup && prev.length < 2) {
+          return [...prev, { x: pt.x, y: pt.y, dataset: pt.data.name, color: pt.fullData.line?.color || theme.palette.secondary.main }]
+        }
+        return prev
+      })
+      //setSelectedDataset(pt.data.name)
     }
 
-    if (selectedPoints.length > 0) {
-        Plotly.addTraces(el, [{
-            x: selectedPoints.map(p => p.x),
-            y: selectedPoints.map(p => p.y),
-            mode: 'markers',
-            marker: {
-                size: 10,
-                color: selectedPoints[0]?.color || theme.palette.secondary.main,
-                symbol: 'x'
-            },
-            name: 'Selected Points',
-            showlegend: false
-        }])
+    el.on('plotly_click', handleClick)
+    return () => el.removeListener('plotly_click', handleClick)
+  }, [theme])
+
+  // 5) Desenha marcadores + faixa em negrito
+  useEffect(() => {
+    const el = chartRef.current
+    if (!el) return
+
+    const removeIdx = el.data
+      .map((t, i) => (t.name === 'Selected Points' || t.name === 'Highlight Range') ? i : -1)
+      .filter(i => i >= 0)
+    if (removeIdx.length) Plotly.deleteTraces(el, removeIdx)
+
+    const toAdd = []
+
+    if (selectedPoints.length) {
+      toAdd.push({
+        x: selectedPoints.map(p => p.x),
+        y: selectedPoints.map(p => p.y),
+        mode: 'markers',
+        marker: {
+          size: 10,
+          color: selectedPoints[0]?.color,
+          symbol: 'x'
+        },
+        name: 'Selected Points',
+        showlegend: false,
+      })
     }
 
     if (selectedPoints.length === 2) {
-        onPointsSelected(selectedPoints)
-        handleSetDatasetSelected(selectedDataset)
-
-        setTimeout(() => {
-            setSelectedPoints([])
-            setSelectedDataset(null)
-        }, 100)
-    }
-  }, [selectedPoints, theme])
-
-  // Interpolations
-  useEffect(() => {
-    const el = chartRef.current
-    if (!el) return
-  
-    const entries = Object.entries(datasets)
-      .filter(([_, ds]) => ds.data?.[0]?.x && ds.data?.[0]?.y)
- 
-    const data = []
-  
-    entries.forEach(([key, ds]) => {
-      if (ds.visible) {
-        data.push({
-          x: ds.data[0].x,
-          y: ds.data[0].y,
-          mode: "lines",
-          name: key,
-          line: {
-            dash: "solid",
-            width: 2,
-          }
+      const [p1, p2] = selectedPoints
+      const ds = datasets[p1.dataset]?.data[0]
+      if (ds) {
+        const xs = ds.x, ys = ds.y
+        const i1 = xs.indexOf(p1.x), i2 = xs.indexOf(p2.x)
+        const [s,e] = [Math.min(i1,i2), Math.max(i1,i2)]
+        toAdd.push({
+          x: xs.slice(s, e+1),
+          y: ys.slice(s, e+1),
+          mode: 'lines',
+          line: { width: 4, color: p1.color },
+          name: 'Highlight Range',
+          showlegend: false
         })
+
+        setSelectedPoints(selectedPoints)
+        handleSetDatasetSelected(p1.dataset)
+        //setTimeout(() => setSelectedPoints([]), 100)
       }
-  
-      if (ds.interpolations?.length > 0) {
-        ds.interpolations
-          .filter(interp => interp.isVisible)
-          .forEach(interp => {
-            data.push({
-              x: interp.data[0].x,
-              y: interp.data[0].y,
-              mode: interp.data[0].mode,
-              name: interp.data[0].name,
-              line: interp.data[0].line,
-            })
-          })
-      }
-    })
-  
-    if (previewData?.x && previewData?.y) {
-      data.push({
-        x: previewData.x,
-        y: previewData.y,
-        mode: "lines",
-        name: "Preview",
-        line: {
-          color: theme.palette.secondary.main,
-          dash: "dot",
-          width: 2,
-        },
-      })
     }
-  
-    Plotly.react(el, data, layout, config)
-  }, [datasets, previewData, layout, config])
+
+    if (toAdd.length) Plotly.addTraces(el, toAdd)
+  }, [selectedPoints, datasets, handleSetDatasetSelected, setSelectedPoints])
 
   return (
     <Box

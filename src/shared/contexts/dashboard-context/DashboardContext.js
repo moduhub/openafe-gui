@@ -14,7 +14,7 @@ export const useDashboardContext = () => {
 
 export const DashboardProvider = ({ children }) => {
   const [tabArduinoIsMinimized, setTabArduinoIsMinimized] = useState(false)
-  const [tabDatasetsIsMinimized, setTabDatasetsIsMinimized] = useState(true)
+  const [tabDatasetsIsMinimized, setTabDatasetsIsMinimized] = useState(false)
 
   const handleToggleTabArduinoMinimized = useCallback(() => {
     setTabArduinoIsMinimized((prevState) => !prevState);
