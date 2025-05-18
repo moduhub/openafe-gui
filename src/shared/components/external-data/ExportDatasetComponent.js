@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
   FormControl,
   InputLabel,
@@ -13,6 +13,14 @@ import * as XLSX from 'xlsx'
 
 import { useDatasetsContext } from '../../contexts'
 
+/**
+ * A component that allows the user to export selected datasets in either JSON or Excel format
+ *
+ * @param {() => void} onClose           - Callback to close the export dialog
+ * @param {number|string} [defaultIndex] - Optional dataset key to be selected by default on open
+ *
+ * @returns {JSX.Element}
+ */
 export const ExportDataset = ({ onClose, defaultIndex }) => {
   const { datasets } = useDatasetsContext()
   const datasetKeys = Object.keys(datasets)
@@ -169,7 +177,7 @@ export const ExportDataset = ({ onClose, defaultIndex }) => {
       </FormControl>
 
       <FormControl fullWidth margin="normal">
-        <InputLabel id="format-label">Formato</InputLabel>
+        <InputLabel id="format-label">File format</InputLabel>
         <Select
           labelId="format-label"
           value={format}
@@ -186,7 +194,7 @@ export const ExportDataset = ({ onClose, defaultIndex }) => {
         variant="contained"
         fullWidth
       >
-        Salvar
+        Save
       </Button>
     </Box>
   )

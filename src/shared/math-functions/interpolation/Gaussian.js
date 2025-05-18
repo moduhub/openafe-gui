@@ -1,11 +1,12 @@
 /**
- * Calculates Gaussian interpolation (RBF with Gaussian nucleus).
+ * Calculates Gaussian interpolation (RBF with Gaussian nucleus),
  *
- * @param {[number,number]} points          Índices [idx1, idx2] do corte.
- * @param {Array} datasets                  Array de datasets (cada um com .data[0].x / .y).
- * @param {number} datasetSelected          Índice do dataset a usar.
- * @param {{min: number, max: number}} range Intervalo de geração de pontos.
- * @returns {{weights: number[], interpolatedX: number[], interpolatedY: number[]}}
+ * @param {[number,number]} points            - Indices [idx1, idx2] of the cut
+ * @param {Array} datasets                    - Array of datasets (each with .data[0].x / .y)
+ * @param {number} datasetSelected            - Index of the dataset to use
+ * @param {{min: number, max: number}} range  - Generation point interval
+ * 
+ * @returns {{mu: number, sigma: number, amplitude: number, interpolatedX: number[], interpolatedY: number[]}}
  */
 export const calculateGaussianInterpolation = (
   points,
@@ -16,52 +17,67 @@ export const calculateGaussianInterpolation = (
   const xValues = datasets[datasetSelected].data[0].x
   const yValues = datasets[datasetSelected].data[0].y
 
-  let [idx1, idx2] = points
-  if (idx1 > idx2) [idx1, idx2] = [idx2, idx1]
+  let [i1, i2] = points
+  if (i1 > i2) [i1, i2] = [i2, i1]
 
-  const xSlice = xValues.slice(idx1, idx2 + 1)
-  const ySlice = yValues.slice(idx1, idx2 + 1)
-  if (xSlice.length === 0) {
-    throw new Error('Intervalo vazio para Gaussiana')
-  }
+  const xSlice = xValues.slice(i1, i2 + 1)
+  const ySlice = yValues.slice(i1, i2 + 1)
+  if (!xSlice.length) throw new Error('Intervalo vazio para Gaussiana')
 
-  // Amplitude A pelo pico, mu pela média ponderada
-  const A = Math.max(...ySlice)
-  const sumY = ySlice.reduce((s, y) => s + y, 0)
-  const mu = sumY
-    ? xSlice.reduce((s, x, i) => s + x * ySlice[i], 0) / sumY
+  // Original signal of the peak and absolute values
+  const absY = ySlice.map(y => Math.abs(y))
+  const peakIdx = absY.indexOf(Math.max(...absY))
+  const originalSign = Math.sign(ySlice[peakIdx]) || 1  // se zero, assume positivo
+
+  // Estimation of A and mu using absY
+  const A = absY[peakIdx]
+  const sumAbsY = absY.reduce((s,y) => s + y, 0)
+  const mu = sumAbsY
+    ? xSlice.reduce((s, x, i) => s + x * absY[i], 0) / sumAbsY
     : (xSlice[0] + xSlice[xSlice.length - 1]) / 2
 
-  // Grid search para sigma ótimo (minimizar SSE)
+  // Optimal sigma search (SSE between Gaussian of absY and absY)
   const span = xSlice[xSlice.length - 1] - xSlice[0] || 1
-  const sigmaMin = span / 100
-  const sigmaMax = span * 2
-  const steps = 100
-  let bestSigma = sigmaMin
-  let minError = Infinity
+  const [σmin, σmax, steps] = [span / 100, span * 2, 100]
+  let bestSigma = σmin
+  let minErr = Infinity
 
   for (let k = 0; k <= steps; k++) {
-    const sigma = sigmaMin + (sigmaMax - sigmaMin) * (k / steps)
-    let error = 0
+    const σ = σmin + (σmax - σmin) * (k / steps)
+    let err = 0
     for (let i = 0; i < xSlice.length; i++) {
-      const diff = xSlice[i] - mu
-      const g = A * Math.exp(-diff * diff / (2 * sigma * sigma))
-      error += (g - ySlice[i]) ** 2
+      const d = xSlice[i] - mu
+      const g = A * Math.exp(-d * d / (2 * σ * σ))
+      err += (g - absY[i]) ** 2
     }
-    if (error < minError) {
-      minError = error
-      bestSigma = sigma
+    if (err < minErr) {
+      minErr = err
+      bestSigma = σ
     }
   }
 
-  // Gera a curva Gaussiana usando sigma ótimo
+  // Generates interpolation in (range.min … range.max)
   const interpolatedX = []
   const interpolatedY = []
   for (let x = range.min; x <= range.max; x += 1) {
     interpolatedX.push(x)
-    const diff = x - mu
-    interpolatedY.push(A * Math.exp(-diff * diff / (2 * bestSigma * bestSigma)))
+    const d = x - mu
+    interpolatedY.push(originalSign * A * Math.exp(-d * d / (2 * bestSigma * bestSigma)))
   }
 
-  return { mu, sigma: bestSigma, amplitude: A, interpolatedX, interpolatedY }
+  // Detect and apply horizontal mirroring, if μ is to the left of the center
+  const sliceMid = (xSlice[0] + xSlice[xSlice.length - 1]) / 2
+  if (mu < sliceMid) {
+    for (let j = 0; j < interpolatedX.length; j++) {
+      interpolatedX[j] = sliceMid - (interpolatedX[j] - sliceMid)
+    }
+  }
+
+  return {
+    mu,
+    sigma: bestSigma,
+    amplitude: A,
+    interpolatedX,
+    interpolatedY
+  }
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 
 import {
   Box,
@@ -34,6 +34,20 @@ import {
   ImportExportDialog
 } from '..'
 
+/**
+ * TabStorage component displays a list of datasets with controls for managing them
+ * 
+ * Features:
+ * - Import and export datasets
+ * - Delete datasets or their interpolations
+ * - Toggle visibility of datasets and interpolations
+ * - Navigate to filter tab for a selected dataset
+ * - Shows current reading dataset indicator
+ * 
+ * @param {function} setTabIndex - Function to change the active tab index
+ * 
+ * @returns {JSX.Element}
+ */
 export const TabStorage = ({ setTabIndex }) => {
 
   const theme = useTheme()
@@ -55,8 +69,6 @@ export const TabStorage = ({ setTabIndex }) => {
   const [importExportDialogOpen, setImportExportDialogOpen] = useState(false)
   const [importExportType, setImportExportType] = useState(0)
   const [importExportDefaultIndex, setImportExportDefaultIndex] = useState(null)
-
-  let lastDataset
 
   const handleDelete = () => {
     if (index !== null) handleDeleteDataset(index)
@@ -93,12 +105,12 @@ export const TabStorage = ({ setTabIndex }) => {
 
 
   const handleOpenImportExportDialog = () => {
-    setImportExportType(0) // tipo: importar
+    setImportExportType(0) // type: import
     setImportExportDefaultIndex(null)
     setImportExportDialogOpen(true)
   }
   const handleOpenExportDialogWithIndex = (index) => {
-    setImportExportType(1) // tipo: exportar
+    setImportExportType(1) // type: export
     setImportExportDefaultIndex(index)
     setImportExportDialogOpen(true)
   }
@@ -139,7 +151,7 @@ export const TabStorage = ({ setTabIndex }) => {
             startIcon={<ImportExportIcon />}
             fullWidth
           >
-            Importar / Exportar
+            Import / Export
           </Button>
         </Box>
 
@@ -153,7 +165,7 @@ export const TabStorage = ({ setTabIndex }) => {
               marginTop: theme.spacing(2),
             }}
           >
-            Não há datasets em cache no momento.
+            There are no datasets in cache at the moment.
           </Typography>
         ) : (
           datasets.map((dataset, index) => {
@@ -238,19 +250,16 @@ export const TabStorage = ({ setTabIndex }) => {
                     ))}
                   </Box>
 
-                  {/* Parameters */}
                   <ParametersComponent 
                     dataset={dataset}
                   />
 
-                  {/* Points */}
                   <PointsComponent
                     formatPoint={formatPoint}
                     xArray={xArray}
                     yArray={yArray}
                   />
 
-                  {/* Interpolation */}
                   <InterpolationComponent
                     dataset={dataset}
                     datasetIndex={index} 

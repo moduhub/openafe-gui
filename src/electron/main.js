@@ -9,6 +9,11 @@ let port
 
 let isDev = false
 
+/**
+ * Initializes and configures the serial port communication with the Arduino
+ * 
+ * @param {String} selectedPort - The path of the serial port selected by the user (e.g., 'COM3')
+ */
 async function setupSerialPort(selectedPort) {
   try {
     if (port) port.close()
@@ -18,7 +23,6 @@ async function setupSerialPort(selectedPort) {
     port.on('open', () => { 
       console.log('Porta serial aberta com sucesso!')
       if (mainWindow) mainWindow.webContents.send('serial-port-opened', 'Porta serial aberta com sucesso!')
-      // Envia comando de reinicialização para o Arduino
       port.write('$RESET\n', (err) => {
         if (err) console.error('Erro ao enviar comando de reinicializacao para o Arduino:', err)
         else console.log('Comando de reinicializacao enviado para o Arduino')
@@ -34,7 +38,13 @@ async function setupSerialPort(selectedPort) {
   }
 }
 
-// Windows
+/**
+ * Creates and configures the main application window
+ * 
+ * - Loads the frontend application (usually a local development server or production build)
+ * - Ensures the serial port is closed when the window is closed
+ * - Injects a Content Security Policy (CSP) meta tag after the page has finished loading
+ */
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 800,
@@ -74,6 +84,12 @@ function createWindow() {
     `)
   })
 }
+
+/**
+ * Creates and displays the settings window.
+ * 
+ * @param {Object} settingsData - The settings data to be passed to the renderer via IPC
+ */
 function createSettingsWindow(settingsData) {
   if (settingsWindow) {
       settingsWindow.focus()
@@ -110,19 +126,39 @@ function createSettingsWindow(settingsData) {
   })
 }
 
+/**
+ * Executes initialization logic once the Electron app is ready.
+ *  
+ */
 app.whenReady().then(() => {
   app.commandLine.appendSwitch('disable-features', 'Autofill')
   createWindow()
 })
 
-app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit() })
+/**
+ * Quits the application when all windows are closed
+ * 
+ * - On platforms other than macOS (Darwin), the app quits entirely
+ * - On macOS, the app remains active until the user quits explicitly (standard macOS behavior)
+ */
+app.on('window-all-closed', () => { 
+  if (process.platform !== 'darwin') app.quit() 
+})
 
-// Serial Port Communication
+/**
+ * Handles request from renderer to retrieve a list of available serial ports
+ */
 ipcMain.handle('get-available-ports', async () => {
   console.log("Portas requeridas")
   const ports = await SerialPort.list()
   return ports
 })
+
+/**
+ * Handles request to connect to a selected serial port
+ * 
+ * @param {String} selectedPort - The path of the serial port to connect to
+ */
 ipcMain.on('connect-to-port', (event, selectedPort) => {
   try{
     setupSerialPort(selectedPort)
@@ -132,6 +168,10 @@ ipcMain.on('connect-to-port', (event, selectedPort) => {
   }
   
 })
+
+/**
+ * Handles request to disconnect the currently open serial port
+ */
 ipcMain.on('disconnect-port', () => {
   if (port) {
     port.close((err) => {
@@ -144,6 +184,12 @@ ipcMain.on('disconnect-port', () => {
     })
   }
 })
+
+/**
+ * Handles request to send a command string to the Arduino via the serial port
+ * 
+ * @param {String} arg - The command string to send to the Arduino
+ */
 ipcMain.on('send-command', (event, arg) => {
   if (port) 
     port.write(arg + '\n', (err) => {
@@ -152,10 +198,21 @@ ipcMain.on('send-command', (event, arg) => {
     })
 })
 
-// Window of settings
+/**
+ * Handles request to open the settings window
+ * 
+ * @param {Object} settingsData - The data to pass to the settings window
+ */
 ipcMain.on('open-settings-window', (event, settingsData) => {
   createSettingsWindow(settingsData)
 })
+
+/**
+ * Handles request to save settings from the settings window
+ * 
+ * @param {Object} data - The settings data submitted by the user
+ */
+
 ipcMain.on('save-settings', (event, data) => {
   console.log('Configurações salvas:', data) 
   if (settingsWindow) {

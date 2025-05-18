@@ -1,3 +1,10 @@
+/**
+ * Recovers and filters the available serial ports based on vendorId and productId, 
+ * and updates the state with the list of valid ports.
+ * 
+ * @param {Function} setPorts - Function to define the available serial ports
+ */
+
 export const ReceivePorts = async (setPorts) => {
   try {
     const portsData = await new Promise((resolve, reject) => {
@@ -7,19 +14,19 @@ export const ReceivePorts = async (setPorts) => {
             return (
               port.vendorId === '2341' && 
               (port.productId === '0043' || port.productId === '0001') 
-            );
-          });
-          resolve(filteredPorts);
-        });
+            )
+          })
+          resolve(filteredPorts)
+        })
       } catch (error) {
-        console.error("Erro ao listar portas:", error);
-        reject(error);
+        console.error("Error listing ports:", error)
+        reject(error)
       }
-    });
+    })
 
-    setPorts(Array.isArray(portsData) ? portsData : []);
+    setPorts(Array.isArray(portsData) ? portsData : [])
   } catch (error) {
-    console.log("Não foi possível receber as portas:", error);
+    console.log("It was not possible to receive the doors:", error)
   }
   
-};
+}

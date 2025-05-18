@@ -1,15 +1,22 @@
-import React, { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo } from "react"
 import {
   Box,
   Stack,
   Typography,
   Slider,
-  TextField,
-  InputAdornment
 } from '@mui/material'
 
 import { useDatasetsContext } from '../../contexts'
 
+/**
+ * A component that applies a moving average filter to the visible dataset and
+ * previews the filtered result. Users can adjust the window size using a slider
+ *
+ * @param {(filtered: { x: number[], y: number[] }) => void} setPreviewFilter -
+ *        Callback to update the filtered signal preview.
+ *
+ * @returns {JSX.Element}
+ */
 export const MovingAverage = ({ setPreviewFilter }) => {
   const { datasets } = useDatasetsContext()
   const [windowSize, setWindowSize] = useState(3)
@@ -63,12 +70,12 @@ export const MovingAverage = ({ setPreviewFilter }) => {
       <Box sx={{ mt: 1, p: 2, boxShadow: 1, borderRadius: 1 }}>
         <Stack spacing={2}>
           <Typography variant="h6" sx={{ fontSize: '1.125rem' }}>
-            Filtro Média Móvel
+            MovingAverage Filter
           </Typography>
 
           <Box>
             <Typography variant="body2" gutterBottom>
-              Tamanho da janela: {windowSize}
+              Window size: {windowSize}
             </Typography>
             <Slider
               value={windowSize}

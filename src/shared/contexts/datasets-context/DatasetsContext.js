@@ -9,10 +9,26 @@ import {
 
 const DatasetsContext = createContext({})
 
+/**
+ * Custom hook to access the Datasets context
+ *
+ * @returns {object} The datasets context value
+ */
 export const useDatasetsContext = () => {
   return useContext(DatasetsContext)
 }
 
+/**
+ * Provides the Datasets context to its children
+ * 
+ * Manages the creation, deletion, visibility, and parameter settings
+ * of datasets based on Arduino data and application settings
+ * Also reacts to serial data events like $START, $SGL, and $END
+ * 
+ * @param {React.ReactNode} children - React children components.
+ * 
+ * @returns {JSX.Element} 
+ */
 export const DataSetsProvider = ({ children }) => {
 
   const { theme } = useContext(ThemeContext)
@@ -23,8 +39,8 @@ export const DataSetsProvider = ({ children }) => {
   } = useArduinoContext()
   const {
     priorityMode,
-    maxDatasets, handleSetMaxDatasets,
-    defaultName, handleSetDefaultName,
+    maxDatasets,
+    defaultName,
   } = useSettingsContext()
   const { 
     tabDatasetsIsMinimized: isDatasetsMinimized, 
@@ -248,7 +264,6 @@ export const DataSetsProvider = ({ children }) => {
     // Data start
     else if(arduinoData.startsWith('$START')){
       setNewDataSet(currentName, currentParams)
-      //console.log("Iniciado leitura de " + currentName)
     }
     
     // Data end
@@ -264,8 +279,6 @@ export const DataSetsProvider = ({ children }) => {
   useEffect(()=>{
     setCurrentName(defaultName)
   },[defaultName])
-
-
 
   return (
     <DatasetsContext.Provider value={{ 
@@ -286,4 +299,3 @@ export const DataSetsProvider = ({ children }) => {
     </DatasetsContext.Provider>
   )
 }
-

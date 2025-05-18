@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useContext, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useContext, useRef } from 'react'
 import { Box } from '@mui/material'
 import Plotly from 'plotly.js-dist'
 
@@ -7,15 +7,39 @@ import {
   useDatasetsContext,
 } from '../../contexts'
 
+/**
+ * ChartComponent renders an interactive Plotly chart with multiple datasets and supports:
+ *  - Dynamic layout and theming based on the current theme context
+ *  - Reactively updates when datasets or preview data change
+ *  - Efficiently extends existing traces when new data points arrive
+ *  - Supports rendering dataset interpolations with customized styles
+ *  - Handles user clicks to select points on the chart (up to 2)
+ *  - Highlights selected points and draws a bold line range between two selected points
+ *  - Automatically resizes on window resize events
+ *  - Cleans up Plotly resources on component unmount
+ *
+ * @param {Object} type_                      - Layout and sizing info for the chart
+ * @param {string|number} type_.height        - Height of the chart container
+ * @param {string|number} type_.width         - Width of the chart container
+ * 
+ * @param {Object} previewData                - Data for the preview overlay line
+ * @param {Array<number>} previewData.x       - Array of x values
+ * @param {Array<number>} previewData.y       - Array of y values
+ * 
+ * @param {Function} setSelectedPoints        - Callback to update selected points array
+ * 
+ * @param {Array<Object>} selectedPoints      - Array of selected points, each with:
+ * @param {number} selectedPoints[].x         - x-coordinate of the point.
+ * @param {number} selectedPoints[].y         - y-coordinate of the point.
+ * @param {string} selectedPoints[].dataset   - Dataset name the point belongs to.
+ * @param {string} [selectedPoints[].color]   - Optional color of the point marker.
+ */
 export const ChartComponent = ({ type_, previewData, setSelectedPoints, selectedPoints }) => {
   const { theme } = useContext(ThemeContext)
   const { datasets, handleSetDatasetSelected } = useDatasetsContext()
   
   const chartRef = useRef(null)
   const prevLengths = useRef({})
-
-  //const [selectedPoints, setSelectedPoints] = useState([])
-  //const [selectedDataset, setSelectedDataset] = useState(null)
 
   const layout = useMemo(() => ({
     font: { size: 14, color: theme.palette.text.primary },
@@ -216,52 +240,74 @@ export const ChartComponent = ({ type_, previewData, setSelectedPoints, selected
     const el = chartRef.current
     if (!el) return
 
+    // Remove os traces antigos de seleção/highlight
     const removeIdx = el.data
-      .map((t, i) => (t.name === 'Selected Points' || t.name === 'Highlight Range') ? i : -1)
+      .map((t, i) =>
+        t.name === 'Selected Points' || t.name === 'Highlight Range' ? i : -1
+      )
       .filter(i => i >= 0)
-    if (removeIdx.length) Plotly.deleteTraces(el, removeIdx)
+    if (removeIdx.length) {
+      Plotly.deleteTraces(el, removeIdx)
+    }
 
     const toAdd = []
 
+    // Desenha os pontos selecionados (se houver)
     if (selectedPoints.length) {
       toAdd.push({
         x: selectedPoints.map(p => p.x),
         y: selectedPoints.map(p => p.y),
         mode: 'markers',
         marker: {
-          size: 10,
-          color: selectedPoints[0]?.color,
-          symbol: 'x'
+          size: 20,
+          color: 'red',
+          symbol: 'sphere'
         },
         name: 'Selected Points',
-        showlegend: false,
+        showlegend: false
       })
     }
 
+    // Se exatos 2 pontos, desenha o range entre eles
     if (selectedPoints.length === 2) {
       const [p1, p2] = selectedPoints
       const ds = datasets[p1.dataset]?.data[0]
       if (ds) {
-        const xs = ds.x, ys = ds.y
-        const i1 = xs.indexOf(p1.x), i2 = xs.indexOf(p2.x)
-        const [s,e] = [Math.min(i1,i2), Math.max(i1,i2)]
-        toAdd.push({
-          x: xs.slice(s, e+1),
-          y: ys.slice(s, e+1),
-          mode: 'lines',
-          line: { width: 4, color: p1.color },
-          name: 'Highlight Range',
-          showlegend: false
-        })
+        const { x: xs, y: ys } = ds
 
-        setSelectedPoints(selectedPoints)
-        handleSetDatasetSelected(p1.dataset)
-        //setTimeout(() => setSelectedPoints([]), 100)
+        // Encontra o índice exato de cada ponto comparando x e y
+        const i1 = xs.findIndex((x, i) => x === p1.x && ys[i] === p1.y)
+        const i2 = xs.findIndex((x, i) => x === p2.x && ys[i] === p2.y)
+
+        if (i1 >= 0 && i2 >= 0) {
+          const [s, e] = [Math.min(i1, i2), Math.max(i1, i2)]
+          toAdd.push({
+            x: xs.slice(s, e + 1),
+            y: ys.slice(s, e + 1),
+            mode: 'lines',
+            line: { width: 4, color: 'red' },
+            name: 'Highlight Range',
+            showlegend: false
+          })
+
+          // Confirma dataset e mantém pontos selecionados
+          setSelectedPoints(selectedPoints)
+          handleSetDatasetSelected(p1.dataset)
+        }
       }
     }
 
-    if (toAdd.length) Plotly.addTraces(el, toAdd)
-  }, [selectedPoints, datasets, handleSetDatasetSelected, setSelectedPoints])
+    // Adiciona os novos traces
+    if (toAdd.length) {
+      Plotly.addTraces(el, toAdd)
+    }
+  }, [
+    selectedPoints,
+    datasets,
+    handleSetDatasetSelected,
+    setSelectedPoints
+  ])
+
 
   return (
     <Box

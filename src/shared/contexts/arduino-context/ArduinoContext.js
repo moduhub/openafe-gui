@@ -1,18 +1,36 @@
-import Snackbar from '@mui/material/Snackbar';
-import Alert from '@mui/material/Alert';
+import Snackbar from '@mui/material/Snackbar'
+import Alert from '@mui/material/Alert'
 
-import React, { createContext, useCallback, useContext, useState, useEffect } from 'react'
+import { createContext, useCallback, useContext, useState, useEffect } from 'react'
 
 import { ReceivePorts } from '../../../arduino'
 
-import { useDashboardContext } from '..';
+import { useDashboardContext } from '..'
 
-const ArduinoContext = createContext({});
+const ArduinoContext = createContext({})
 
+/**
+ * Returns the current value of the Arduino context.
+ * 
+ * @returns {object} - The Arduino context value
+ */
 export const useArduinoContext = () => {
   return useContext(ArduinoContext)
 }
 
+/**
+ * ArduinoProvider manages the state and context for Arduino serial communication
+ * 
+ * Responsibilities:
+ * - Manages connection state, selected ports, and incoming Arduino data
+ * - Listens for Electron IPC events related to Arduino communication
+ * - Exposes context values and setters for consuming components
+ * - Displays status messages via a Snackbar
+ * 
+ * @param {ReactNode} children - React children components to be wrapped by this context provider
+ * 
+ * @returns {JSX.Element} 
+ */
 export const ArduinoProvider = ({ children }) => {
   const [arduinoData, setArduinoData] = useState('')
   const [portSelected, setPortSelected] = useState('')
@@ -22,10 +40,10 @@ export const ArduinoProvider = ({ children }) => {
   const [isConnecting, setIsConnecting] = useState(false)
   const [isReading, setIsReading] = useState(false)
 
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' })
   const handleCloseSnackbar = () => {
-    setSnackbar((prev) => ({ ...prev, open: false }));
-  };
+    setSnackbar((prev) => ({ ...prev, open: false }))
+  }
 
   const {
     tabArduinoIsMinimized: isArduinoMinimized, 
@@ -58,10 +76,7 @@ export const ArduinoProvider = ({ children }) => {
   useEffect(()=>{
     ReceivePorts(setPorts)
 
-    const handleArduinoData = (data) => {
-      handleSetArduinoData(data)
-      //console.log(data)
-    }
+    const handleArduinoData = (data) => handleSetArduinoData(data)
     const handleSerialPortOpened = (message) => {
       if(!message.startsWith("not-connected")){
         handleSetIsConnecting(true)
@@ -69,12 +84,11 @@ export const ArduinoProvider = ({ children }) => {
       }
     }
     const handleSerialPortDisconnected = (message) => {
-      //console.log(message)
       handleSetPortConnected('')
       handleSetPortSelected('')
       handleSetIsConnect(false)
       handleSetArduinoData('')
-      setSnackbar({ open: true, message: 'Desconectado com sucesso!', severity: 'success' });
+      setSnackbar({ open: true, message: 'Desconectado com sucesso!', severity: 'success' })
     }
 
     // Listeners
@@ -97,7 +111,7 @@ export const ArduinoProvider = ({ children }) => {
       handleSetIsConnecting(false)
       handleSetIsConnect(true)
       setSnackbar({ open: false, message: '', severity: 'info' }) 
-      setSnackbar({ open: true, message: 'Conectado com sucesso na porta '+portSelected+'!', severity: 'success' });
+      setSnackbar({ open: true, message: 'Conectado com sucesso na porta '+portSelected+'!', severity: 'success' })
       if(isArduinoMinimized)
         setIsArduinoMinimized()
     }
@@ -127,5 +141,5 @@ export const ArduinoProvider = ({ children }) => {
         </Alert>
       </Snackbar>
     </ArduinoContext.Provider>
-  );
+  )
 }

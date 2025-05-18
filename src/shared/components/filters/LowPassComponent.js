@@ -10,6 +10,16 @@ import {
 
 import { useDatasetsContext } from '../../contexts'
 
+/**
+ * A component that applies a low-pass filter to the currently visible dataset
+ * and previews the filtered result. Users can control the cutoff frequency 
+ * using either a slider or a numeric input field
+ *
+ * @param {(filtered: { x: number[], y: number[] }) => void} setPreviewFilter - 
+ *        Callback to update the filtered signal preview
+ *
+ * @returns {JSX.Element}
+ */
 export const LowPass = ({ setPreviewFilter }) => {
   const { datasets } = useDatasetsContext()
   const [cutoffFrequency, setCutoffFrequency] = useState(50)
@@ -62,12 +72,12 @@ export const LowPass = ({ setPreviewFilter }) => {
       <Box sx={{ mt: 1, p: 2, boxShadow: 1, borderRadius: 1 }}>
         <Stack spacing={2}>
           <Typography variant="h6" sx={{ fontSize: '1.125rem' }}>
-            Filtro Passa-Baixa
+            LowPass Filter
           </Typography>
 
           <Box>
             <Typography variant="body2" gutterBottom>
-              Frequência de Corte (Hz): 
+              Cutoff Frequency (Hz): 
             </Typography>
             <Slider
               value={cutoffFrequency}
@@ -85,7 +95,7 @@ export const LowPass = ({ setPreviewFilter }) => {
           </Box>
 
           <TextField
-            label="Frequência de Corte"
+            label="Cutoff Frequency"
             type="number"
             value={cutoffFrequency}
             onChange={(e) => {

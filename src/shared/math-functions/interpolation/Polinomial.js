@@ -1,3 +1,14 @@
+/**
+ * Calculates Polinomial Interpolation (Vandermonde + Normal Equation),
+ *
+ * @param {[number,number]} points            - Indices [idx1, idx2] of the cut
+ * @param {Array} datasets                    - Array of datasets (each with .data[0].x / .y)
+ * @param {number} datasetSelected            - Index of the dataset to use
+ * @param {number} degree                     - Degree of the interpolating polynomial
+ * @param {{min: number, max: number}} range  - Generation point interval
+ * 
+ * @returns {{coefficients: Array, interpolatedX: number[], interpolatedY: number[]}}
+ */
 export const calculatePolynomialInterpolation = (
   points, 
   datasets, 

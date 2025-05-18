@@ -1,8 +1,19 @@
 import { Navigate, Routes, Route } from 'react-router-dom'
 
-import { Dashboard, DataProcessing, Settings, Filters } from '../pages';
+import { Dashboard, DataProcessing, Settings, Filters } from '../pages'
 
-export const AppRoutes=()=>{
+/**
+ * Defines the routing structure for the application
+ * 
+ * Routes:
+ *  - "/home"            : Dashboard component
+ *  - "/data-processing" : DataProcessing component
+ *  - "/settings"        : Settings component
+ *  - "/filters"         : Filters component
+ * 
+ * Includes a catch-all route that redirects any unknown paths to "/home"
+ */
+export const AppRoutes = () => {
   return(
     <Routes>
       <Route path="/home"  element={<Dashboard />} />
@@ -11,7 +22,7 @@ export const AppRoutes=()=>{
       
       <Route path="/filters" element={<Filters />} />
 
-      {/* Se o usuário inserir um path inválido redireciona para o padrão */}
+      {/* If the user enters an invalid path, it redirects to the default */}
       <Route path='*' element={<Navigate to='/home'/>}/>
     </Routes>
   )

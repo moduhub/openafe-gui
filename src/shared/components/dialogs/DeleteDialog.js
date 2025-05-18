@@ -8,6 +8,14 @@ import {
   Button 
 } from "@mui/material"
 
+/**
+ * DeleteDialog displays a confirmation dialog for deleting an item
+ * It manages accessibility by setting the root element inert while open
+ *
+ * @param {boolean} open        - Controls whether the dialog is open
+ * @param {() => void} onClose  - Callback to close the dialog
+ * @param {() => void} onDelete - Callback to confirm and perform the delete action
+ */
 export const DeleteDialog = ({ open, onClose, onDelete }) => {
   
   // Gerencia o atributo inert no root para acessibilidade
@@ -46,6 +54,16 @@ export const DeleteDialog = ({ open, onClose, onDelete }) => {
   )
 }
 
+/**
+ * Custom hook to manage the state of a delete confirmation dialog
+ *
+ * @returns {{
+ *   openDialog: boolean,        // Whether the dialog is currently open
+ *   index: number | null,       // The index of the item to delete or null
+ *   open: (i: number) => void,  // Function to open the dialog with an item index
+ *   close: () => void           // Function to close the dialog and reset index
+ * }}
+ */
 export const useDeleteDialog = () => {
   const [openDialog, setOpenDialog] = useState(false)
   const [index, setIndex] = useState(null)

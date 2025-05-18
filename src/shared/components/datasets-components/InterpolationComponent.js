@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   Box,
   Accordion,
@@ -7,8 +6,6 @@ import {
   Typography,
   Button,
   useTheme,
-  IconButton,
-  Tooltip,
   Stack,
   Chip,
   Divider,
@@ -21,7 +18,15 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import { PointsComponent } from '..'
 
 /**
- * Component that displays interpolations (polynomial and Gaussian)
+ * InterpolationComponent displays a list of interpolations for a dataset,
+ * allowing toggling visibility and deletion of individual interpolations
+ * Shows details depending on interpolation type (polynomial or gaussian)
+ *
+ * @param {Object} dataset                                        - Dataset object containing interpolations
+ * @param {Array<Object>} dataset.interpolations                  - Interpolations
+ * @param {number} datasetIndex                                   - Index of the dataset in the parent collection
+ * @param {function(number, number): void} onToggleVisibility     - Callback invoked with (datasetIndex, interpolationIndex) to toggle visibility
+ * @param {function(number, number): void} onDeleteInterpolation  - Callback invoked with (datasetIndex, interpolationIndex) to delete interpolation
  */
 export const InterpolationComponent = ({ 
   dataset, 
@@ -43,7 +48,7 @@ export const InterpolationComponent = ({
         const { 
           name, type, data, 
           order, coefficients, 
-          weights, sigma, mu, amplitude 
+          sigma, mu, amplitude 
         } = interpolation
         const title = name || `${type} ${i + 1}`
         const xArray = data?.[0]?.x || []
@@ -115,7 +120,7 @@ export const InterpolationComponent = ({
                       </Stack>
                     ) : (
                       <Typography variant="body2" color="text.secondary">
-                        Nenhum valor disponível
+                        No value available
                       </Typography>
                     )}
                   </Box>

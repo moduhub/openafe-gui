@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   Box,
   Accordion,
@@ -18,6 +18,14 @@ import AddIcon from '@mui/icons-material/Add'
 import { useDatasetsContext } from '../../contexts'
 import { ParametersInsertionDialog } from '..'
 
+/**
+ * ParametersComponent displays and manages a list of parameters for a dataset
+ * Allows adding new parameters through a dialog
+ *
+ * @param {Object} dataset                       - Dataset object containing parameters
+ * @param {string} dataset.name                  - Name of the dataset (used to identify dataset when adding parameters)
+ * @param {Object.<string, any>} dataset.params  - Key-value pairs of parameters for the dataset
+ */
 export const ParametersComponent = ({ dataset }) => {
   const theme = useTheme()
   const isXs = useMediaQuery(theme.breakpoints.down('sm'))
@@ -76,7 +84,7 @@ export const ParametersComponent = ({ dataset }) => {
             </Stack>
           ) : (
             <Typography variant="body2" color="text.secondary">
-              Nenhum parâmetro adicionado.
+              No parameter added.
             </Typography>
           )}
 

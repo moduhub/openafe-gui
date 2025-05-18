@@ -1,16 +1,25 @@
-import React from "react"
 import { useEffect, useState, useMemo } from "react"
 import {
     Box,
     Stack,
     Typography,
-    Slider,
     TextField,
     InputAdornment
 } from '@mui/material'
 
 import { useDatasetsContext } from '../../contexts'
 
+/**
+ * A component that applies a band-stop (notch) filter to the currently visible dataset
+ * and previews the filtered signal. Users can configure the lower and upper cutoff frequencies,
+ * and the component applies a simple IIR-based notch filter using a combination of low-pass
+ * and high-pass filters
+ *
+ * @param {(filtered: { x: number[], y: number[] }) => void} setPreviewFilter - 
+ *        Callback to provide the filtered signal for preview.
+ *
+ * @returns {JSX.Element}
+ */
 export const BandStop = ({ setPreviewFilter }) => {
     const { datasets } = useDatasetsContext()
     const [lowCutoffFrequency, setLowCutoffFrequency] = useState(10)
@@ -80,15 +89,15 @@ export const BandStop = ({ setPreviewFilter }) => {
             <Box sx={{ mt: 1, p: 2, boxShadow: 1, borderRadius: 1 }}>
                 <Stack spacing={2}>
                     <Typography variant="h6" sx={{ fontSize: '1.125rem' }}>
-                        Filtro Rejeita-Faixa
+                        BandStop Filter
                     </Typography>
 
                     <Box>
                         <Typography variant="body2" gutterBottom>
-                            Corte Inferior (Hz):
+                            Lower Cut (Hz):
                         </Typography>
                         <TextField
-                            label="Frequência de Corte Inferior"
+                            label="Lower Cut Frequency"
                             type="number"
                             value={lowCutoffFrequency}
                             onChange={(e) => {
@@ -106,10 +115,10 @@ export const BandStop = ({ setPreviewFilter }) => {
 
                     <Box>
                         <Typography variant="body2" gutterBottom>
-                            Corte Superior (Hz):
+                            Higher cut (Hz):
                         </Typography>
                         <TextField
-                            label="Frequência de Corte Superior"
+                            label="Higher Cutoff Frequency"
                             type="number"
                             value={highCutoffFrequency}
                             onChange={(e) => {

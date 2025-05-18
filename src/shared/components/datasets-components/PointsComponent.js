@@ -1,22 +1,26 @@
-import React, { useState } from 'react'
 import {
   Box,
   Accordion,
   AccordionSummary,
   AccordionDetails,
   Typography,
-  useTheme,
 } from '@mui/material'
 
 import { FixedSizeList } from 'react-window'
 
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 
+/**
+ * PointsComponent renders a scrollable list of points with formatted x and y values
+ *
+ * @param {(value: number) => string} formatPoint   - Function to format point values (e.g., rounds numbers)
+ * @param {number[]} xArray                         - Array of x-coordinates
+ * @param {number[]} yArray                         - Array of y-coordinates
+ */
 export const PointsComponent = ({ 
   formatPoint,
   xArray, yArray 
 }) => {
-  const theme = useTheme()
 
   return (
     <>

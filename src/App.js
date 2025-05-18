@@ -1,29 +1,28 @@
-import React from 'react';
 import { 
   BrowserRouter, 
   useLocation 
-} from "react-router-dom";
-import { AppRoutes } from './routes';
+} from "react-router-dom"
+import { AppRoutes } from './routes'
 import { 
   AppThemeProvider, 
   DrawerProvider 
-} from './shared/contexts';
+} from './shared/contexts'
 
 import { 
   TopMenu, 
   DrawerMenu 
-} from './shared/components';
+} from './shared/components'
 import { 
   ArduinoProvider, 
   DataSetsProvider, 
   SettingsProvider, 
   DashboardProvider 
-} from './shared/contexts';
+} from './shared/contexts'
 
 const AppContent = () => {
 
-  const location = useLocation();
-  const isFiltersRoute = location.pathname === "/filters";
+  const location = useLocation()
+  const isFiltersRoute = location.pathname === "/filters"
 
   return (
     <AppThemeProvider>
@@ -47,13 +46,13 @@ const AppContent = () => {
         </SettingsProvider>
       </DashboardProvider>
     </AppThemeProvider>
-  );
-};
+  )
+}
 
 export const App = () => {
   return (
     <BrowserRouter>
       <AppContent />
     </BrowserRouter>
-  );
-};
+  )
+}

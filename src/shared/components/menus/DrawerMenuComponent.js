@@ -1,18 +1,37 @@
-import { Typography, Divider, Drawer, List, ListItemButton, ListItemIcon, ListItemText, useTheme } from '@mui/material';
-import { Box } from '@mui/system';
-import SettingsIcon from '@mui/icons-material/Settings';
-import HomeIcon from '@mui/icons-material/Home';
-import BarChartIcon from '@mui/icons-material/BarChart';
-import MenuIcon from '@mui/icons-material/Menu';
-import { useNavigate } from 'react-router-dom'; // Importando o hook useNavigate
+import { 
+  Typography, 
+  Divider, 
+  Drawer, 
+  List, 
+  ListItemButton, 
+  ListItemIcon, 
+  ListItemText, 
+  useTheme,
+  Box 
+} from '@mui/material'
 
-import { useDrawerContext } from '../../contexts';
+import SettingsIcon from '@mui/icons-material/Settings'
+import HomeIcon from '@mui/icons-material/Home'
+import BarChartIcon from '@mui/icons-material/BarChart'
+import MenuIcon from '@mui/icons-material/Menu'
 
+import { useNavigate } from 'react-router-dom' 
+
+import { useDrawerContext } from '../../contexts'
+
+/**
+ * A navigation drawer menu component that toggles open/closed state and
+ * provides navigation links to main app sections such as Home, Data Processing, and Settings.
+ * 
+ * @param {{ children: React.ReactNode }} props - The children elements to render alongside the drawer.
+ * 
+ * @returns {JSX.Element} 
+ */
 export const DrawerMenu = ({ children }) => {
 
-  const theme = useTheme();
-  const { isDrawerOpen, toggleDrawerOpen } = useDrawerContext();
-  const navigate = useNavigate();
+  const theme = useTheme()
+  const { isDrawerOpen, toggleDrawerOpen } = useDrawerContext()
+  const navigate = useNavigate()
 
   return (
     <>
@@ -33,7 +52,7 @@ export const DrawerMenu = ({ children }) => {
               <List component="nav">
                 <ListItemButton onClick={() => navigate('/home')}>
                   <ListItemIcon>
-                    <HomeIcon /> {/* Usando o ícone de Home da MUI */}
+                    <HomeIcon />
                   </ListItemIcon>
                   <ListItemText primary="Home" />
                 </ListItemButton>
@@ -44,7 +63,7 @@ export const DrawerMenu = ({ children }) => {
               <List component="nav">
                 <ListItemButton onClick={() => navigate('/data-processing')}>
                   <ListItemIcon>
-                    <BarChartIcon /> {/* Usando o ícone de Estatísticas da MUI */}
+                    <BarChartIcon />
                   </ListItemIcon>
                   <ListItemText primary="Data Processing" />
                 </ListItemButton>
@@ -59,7 +78,7 @@ export const DrawerMenu = ({ children }) => {
               <List component="nav">
                 <ListItemButton onClick={() => navigate('/settings')}>
                   <ListItemIcon>
-                    <SettingsIcon /> {/* Usando o ícone de configurações da MUI */}
+                    <SettingsIcon />
                   </ListItemIcon>
                   <ListItemText primary="Settings" />
                 </ListItemButton>
@@ -73,5 +92,5 @@ export const DrawerMenu = ({ children }) => {
         {children}
       </Box>
     </>
-  );
-};
+  )
+}

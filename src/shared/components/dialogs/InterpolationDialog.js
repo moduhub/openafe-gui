@@ -21,6 +21,16 @@ import {
   calculateGaussianInterpolation,
 } from "../../math-functions/"
 
+/**
+ * Displays a dialog that allows the user to configure and apply an interpolation
+ * (polynomial or Gaussian) to a selected dataset using two selected points
+ *
+ * @param {boolean} open                              - Whether the dialog is currently visible
+ * @param {() => void} onClose                        - Callback to trigger when the dialog is closed
+ * @param {{ x: number, y: number }[]} selectedPoints - Array of two points selected for interpolation
+ *
+ * @returns {JSX.Element}
+ */
 export const InterpolationDialog = ({ open, onClose, selectedPoints }) => {
   const { datasets, datasetSelected } = useDatasetsContext()
 
@@ -140,35 +150,35 @@ export const InterpolationDialog = ({ open, onClose, selectedPoints }) => {
   return (
     <Dialog open={open} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
       <DialogTitle>
-        Interpolação em {datasets?.[datasetSelected]?.name || "conjunto desconhecido"}
+        Interpolation in {datasets?.[datasetSelected]?.name || "unknown set"}
       </DialogTitle>
       <DialogContent>
         <Box sx={{ mb: 2 }}>
           <Typography>
-            Ponto 1: {selectedPoints?.[0] ? `(${selectedPoints[0].x}, ${selectedPoints[0].y})` : "Não selecionado"}
+            Point 1: {selectedPoints?.[0] ? `(${selectedPoints[0].x}, ${selectedPoints[0].y})` : "Não selecionado"}
           </Typography>
           <Typography>
-            Ponto 2: {selectedPoints?.[1] ? `(${selectedPoints[1].x}, ${selectedPoints[1].y})` : "Não selecionado"}
+            Point 2: {selectedPoints?.[1] ? `(${selectedPoints[1].x}, ${selectedPoints[1].y})` : "Não selecionado"}
           </Typography>
         </Box>
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2, my: 2 }}>
           <FormControl fullWidth>
-            <InputLabel>Tipo de Interpolação</InputLabel>
+            <InputLabel>Type of Interpolation</InputLabel>
             <Select
               value={interpolationType}
               label="Tipo de Interpolação"
               onChange={handleInterpolationTypeChange}
             >
-              <MenuItem value="polinomial">Polinomial</MenuItem>
-              <MenuItem value="gaussiana">Gaussiana</MenuItem>
+              <MenuItem value="polinomial">Polynomial</MenuItem>
+              <MenuItem value="gaussiana">Gaussian</MenuItem>
             </Select>
           </FormControl>
         </Box>
 
         {interpolationType === "polinomial" && (
           <Box sx={{ mt: 2 }}>
-            <Typography gutterBottom>Ordem do Polinômio:</Typography>
+            <Typography gutterBottom>Order of the Polynomial:</Typography>
             <Slider
               value={polynomialOrder}
               onChange={handleOrderChange}
@@ -178,7 +188,7 @@ export const InterpolationDialog = ({ open, onClose, selectedPoints }) => {
               valueLabelDisplay="auto"
               sx={{ mb: 2 }}
             />
-            <Typography gutterBottom>Intervalo de X:</Typography>
+            <Typography gutterBottom>Interval of X:</Typography>
             <Slider
               value={range.min}
               onChange={handleRangeChange("min")}
@@ -201,7 +211,7 @@ export const InterpolationDialog = ({ open, onClose, selectedPoints }) => {
 
         {interpolationType === "gaussiana" && (
           <Box sx={{ mb: 3 }}>
-            <Typography gutterBottom>Intervalo de X:</Typography>
+            <Typography gutterBottom>Interval of X:</Typography>
             <Slider
               value={range.min}
               onChange={handleRangeChange("min")}
@@ -225,7 +235,7 @@ export const InterpolationDialog = ({ open, onClose, selectedPoints }) => {
       </DialogContent>
       <DialogActions>
         <Button onClick={handleCloseDialog} color="secondary">
-          Cancelar
+          Cancel
         </Button>
         <Button
           onClick={handleConfirmInterpolation}
@@ -233,7 +243,7 @@ export const InterpolationDialog = ({ open, onClose, selectedPoints }) => {
           variant="contained"
           disabled={!interpolationType}
         >
-          Interpolar
+          Interpolate
         </Button>
       </DialogActions>
     </Dialog>

@@ -1,17 +1,32 @@
-import React, { createContext, useCallback, useContext, useState } from 'react'
+import { createContext, useCallback, useContext, useState } from 'react'
 
 const SettingsContext = createContext({})
 
+/**
+ * Custom hook to access the Settings context
+ *
+ * @returns {object} The theme context value
+ */
 export const useSettingsContext = () => {
   return useContext(SettingsContext)
 }
 
+/**
+ * Provides global application settings to all nested components
+ * 
+ * Manages configurable options like dataset behavior, UI preferences, 
+ * and system-wide flags (e.g., priority mode, unit system)
+ * 
+ * @param {React.ReactNode} children 
+ * 
+ * @returns {JSX.Element} 
+ */
 export const SettingsProvider = ({ children }) => {
   const [priorityMode, setPriorityMode] = useState(true)
   const [autoConnect, setAutoConnect] = useState(false)
   const [maxDatasets, setMaxDatasets] = useState(10)
   const [defaultName, setDefaultName] = useState('captura')
-  const [deleteCache, setDeleteCache] = useState('Apagar dataset mais antigo')
+  const [deleteCache, setDeleteCache] = useState('Delete the oldest dataset')
   const [unitSystem, setUnitSystem] = useState('SI')
   const [tabIndex, setTabIndex] = useState(0)
 

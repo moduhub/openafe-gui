@@ -14,6 +14,16 @@ import ExportIcon from '@mui/icons-material/CloudDownload'
 import { ImportDataset } from '..'
 import { ExportDataset } from '..'
 
+/**
+ * Renders a dialog interface for importing or exporting a dataset
+ *
+ * @param {boolean} open             - Indicates whether the dialog is open
+ * @param {() => void} onClose       - Callback to close the dialog
+ * @param {number} [type=0]          - Initial selected tab index (0 for import, 1 for export)
+ * @param {number} [defaultIndex]    - Default dataset index to use during export
+ *
+ * @returns {JSX.Element}
+ */
 export const ImportExportDialog = ({
   open,
   onClose,
@@ -47,7 +57,7 @@ export const ImportExportDialog = ({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth>
-      <DialogTitle>Importar / Exportar Dataset</DialogTitle>
+      <DialogTitle>Import / Export Dataset</DialogTitle>
 
       <Tabs
         value={tabIndex}
@@ -56,8 +66,8 @@ export const ImportExportDialog = ({
         textColor="primary"
         centered
       >
-        <Tab icon={<ImportIcon />} label="Importar" />
-        <Tab icon={<ExportIcon />} label="Exportar" />
+        <Tab icon={<ImportIcon />} label="Import" />
+        <Tab icon={<ExportIcon />} label="Export" />
       </Tabs>
 
       <DialogContent>
@@ -71,7 +81,7 @@ export const ImportExportDialog = ({
 
       <DialogActions>
         <Button onClick={onClose} color="secondary">
-          Cancelar
+          Cancel
         </Button>
       </DialogActions>
     </Dialog>

@@ -19,6 +19,19 @@ import {
   useDashboardContext,
 } from '../../contexts'
 
+/**
+ * TabArduino component provides a UI panel for configuring and controlling Arduino data acquisition
+ * 
+ * Features:
+ * - Displays input fields for dataset name and acquisition parameters
+ * - Validates inputs and manages error states
+ * - Starts and stops reading data from the Arduino device
+ * - Automatically handles unique naming of datasets to avoid duplicates
+ * - Allows minimizing the tab
+ * - Uses contexts for Arduino connection state, dataset management, and dashboard UI state
+ * 
+ * @returns {JSX.Element|null}
+ */
 export const TabArduino = () => {
 
   const theme = useTheme()
@@ -29,7 +42,7 @@ export const TabArduino = () => {
   const {
     currentParams, handleCurrentParams,
     currentName, handleCurrentName,
-    datasets, showOnlyDataset
+    datasets
   } = useDatasetsContext()
   const {
     tabArduinoIsMinimized: isMinimized, 
@@ -115,7 +128,7 @@ export const TabArduino = () => {
       if(!isMinimizedDataset)
         setIsMinimizedDataset()      
     }
-    else console.log("Não é possível iniciar, processo em andamento")
+    else console.log("It is not possible to start, process in progress")
   }
   
   if (isMinimized) 

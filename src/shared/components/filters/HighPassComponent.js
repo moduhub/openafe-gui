@@ -1,4 +1,3 @@
-import React from "react"
 import { useEffect, useState, useMemo } from "react"
 import {
   Box,
@@ -11,6 +10,16 @@ import {
 
 import { useDatasetsContext } from '../../contexts'
 
+/**
+ * A component that applies a high-pass filter to the currently visible dataset
+ * and previews the filtered signal. Users can configure the cutoff frequency
+ * via a slider or text input. The filter uses a basic IIR implementation
+ *
+ * @param {(filtered: { x: number[], y: number[] }) => void} setPreviewFilter - 
+ *        Callback to update the preview with the filtered signal.
+ *
+ * @returns {JSX.Element}
+ */
 export const HighPass = ({ setPreviewFilter }) => {
     const { datasets } = useDatasetsContext()
     const [cutoffFrequency, setCutoffFrequency] = useState(50)
@@ -68,12 +77,12 @@ export const HighPass = ({ setPreviewFilter }) => {
         <Box sx={{ mt: 1, p: 2, boxShadow: 1, borderRadius: 1 }}>
         <Stack spacing={2}>
             <Typography variant="h6" sx={{ fontSize: '1.125rem' }}>
-            Filtro Passa-Alta
+                HighPass Filter
             </Typography>
 
             <Box>
             <Typography variant="body2" gutterBottom>
-                Frequência de Corte (Hz): 
+                Cutoff Frequency (Hz): 
             </Typography>
             <Slider
                 value={cutoffFrequency}
@@ -91,7 +100,7 @@ export const HighPass = ({ setPreviewFilter }) => {
             </Box>
 
             <TextField
-            label="Frequência de Corte"
+            label="Cutoff Frequency"
             type="number"
             value={cutoffFrequency}
             onChange={(e) => {

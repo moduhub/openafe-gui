@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   Box,
   Typography
@@ -6,6 +6,14 @@ import {
 
 import { useDatasetsContext } from '../../contexts'
 
+/**
+ * A component for importing datasets from a JSON file. Validates and integrates datasets,
+ * enriching them with visibility controls and interpolation capabilities
+ *
+ * @param {() => void} onClose - Callback to close the import dialog after successful import
+ *
+ * @returns {JSX.Element}
+ */
 export const ImportDataset = ({ onClose }) => {
   const { datasets, handleSetDataset } = useDatasetsContext()
   const [error, setError] = useState('')
@@ -15,7 +23,7 @@ export const ImportDataset = ({ onClose }) => {
     if (!file) return
 
     if (file.type !== 'application/json') {
-      setError('Por favor, selecione um arquivo JSON válido.')
+      setError('Please select a valid JSON file.')
       return
     }
 
@@ -31,7 +39,7 @@ export const ImportDataset = ({ onClose }) => {
           ds.name && ds.data && Array.isArray(ds.data)
         )
         if (!isValid) {
-          setError('O arquivo JSON contém datasets inválidos.')
+          setError('The JSON file contains invalid datasets.')
           return
         }
 
@@ -86,7 +94,7 @@ export const ImportDataset = ({ onClose }) => {
         setError('')
         onClose()
       } catch {
-        setError('Erro ao processar o arquivo JSON. Verifique o formato.')
+        setError('Error processing the JSON file. Check the format.')
       }
     }
     reader.readAsText(file)
@@ -95,7 +103,7 @@ export const ImportDataset = ({ onClose }) => {
   return (
     <Box>
       <Typography variant="body1" gutterBottom>
-        Selecione um arquivo JSON para importar datasets.
+        Select a JSON file to import datasets.
       </Typography>
       <input
         type="file"

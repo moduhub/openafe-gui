@@ -9,29 +9,40 @@ import {
   MenuItem, 
   Tooltip,
   Divider
-} from '@mui/material';
+} from '@mui/material'
 
 import { 
   useDrawerContext, 
   useArduinoContext,
   useDashboardContext
-} from '../../contexts';
-import { DisconnectPort, ReceivePorts, ConnectPort } from '../../../arduino';
-import { useNavigate } from 'react-router-dom';
+} from '../../contexts'
+import { DisconnectPort, ReceivePorts, ConnectPort } from '../../../arduino'
+import { useNavigate } from 'react-router-dom'
 
-import SdStorageIcon from '@mui/icons-material/SdStorage';
-import MemoryIcon from '@mui/icons-material/Memory';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import MenuIcon from '@mui/icons-material/Menu';
-import CloseIcon from '@mui/icons-material/Close';
-import SettingsIcon from '@mui/icons-material/Settings';
-import CircularProgress from '@mui/material/CircularProgress'; // Para o ícone de carregamento
+import SdStorageIcon from '@mui/icons-material/SdStorage'
+import MemoryIcon from '@mui/icons-material/Memory'
+import RefreshIcon from '@mui/icons-material/Refresh'
+import MenuIcon from '@mui/icons-material/Menu'
+import SettingsIcon from '@mui/icons-material/Settings'
+import CircularProgress from '@mui/material/CircularProgress'
 
+/**
+ * TopMenu component renders the app's top navigation bar with controls for:
+ * - toggling the main drawer menu,
+ * - selecting and managing Arduino serial ports,
+ * - toggling visibility of Arduino and Datasets panels,
+ * - navigating to the Settings page,
+ * and displaying any passed children below the AppBar
+ * 
+ * @param {{ children: React.ReactNode }} props - Children elements to render below the top menu bar
+ * 
+ * @returns {JSX.Element} 
+ */
 export const TopMenu = ({ children }) => {
 
-  const theme = useTheme();
+  const theme = useTheme()
 
-  const { toggleDrawerOpen } = useDrawerContext();
+  const { toggleDrawerOpen } = useDrawerContext()
   const { 
     handleSetArduinoData,
     ports, handleSetPorts,
@@ -40,16 +51,16 @@ export const TopMenu = ({ children }) => {
     isConnected,
     isConnecting, 
     isReading
-  } = useArduinoContext();
+  } = useArduinoContext()
 
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   const {
     tabArduinoIsMinimized: isArduinoMinimized, 
     handleToggleTabArduinoMinimized: setIsArduinoMinimized, 
     tabDatasetsIsMinimized: isDatasetMinimized, 
     handleToggleTabDatasetsMinimized: setIsMinimizedDataset,
-} = useDashboardContext();
+} = useDashboardContext()
 
   return (
     <>
@@ -70,9 +81,9 @@ export const TopMenu = ({ children }) => {
               size='small'
             >   
               {isConnected ? (
-                <MenuItem value="" disabled={isReading} onClick={() => DisconnectPort()}>Desconectar</MenuItem>
+                <MenuItem value="" disabled={isReading} onClick={() => DisconnectPort()}>Disconnect</MenuItem>
               ) : (
-                <MenuItem value="" disabled>Não Conectado</MenuItem>
+                <MenuItem value="" disabled>Not Connected</MenuItem>
               )}
               {ports.map((port, index) => (
                 <MenuItem 
@@ -93,7 +104,6 @@ export const TopMenu = ({ children }) => {
             </Tooltip>
           </Box>
 
-          {/* Botão Arduino */}
           <Button 
             variant="contained" 
             style={{
@@ -107,7 +117,6 @@ export const TopMenu = ({ children }) => {
             <SdStorageIcon />
           </Button>
     
-          {/* Botão Datasets */}
           <Button 
             variant="contained" 
             style={{
@@ -121,10 +130,8 @@ export const TopMenu = ({ children }) => {
             <MemoryIcon />
           </Button>
 
-          {/* Divider vertical */}
           <Divider orientation="vertical" flexItem sx={{ mx: 2, marginRight: theme.spacing(4) }} />
 
-          {/* Button Settings */}
           <Tooltip title="Settings">
             <Button color="inherit" onClick={() => navigate('/settings')}>
               <SettingsIcon />
@@ -135,9 +142,9 @@ export const TopMenu = ({ children }) => {
       </AppBar>
 
       <Box height='calc(100% - 64px)'>
-        {/* 64px é a altura do AppBar */}
-        {children} {/* Conteúdo principal */}
+        {/* 64px It's the height of the AppBar */}
+        {children} {/* Main content */}
       </Box>
     </>
-  );
-};
+  )
+}

@@ -12,6 +12,29 @@ import {
   useDashboardContext 
 } from '../../shared/contexts'
 
+/**
+ * Dashboard component that manages the main layout and interactions for data visualization and device control
+ * 
+ * Features:
+ * - Displays a chart area for visualizing data
+ * - Provides UI tabs for Arduino controls and dataset management
+ * - Handles interpolation dialog opening based on user-selected points
+ * - Automatically minimizes side panels when two points are selected on the chart
+ * 
+ * State:
+ * - `previewData`: Holds the x and y data to display in the chart
+ * - `selectedPoints`: Stores points selected by the user on the chart
+ * - `openDialog`: Controls visibility of the interpolation dialog
+ * 
+ * Context:
+ * - Uses `useDashboardContext()` for tab minimization state and toggle handlers
+ * 
+ * Components:
+ * - `TabArduino`: Sidebar for Arduino-related controls
+ * - `ChartComponent`: Graphical data display
+ * - `TabDataset`: Sidebar for dataset control and previewing
+ * - `InterpolationDialog`: Modal dialog for handling selected data point interpolation
+ */
 export const Dashboard = () => {
 
   let type_chart_dashboard = {
@@ -54,10 +77,8 @@ export const Dashboard = () => {
       height="100%" width="100%" 
       display="flex" flexDirection="column"
     >
-      {/* Menu lateral */}
       <TabArduino />
 
-      {/* Gráfico */}
       <ChartComponent 
         type_={type_chart_dashboard} 
         previewData={previewData}
@@ -65,12 +86,10 @@ export const Dashboard = () => {
         selectedPoints={selectedPoints}
       />
 
-      {/* Controle de Datasets */}
       <TabDataset 
         setPreviewData={setPreviewData}
         previewData={previewData} 
       />
-      
     </Box>
     </>
   )

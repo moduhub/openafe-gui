@@ -16,14 +16,17 @@ import AspectRatioIcon from '@mui/icons-material/AspectRatio'
 import FilterListIcon from '@mui/icons-material/FilterList'
 
 import { useDatasetsContext } from '../../contexts'
-import {
-    MovingAverage,
-    LowPass,
-    HighPass,
-    BandPass,
-    BandStop
-} from '..'
+import { MovingAverage , LowPass , HighPass , BandPass , BandStop } from '..'
 
+/**
+ * TabFilter component allows selection and application of filters to datasets
+ * 
+ * @param {function} setPreviewData             - Function to update the filtered preview data
+ * @param {{ x: any[], y: any[] }} previewData  - The current data previewed for filtering
+ * @param {function} setTabIndex                - Function to switch tabs in the parent component
+ * 
+ * @returns {JSX.Element}
+ */
 export const TabFilter = ({ 
     setPreviewData, 
     previewData, 
@@ -41,12 +44,12 @@ export const TabFilter = ({
     } = useDatasetsContext()
 
     const filtersConfig = [
-        { label: "MM", tooltip: "Média Móvel", component: <MovingAverage setPreviewFilter={setPreviewData}/> },
-        { label: "PB", tooltip: "Passa Baixa", component: <LowPass setPreviewFilter={setPreviewData}/> },
-        { label: "PA", tooltip: "Passa Alta", component: <HighPass setPreviewFilter={setPreviewData}/> },
-        { label: "PF", tooltip: "Passa Faixa", component: <BandPass setPreviewFilter={setPreviewData}/> },
-        { label: "RF", tooltip: "Rejeita Faixa", component: <BandStop setPreviewFilter={setPreviewData}/> },
-    ]
+            { label: "MA", tooltip: "Moving Average", component: <MovingAverage setPreviewFilter={setPreviewData}/> },
+            { label: "LP", tooltip: "Low Pass", component: <LowPass setPreviewFilter={setPreviewData}/> },
+            { label: "HP", tooltip: "High Pass", component: <HighPass setPreviewFilter={setPreviewData}/> },
+            { label: "BP", tooltip: "Band Pass", component: <BandPass setPreviewFilter={setPreviewData}/> },
+            { label: "BS", tooltip: "Band Stop", component: <BandStop setPreviewFilter={setPreviewData}/> },
+        ]
 
     const handleOpenSettings = () => {
         if (window.electron) {
@@ -88,7 +91,7 @@ export const TabFilter = ({
     
     const renderSelected = (value) => {
         if (!value) {
-            return <>Selecione um filtro</>;
+            return <>Select a filter</>;
         }
         const { tooltip } = filtersConfig.find((f) => f.label === value) || {};
         return tooltip || '';
@@ -116,7 +119,7 @@ export const TabFilter = ({
                     align="center"
                     sx={{ padding: theme.spacing(2), marginTop: theme.spacing(2) }}
                 >
-                    Não há datasets em cache no momento.
+                    There are no datasets in cache at the moment.
                 </Typography>
             ) : (
                 <>
@@ -158,7 +161,7 @@ export const TabFilter = ({
                                 displayEmpty
                             >
                                 <MenuItem value="" disabled>
-                                    Selecione um filtro
+                                    Select a filter
                                 </MenuItem>
                                 {filtersConfig.map((filter) => (
                                 <MenuItem key={filter.label} value={filter.label}>
@@ -186,7 +189,7 @@ export const TabFilter = ({
                             right: theme.spacing(2),
                         }}
                     >
-                        Salvar Filtro
+                        Save Filter
                     </Button>
                 </>
             )}

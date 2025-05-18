@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react'
 import {
   Box,
   Typography,
@@ -8,7 +8,7 @@ import {
   Paper,
   Select,
   MenuItem
-} from '@mui/material';
+} from '@mui/material'
 
 import { 
     ChartComponent,
@@ -23,6 +23,31 @@ import {
     useDatasetsContext
 } from '../../shared/contexts'
 
+/**
+ * Filters component for applying signal processing filters to datasets
+ * 
+ * State:
+ * - `activeTab`: Index of the currently active filter tab
+ * - `previewFilter`: Data previewed on the chart after filtering
+ * - `selectedDataset`: Name of the currently selected dataset
+ * - `posSelecteDataset`: Position index of the selected dataset in the datasets array
+ * - `selectedPoints`: Array of points selected in the preview chart
+ * 
+ * Context:
+ * - Uses `useDatasetsContext()` for accessing and updating datasets globally
+ * 
+ * Handlers:
+ * - `recreateDatasetStates()`: Enhances datasets with visibility flags and toggle functions based on selection
+ * 
+ * UI:
+ * - Tabs for filter selection with tooltips
+ * - Dropdown menu to choose dataset
+ * - Left pane: Filter control components dynamically rendered based on active tab
+ * - Right pane: Chart preview area showing the filtered data
+ * 
+ * Integration:
+ * - Listens for `settings-data` event from Electron and updates datasets and selected dataset accordingly
+ */
 export const Filters = () => {
     
     const [activeTab, setActiveTab] = useState(0)
@@ -52,7 +77,7 @@ export const Filters = () => {
 
     const recreateDatasetStates = (parsedDatasets) => {
         const datasetsWithStates = parsedDatasets.map(dataset => {
-            const visible_ = selectedDataset ? (selectedDataset == dataset.name) : false;
+            const visible_ = selectedDataset ? (selectedDataset == dataset.name) : false
             
             const handleSetIsVisible = () => {
                 handleSetDataset(prevDatasets =>
@@ -100,13 +125,13 @@ export const Filters = () => {
                 const needsVisibilityUpdate = datasets.some(dataset => 
                     (dataset.name === selectedDataset && !dataset.visible) ||
                     (dataset.name !== selectedDataset && dataset.visible)
-                );
+                )
     
                 if (needsVisibilityUpdate) {
                     const updatedDatasets = datasets.map(dataset => ({
                         ...dataset,
                         visible: dataset.name === selectedDataset
-                    }));
+                    }))
                     handleSetDataset(updatedDatasets)
                 }
             }
@@ -115,11 +140,11 @@ export const Filters = () => {
     
 
     const filtersConfig = [
-        { label: "MM", tooltip: "Média Móvel", component: <MovingAverage setPreviewFilter={setPreviewFilter}/> },
-        { label: "PB", tooltip: "Passa Baixa", component: <LowPass setPreviewFilter={setPreviewFilter}/> },
-        { label: "PA", tooltip: "Passa Alta", component: <HighPass setPreviewFilter={setPreviewFilter}/> },
-        { label: "PF", tooltip: "Passa Faixa", component: <BandPass setPreviewFilter={setPreviewFilter}/> },
-        { label: "RF", tooltip: "Rejeita Faixa", component: <BandStop setPreviewFilter={setPreviewFilter}/> },
+        { label: "MA", tooltip: "Moving Average", component: <MovingAverage setPreviewFilter={setPreviewFilter}/> },
+        { label: "LP", tooltip: "Low Pass", component: <LowPass setPreviewFilter={setPreviewFilter}/> },
+        { label: "HP", tooltip: "High Pass", component: <HighPass setPreviewFilter={setPreviewFilter}/> },
+        { label: "BP", tooltip: "Band Pass", component: <BandPass setPreviewFilter={setPreviewFilter}/> },
+        { label: "BS", tooltip: "Band Stop", component: <BandStop setPreviewFilter={setPreviewFilter}/> },
     ]
 
     return (
@@ -156,7 +181,7 @@ export const Filters = () => {
                 ))}
                 </Tabs>
 
-                {/* Select para escolher o dataset */}
+                {/* Select to choose the dataset */}
                 <Select
                 value={
                     datasets.some((dataset) => dataset.name === selectedDataset)
@@ -209,7 +234,7 @@ export const Filters = () => {
                             mb: 0.5
                         }}
                     >
-                        Visualização do Preview
+                        Preview Visualization
                     </Typography>
                     <Box sx={{ 
                         flex: 1,

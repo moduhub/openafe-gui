@@ -26,6 +26,19 @@ import {
   TabFilter
 } from './TabFilterComponent'
 
+/**
+ * TabDataset component provides a UI panel for managing datasets and applying filters
+ * 
+ * Features:
+ * - Displays two tabs: one for dataset storage/management and another for filtering data
+ * - Controls tab switching and resets preview data accordingly
+ * - Calls context functions to control dataset visibility when switching tabs
+ * 
+ * @param {{ x: any[], y: any[] }} previewData                    - The current preview data to be filtered or displayed.
+ * @param {(data: { x: any[], y: any[] }) => void} setPreviewData - Function to update the preview data.
+ * 
+ * @returns {JSX.Element|null}
+ */
 export const TabDataset = ({ setPreviewData , previewData }) => {
 
   const theme = useTheme()
