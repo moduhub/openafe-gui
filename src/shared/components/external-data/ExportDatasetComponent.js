@@ -1,17 +1,23 @@
 import { useState, useEffect } from 'react'
 import {
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
   Checkbox,
   ListItemText,
   Button,
-  Box
+  Box,
+  Typography,
+  Switch,
+  FormControlLabel
 } from '@mui/material'
-import * as XLSX from 'xlsx'
 
 import { useDatasetsContext } from '../../contexts'
+
+import { exportJSON } from './export-formats/exportJSON'
+import { exportXLSX } from './export-formats/exportXLSX'
+import { exportCSV } from './export-formats/exportCSV'
+import { exportYAML } from './export-formats/exportYAML'
 
 /**
  * A component that allows the user to export selected datasets in either JSON or Excel format
@@ -27,6 +33,7 @@ export const ExportDataset = ({ onClose, defaultIndex }) => {
 
   const [selectedKeys, setSelectedKeys] = useState([])
   const [format, setFormat] = useState('json')
+  const [includeInterpPoints, setIncludeInterpPoints] = useState(true)
 
   useEffect(() => {
     if (defaultIndex != null) {
@@ -51,106 +58,27 @@ export const ExportDataset = ({ onClose, defaultIndex }) => {
       if (!ds) return
 
       const baseName = ds.name || `dataset-${key}`
-
+      
       if (format === 'json') {
-        const blob = new Blob([
-          JSON.stringify(ds, null, 2)
-        ], { type: 'application/json' })
-
-        const url = URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-        link.download = `${baseName}.json`
-        link.click()
+        exportJSON(ds, baseName)
         return
       }
 
       if (format === 'excel') {
-        const wb = XLSX.utils.book_new()
-        const ws = {}
-        const merges = []
-
-        ws['A1'] = { v: 'X' }
-        ws['B1'] = { v: 'Y' }
-        ws['C1'] = { v: '' }
-        ws['D1'] = {
-          v: 'Parâmetros',
-          s: { alignment: { horizontal: 'center', vertical: 'center' } }
-        }
-        merges.push({ s: { r: 0, c: 3 }, e: { r: 0, c: 4 } })
-
-        let rowPtr = 2
-        Object.entries(ds.params || {}).forEach(([k, v]) => {
-          ws[`D${rowPtr}`] = { v: k }
-          ws[`E${rowPtr}`] = { v: v }
-          rowPtr++
-        })
-
-        const main = Array.isArray(ds.data) ? ds.data[0] : null
-        const xs = main?.x || []
-        const ys = main?.y || []
-        const dataStart = 2
-        xs.forEach((x, i) => {
-          const r = dataStart + i
-          ws[`A${r}`] = { v: x }
-          ws[`B${r}`] = { v: ys[i] !== undefined ? ys[i] : '' }
-        })
-
-        const interps = Array.isArray(ds.interpolations)
-          ? ds.interpolations
-          : []
-
-        interps.forEach((interp, idx) => {
-          const startCol = 6 + idx * 3
-          const colX = XLSX.utils.encode_col(startCol)
-          const colY = XLSX.utils.encode_col(startCol + 1)
-
-          const title =
-            interp.type === 'polinomial'
-              ? `Polinomial (ord ${interp.order})`
-              : interp.type === 'gaussiana'
-                ? `Gaussiana`
-                : interp.type || 'Interp'
-          ws[`${colX}1`] = { v: title, s: { alignment: { horizontal: 'center', vertical: 'center' } } }
-          merges.push({ s: { r: 0, c: startCol }, e: { r: 0, c: startCol + 1 } })
-
-          let pStr = ''
-          if (interp.type === 'polinomial' && Array.isArray(interp.coefficients)) {
-            pStr = interp.coefficients.map((c, i) => `a${i}: ${c}`).join(' ')
-          } else if (interp.type === 'gaussiana') {
-            pStr = `σ: ${interp.sigma} μ: ${interp.mu} A: ${interp.amplitude}`
-          }
-          ws[`${colX}2`] = { v: pStr, s: { alignment: { horizontal: 'center', vertical: 'center' } } }
-          merges.push({ s: { r: 1, c: startCol }, e: { r: 1, c: startCol + 1 } })
-
-          const block = interp.data?.[0] || {}
-          const bxs = Array.isArray(block.x) ? block.x : []
-          const bys = Array.isArray(block.y) ? block.y : []
-          bxs.forEach((xv, j) => {
-            const r = dataStart + j + 1
-            ws[`${colX}${r}`] = { v: xv }
-            ws[`${colY}${r}`] = { v: bys[j] !== undefined ? bys[j] : '' }
-          })
-        })
-
-        ws['!merges'] = merges
-        const lastCol = 6 + interps.length * 3 - 2
-        const lastRow = Math.max(
-          dataStart + xs.length - 1,
-          dataStart + 1 + Math.max(0, ...interps.map(i => i.data?.[0]?.x?.length || 0))
-        )
-        ws['!ref'] = `A1:${XLSX.utils.encode_col(lastCol)}${lastRow}`
-
-        const cols = [
-          { wch: 12 }, { wch: 12 }, { wch: 2 },
-          { wch: 18 }, { wch: 15 }, { wch: 2 },
-          ...interps.flatMap(() => [{ wch: 20 }, { wch: 20 }, { wch: 2 }])
-        ]
-        ws['!cols'] = cols
-
-        XLSX.utils.book_append_sheet(wb, ws, 'Dataset')
-        XLSX.writeFile(wb, `${baseName}.xlsx`)
+        exportXLSX(ds, baseName, includeInterpPoints)
+        return
       }
+
+      if (format === 'csv') {
+        exportCSV(ds, baseName, includeInterpPoints)
+        return
+      }
+
+      if (format === 'yaml') {
+        exportYAML(ds, baseName)
+        return
+      }
+
     })
 
     onClose()
@@ -159,13 +87,15 @@ export const ExportDataset = ({ onClose, defaultIndex }) => {
   return (
     <Box>
       <FormControl fullWidth margin="normal">
-        <InputLabel id="dataset-multi-label">Datasets</InputLabel>
+        <Typography variant="subtitle1" gutterBottom>
+          Datasets:
+        </Typography>
         <Select
           labelId="dataset-multi-label"
           multiple
           value={selectedKeys}
           onChange={handleChange}
-          renderValue={(selected) => selected.join(', ')}
+          renderValue={(selected) => selected.map((key) => datasets[key]?.name || key).join(', ')}
         >
           {datasetKeys.map((key) => (
             <MenuItem key={key} value={key}>
@@ -177,16 +107,34 @@ export const ExportDataset = ({ onClose, defaultIndex }) => {
       </FormControl>
 
       <FormControl fullWidth margin="normal">
-        <InputLabel id="format-label">File format</InputLabel>
+        <Typography variant="subtitle1" gutterBottom>
+          File format:
+        </Typography>
         <Select
           labelId="format-label"
           value={format}
           onChange={(e) => setFormat(e.target.value)}
         >
-          <MenuItem value="json">JSON</MenuItem>
-          <MenuItem value="excel">Excel</MenuItem>
+          <MenuItem value="json">JSON ( Default )</MenuItem>
+          <MenuItem value="excel">XLSX ( Excel )</MenuItem>
+          <MenuItem value="csv">CSV</MenuItem>
+           <MenuItem value="yaml">YAML</MenuItem>
         </Select>
       </FormControl>
+
+      {(format === 'excel' || format === 'csv') && (
+        <FormControlLabel
+          control={
+            <Switch
+              checked={includeInterpPoints}
+              onChange={(e) => setIncludeInterpPoints(e.target.checked)}
+              color="primary"
+            />
+          }
+          label="Incluir pontos das interpolações"
+          sx={{ mt: 2 }}
+        />
+      )}
 
       <Button
         onClick={handleSave}

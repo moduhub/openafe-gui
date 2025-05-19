@@ -18,7 +18,8 @@ import { useDatasetsContext } from "../../contexts"
 
 import { 
   calculatePolynomialInterpolation,
-  calculateGaussianInterpolation,
+  calculateGaussianInterpolationRBF,
+  calculateGaussianInterpolationLS
 } from "../../math-functions/"
 
 /**
@@ -44,8 +45,10 @@ export const InterpolationDialog = ({ open, onClose, selectedPoints }) => {
 
   const [interpolationType, setInterpolationType] = useState("")
   const [points, setPoints] = useState([])
-  const [range, setRange] = useState({ min: start, max: end })
+  //const [range, setRange] = useState({ min: start, max: end })
+  const [range, setRange] = useState([start, end])
   const [polynomialOrder, setPolynomialOrder] = useState(1)
+  const [gaussianMethod, setGaussianMethod] = useState("rbf") // "rbf" or "ls"
 
   // Gerencia atributo inert para acessibilidade
   useEffect(() => {
@@ -76,14 +79,8 @@ export const InterpolationDialog = ({ open, onClose, selectedPoints }) => {
     if (idx1 === -1 || idx2 === -1) return
 
     setPoints([idx1, idx2])
-    setRange({
-      min: xValues[idx1],
-      max: xValues[idx2],
-    })
-  }
-
-  const handleRangeChange = (key) => (_, newValue) => {
-    setRange((prev) => ({ ...prev, [key]: newValue }))
+    //setRange({min: xValues[idx1],max: xValues[idx2],})
+    setRange([xValues[idx1], xValues[idx2]])
   }
 
   const handleOrderChange = (_, newValue) => {
@@ -98,26 +95,35 @@ export const InterpolationDialog = ({ open, onClose, selectedPoints }) => {
         datasets,
         datasetSelected,
         polynomialOrder,
-        range
+        //range
+        { min: range[0], max: range[1] }
       )
-    } else if (interpolationType === "gaussiana" && points.length === 2) {
-      result = calculateGaussianInterpolation(
-        points,
-        datasets,
-        datasetSelected,
-        range
-      )
+    } 
+    else if (interpolationType === "gaussiana" && points.length === 2) {
+      result = gaussianMethod === "rbf"
+        ? calculateGaussianInterpolationRBF(
+            points,
+            datasets,
+            datasetSelected,
+            { min: range[0], max: range[1] }
+          )
+        : calculateGaussianInterpolationLS(
+            points,
+            datasets,
+            datasetSelected,
+            { min: range[0], max: range[1] }
+          )
     }
 
     if (result) {
       const newInterpolation = {
         type: interpolationType,
+        typeCalculate: (interpolationType === "polinomial")? "Vandermonde" : (gaussianMethod === "rbf")?"RBF":"LS",
         order: interpolationType === "polinomial" ? polynomialOrder : undefined,
         sigma: interpolationType === "gaussiana" ? result.sigma : undefined,
         mu: interpolationType === "gaussiana" ? result.mu : undefined,
         amplitude: interpolationType === "gaussiana" ? result.amplitude : undefined,
         coefficients: result.coefficients ?? undefined,
-        weights: result.weights ?? undefined,
         isVisible: true,
         data: [
           {
@@ -128,7 +134,7 @@ export const InterpolationDialog = ({ open, onClose, selectedPoints }) => {
             name:
               interpolationType === "polinomial"
                 ? `Interpolação ${polynomialOrder}° grau`
-                : `Interpolação Gaussiana (σ=${result.sigma})`,
+                : `Interpolação Gaussiana (${gaussianMethod === "rbf" ? "RBF" : "MMQ"}) (σ=${result.sigma})`,
           },
         ],
       }
@@ -142,7 +148,8 @@ export const InterpolationDialog = ({ open, onClose, selectedPoints }) => {
   const handleCloseDialog = () => {
     setInterpolationType("")
     setPoints([])
-    setRange({ min: start, max: end })
+    //setRange({ min: start, max: end })
+    setRange([start, end])
     setPolynomialOrder(1)
     onClose()
   }
@@ -176,31 +183,39 @@ export const InterpolationDialog = ({ open, onClose, selectedPoints }) => {
           </FormControl>
         </Box>
 
-        {interpolationType === "polinomial" && (
+        {(interpolationType === "polinomial" || interpolationType === "gaussiana") && (
           <Box sx={{ mt: 2 }}>
-            <Typography gutterBottom>Order of the Polynomial:</Typography>
-            <Slider
-              value={polynomialOrder}
-              onChange={handleOrderChange}
-              min={1}
-              max={5}
-              step={1}
-              valueLabelDisplay="auto"
-              sx={{ mb: 2 }}
-            />
+            {interpolationType === "polinomial" && (
+              <>
+                <Typography gutterBottom>Order of the Polynomial:</Typography>
+                <Slider
+                  value={polynomialOrder}
+                  onChange={handleOrderChange}
+                  min={1}
+                  max={5}
+                  step={1}
+                  valueLabelDisplay="auto"
+                  sx={{ mb: 2 }}
+                />
+              </>
+            )}
+            {interpolationType === "gaussiana" && (
+              <FormControl fullWidth sx={{ mt: 2 }}>
+                <InputLabel>Gaussian Method</InputLabel>
+                <Select
+                  value={gaussianMethod}
+                  label="Gaussian Method"
+                  onChange={(e) => setGaussianMethod(e.target.value)}
+                >
+                  <MenuItem value="rbf">Radial Basis Function (RBF)</MenuItem>
+                  <MenuItem value="ls">Least Squares (MMQ)</MenuItem>
+                </Select>
+              </FormControl>
+            )}
             <Typography gutterBottom>Interval of X:</Typography>
             <Slider
-              value={range.min}
-              onChange={handleRangeChange("min")}
-              min={minStart}
-              max={maxEnd}
-              step={step}
-              valueLabelDisplay="auto"
-              sx={{ mb: 2 }}
-            />
-            <Slider
-              value={range.max}
-              onChange={handleRangeChange("max")}
+              value={range}
+              onChange={(_, newValue) => setRange(newValue)}
               min={minStart}
               max={maxEnd}
               step={step}
@@ -208,30 +223,6 @@ export const InterpolationDialog = ({ open, onClose, selectedPoints }) => {
             />
           </Box>
         )}
-
-        {interpolationType === "gaussiana" && (
-          <Box sx={{ mb: 3 }}>
-            <Typography gutterBottom>Interval of X:</Typography>
-            <Slider
-              value={range.min}
-              onChange={handleRangeChange("min")}
-              min={minStart}
-              max={maxEnd}
-              step={step}
-              valueLabelDisplay="auto"
-              sx={{ mb: 1 }}
-            />
-            <Slider
-              value={range.max}
-              onChange={handleRangeChange("max")}
-              min={minStart}
-              max={maxEnd}
-              step={step}
-              valueLabelDisplay="auto"
-            />
-          </Box>
-        )}
-
       </DialogContent>
       <DialogActions>
         <Button onClick={handleCloseDialog} color="secondary">

@@ -102,8 +102,8 @@ export const ImportDataset = ({ onClose }) => {
 
   return (
     <Box>
-      <Typography variant="body1" gutterBottom>
-        Select a JSON file to import datasets.
+      <Typography variant="subtitle1" gutterBottom>
+        Select a JSON file to import datasets:
       </Typography>
       <input
         type="file"

@@ -46,8 +46,8 @@ export const InterpolationComponent = ({
     <>
       {dataset.interpolations.map((interpolation, i) => {
         const { 
-          name, type, data, 
-          order, coefficients, 
+          name, type, typeCalculate, 
+          data, order, coefficients, 
           sigma, mu, amplitude 
         } = interpolation
         const title = name || `${type} ${i + 1}`
@@ -93,6 +93,13 @@ export const InterpolationComponent = ({
                       type === 'polinomial' ? theme.palette.primary.light : theme.palette.success.light
                     ),
                   }}
+                />
+              </Box>
+              <Box display="flex" alignItems="center" gap={1} mb={1}>
+                <Typography variant="subtitle2">Calculate:</Typography>
+                <Chip
+                  label={typeCalculate}
+                  size="small"
                 />
               </Box>
 

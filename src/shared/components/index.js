@@ -18,6 +18,7 @@ export * from './dialogs/DeleteDialog'
 export * from './dialogs/InterpolationDialog'
 export * from './dialogs/ParametersInsertionDialog'
 export * from './dialogs/ImportExportDialog'
+export * from './dialogs/PointsSelectedDialog'
 
 export * from './external-data/ExportDatasetComponent'
 export * from './external-data/ImportDatasetComponent'

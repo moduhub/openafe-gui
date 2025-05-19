@@ -8,7 +8,7 @@
  * 
  * @returns {{mu: number, sigma: number, amplitude: number, interpolatedX: number[], interpolatedY: number[]}}
  */
-export const calculateGaussianInterpolation = (
+export const calculateGaussianInterpolationRBF = (
   points,
   datasets,
   datasetSelected,

@@ -151,10 +151,12 @@ export const DataSetsProvider = ({ children }) => {
             y: [],
             mode: 'lines',
             line: { color: theme.palette.primary.main },
+            name: toString(name_),
           },
         ],
       },
     ])
+
   }
 
   const handleNewDataset = (name_, parameters_, points_) => {
