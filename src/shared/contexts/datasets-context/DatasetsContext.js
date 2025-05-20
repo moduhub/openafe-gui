@@ -133,6 +133,19 @@ export const DataSetsProvider = ({ children }) => {
         )
       )
     }
+
+    const addAreaMarker = (area) => {
+      setDatasets((prevDatasets) =>
+        prevDatasets.map((dataset) =>
+          dataset.name === name_
+            ? {
+                ...dataset,
+                areas: [...dataset.areas, area],
+              }
+            : dataset
+        )
+      )
+    }
     
   
     cacheDatasetsManager()
@@ -144,7 +157,9 @@ export const DataSetsProvider = ({ children }) => {
         visible: visible_,
         setIsVisible: handleSetIsVisible,
         addInterpolation: addInterpolation,
+        addAreaMarker: addAreaMarker,
         interpolations: [],
+        areas: [],
         data: [
           {
             x: [],

@@ -38,10 +38,37 @@ export const exportXLSX = (ds, baseName, includeInterpPoints = true) => {
     ws[`B${r}`] = { v: ys[i] !== undefined ? ys[i] : '' }
   })
 
+  ws['F1'] = { v: '' }
+  ws['F1'].s = { alignment: { horizontal: 'center', vertical: 'center' } }
+
+  const areaColStart = 6 // G index (0-based)
+  const areaColEnd = 7   // H index
+  
+  ws['G1'] = { v: 'Areas', s: { alignment: { horizontal: 'center', vertical: 'center' } } }
+  merges.push({ s: { r: 0, c: areaColStart }, e: { r: 0, c: areaColEnd } })
+  ws['G2'] = { v: 'Area' }
+  ws['H2'] = { v: 'Value' }
+  const areas = Array.isArray(ds.areas) ? ds.areas : []
+  let areaRowPtr = 3
+  areas.forEach((area, idx) => {
+    ws[`G${areaRowPtr}`] = { v: `Area ${idx + 1}` }
+    ws[`H${areaRowPtr}`] = { v: area.value }
+    areaRowPtr++
+    ws[`G${areaRowPtr}`] = { v: 'Start' }
+    ws[`H${areaRowPtr}`] = { v: area.start }
+    areaRowPtr++
+    ws[`G${areaRowPtr}`] = { v: 'End' }
+    ws[`H${areaRowPtr}`] = { v: area.end }
+    areaRowPtr++
+    areaRowPtr++
+  })
+
+  ws['I1'] = { v: '' }
+
   const interps = Array.isArray(ds.interpolations) ? ds.interpolations : []
 
   interps.forEach((interp, idx) => {
-    const startCol = 6 + idx * 3
+    const startCol = 9 + idx * 3
     const colX = XLSX.utils.encode_col(startCol)
     const colY = XLSX.utils.encode_col(startCol + 1)
 
@@ -88,19 +115,26 @@ export const exportXLSX = (ds, baseName, includeInterpPoints = true) => {
   })
 
   ws['!merges'] = merges
-  const lastCol = 6 + interps.length * 3 - 2
+  const lastCol = 9 + interps.length * 3 - 1
   const lastRow = Math.max(
     dataStart + xs.length - 1,
     dataStart + 1 + Math.max(0, ...interps.map(i => i.data?.[0]?.x?.length || 0))
   )
   ws['!ref'] = `A1:${XLSX.utils.encode_col(lastCol)}${lastRow}`
 
-  const cols = [
-    { wch: 12 }, { wch: 12 }, { wch: 2 },
-    { wch: 18 }, { wch: 15 }, { wch: 2 },
-    ...interps.flatMap(() => [{ wch: 20 }, { wch: 20 }, { wch: 2 }])
+  // Column widths
+  ws['!cols'] = [
+    { wch: 12 }, // A
+    { wch: 12 }, // B
+    { wch: 2 },  // C
+    { wch: 18 }, // D
+    { wch: 15 }, // E
+    { wch: 2 },  // F 
+    { wch: 6 },  // G Area label
+    { wch: 22 }, // H Area value
+    { wch: 2 },  // I
+    ...interps.flatMap(() => [{ wch: 22 }, { wch: 22 }, { wch: 2 }])
   ]
-  ws['!cols'] = cols
 
   XLSX.utils.book_append_sheet(wb, ws, 'Dataset')
   XLSX.writeFile(wb, `${baseName}.xlsx`)

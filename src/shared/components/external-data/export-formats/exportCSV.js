@@ -28,7 +28,18 @@ export const exportCSV = (ds, baseName, includeInterpPoints = true) => {
     const yv = String(ys[i]).includes(',') ? `"${ys[i]}"` : ys[i]
     csvLines.push(`${xv},${yv}`)
   })
-  csvLines.push(''); // ";" necessary to separate commands
+  csvLines.push('')
+
+  // Area markers section
+  csvLines.push('Areas')
+  const areas = Array.isArray(ds.areas) ? ds.areas : []
+  areas.forEach((area, idx) => {
+    csvLines.push(`Area ${idx + 1}`)
+    csvLines.push(`value,${area.value}`)
+    csvLines.push(`start,${area.start}`)
+    csvLines.push(`end,${area.end}`)
+    csvLines.push('')
+  }); // ";" necessary to separate commands
 
   // Interpolation sections
   (Array.isArray(ds.interpolations) ? ds.interpolations : []).forEach((interp, idx) => {

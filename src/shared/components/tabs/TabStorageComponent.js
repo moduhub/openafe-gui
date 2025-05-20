@@ -31,6 +31,7 @@ import {
   InterpolationComponent,
   ParametersComponent,
   PointsComponent,
+  AreaMarkers,
   ImportExportDialog
 } from '..'
 
@@ -103,12 +104,12 @@ export const TabStorage = ({ setTabIndex }) => {
     handleSetDataset(updatedDatasets) 
   }
 
-
   const handleOpenImportExportDialog = () => {
     setImportExportType(0) // type: import
     setImportExportDefaultIndex(null)
     setImportExportDialogOpen(true)
   }
+
   const handleOpenExportDialogWithIndex = (index) => {
     setImportExportType(1) // type: export
     setImportExportDefaultIndex(index)
@@ -133,7 +134,6 @@ export const TabStorage = ({ setTabIndex }) => {
         type={importExportType}
         defaultIndex={importExportDefaultIndex}
       />
-
 
       <Box
         sx={{
@@ -258,6 +258,10 @@ export const TabStorage = ({ setTabIndex }) => {
                     formatPoint={formatPoint}
                     xArray={xArray}
                     yArray={yArray}
+                  />
+
+                  <AreaMarkers 
+                    areas={dataset.areas} 
                   />
 
                   <InterpolationComponent

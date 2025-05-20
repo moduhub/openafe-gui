@@ -5,7 +5,8 @@ import {
   ChartComponent,
   TabArduino, 
   TabDataset, 
-  InterpolationDialog
+  //InterpolationDialog
+  PointsSelectedDialog,
 } from '../../shared/components'
 
 import { 
@@ -67,7 +68,7 @@ export const Dashboard = () => {
 
   return (
     <>
-    <InterpolationDialog 
+    <PointsSelectedDialog 
       open={openDialog}
       onClose={handleCloseDialog}
       selectedPoints={selectedPoints}

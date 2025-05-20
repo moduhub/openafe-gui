@@ -88,6 +88,18 @@ export const ImportDataset = ({ onClose }) => {
               )
             )
           },
+          addAreaMarker: (area) => {
+            handleSetDataset((prevDatasets) =>
+              prevDatasets.map((dataset) =>
+                dataset.name === ds.name
+                  ? {
+                      ...dataset,
+                      areas: [...dataset.areas, area],
+                    }
+                  : dataset
+              )
+            )
+          },
         }))
 
         handleSetDataset(prev => [...prev, ...enriched])
