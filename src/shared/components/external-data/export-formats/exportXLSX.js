@@ -44,14 +44,41 @@ export const exportXLSX = (ds, baseName, includeInterpPoints = true) => {
   const areaColStart = 6 // G index (0-based)
   const areaColEnd = 7   // H index
   
-  ws['G1'] = { v: 'Areas', s: { alignment: { horizontal: 'center', vertical: 'center' } } }
+  ws['G1'] = { v: 'Markers', s: { alignment: { horizontal: 'center', vertical: 'center', font: { bold: true } } } }
   merges.push({ s: { r: 0, c: areaColStart }, e: { r: 0, c: areaColEnd } })
-  ws['G2'] = { v: 'Area' }
-  ws['H2'] = { v: 'Value' }
+
+  let areaRowPtr = 2
+  const markers = Array.isArray(ds.markers) ? ds.markers : []
+  markers.forEach((marker, idx) => {
+    ws[`G${areaRowPtr}`] = { v: `Marker` }
+    ws[`H${areaRowPtr}`] = { v: `${idx + 1}` }
+    areaRowPtr++
+    ws[`G${areaRowPtr}`] = { v: `Name` }
+    ws[`H${areaRowPtr}`] = { v: marker.label }
+    areaRowPtr++
+    ws[`G${areaRowPtr}`] = { v: 'Symbol' }
+    ws[`H${areaRowPtr}`] = { v: marker.symbol }
+    areaRowPtr++
+    ws[`G${areaRowPtr}`] = { v: 'X' }
+    ws[`H${areaRowPtr}`] = { v: marker.x }
+    areaRowPtr++
+    ws[`G${areaRowPtr}`] = { v: 'Y' }
+    ws[`H${areaRowPtr}`] = { v: marker.y }
+    areaRowPtr++
+    areaRowPtr++
+  })
+
+  areaRowPtr++
+  ws[`G${areaRowPtr}`] = { v: 'Areas', s: { alignment: { horizontal: 'center', vertical: 'center', font: { bold: true } } } }
+  merges.push({ s: { r: areaRowPtr - 1, c: areaColStart }, e: { r: areaRowPtr - 1, c: areaColEnd } })
+  areaRowPtr++
+  
   const areas = Array.isArray(ds.areas) ? ds.areas : []
-  let areaRowPtr = 3
   areas.forEach((area, idx) => {
-    ws[`G${areaRowPtr}`] = { v: `Area ${idx + 1}` }
+    ws[`G${areaRowPtr}`] = { v: `Area` }
+    ws[`H${areaRowPtr}`] = { v: `${idx + 1}` }
+    areaRowPtr++
+    ws[`G${areaRowPtr}`] = { v: `Value` }
     ws[`H${areaRowPtr}`] = { v: area.value }
     areaRowPtr++
     ws[`G${areaRowPtr}`] = { v: 'Start' }

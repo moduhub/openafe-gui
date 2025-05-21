@@ -146,6 +146,21 @@ export const DataSetsProvider = ({ children }) => {
         )
       )
     }
+
+    const addPointMarker = (marker) =>{
+      setDatasets((prevDatasets) =>
+        prevDatasets.map((dataset) =>
+          dataset.name === name_
+            ? {
+                ...dataset,
+                markers: [...dataset.markers, marker],
+              }
+            : dataset
+        )
+      )
+      console.log("marcação adicionada com sucesso")
+      console.log(marker)
+    }
     
   
     cacheDatasetsManager()
@@ -158,8 +173,10 @@ export const DataSetsProvider = ({ children }) => {
         setIsVisible: handleSetIsVisible,
         addInterpolation: addInterpolation,
         addAreaMarker: addAreaMarker,
+        addPointMarker: addPointMarker,
         interpolations: [],
         areas: [],
+        markers: [],
         data: [
           {
             x: [],

@@ -61,7 +61,7 @@ export const InterpolationComponent = ({
               sx={{ color: interpolation.isVisible ? 'inherit' : 'gray' }}
             >
               <Typography variant="body1" noWrap>
-              {title}
+                {title}
               </Typography>
             </AccordionSummary>
             <AccordionDetails>

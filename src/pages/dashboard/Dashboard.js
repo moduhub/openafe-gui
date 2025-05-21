@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
-import { Box } from '@mui/material'
+import { useState } from 'react'
+import { Box, Menu, MenuItem } from '@mui/material'
 
 import { 
   ChartComponent,
   TabArduino, 
   TabDataset, 
-  //InterpolationDialog
+  AddMarkDialog,
   PointsSelectedDialog,
 } from '../../shared/components'
 
@@ -21,14 +21,6 @@ import {
  * - Provides UI tabs for Arduino controls and dataset management
  * - Handles interpolation dialog opening based on user-selected points
  * - Automatically minimizes side panels when two points are selected on the chart
- * 
- * State:
- * - `previewData`: Holds the x and y data to display in the chart
- * - `selectedPoints`: Stores points selected by the user on the chart
- * - `openDialog`: Controls visibility of the interpolation dialog
- * 
- * Context:
- * - Uses `useDashboardContext()` for tab minimization state and toggle handlers
  * 
  * Components:
  * - `TabArduino`: Sidebar for Arduino-related controls
@@ -52,17 +44,48 @@ export const Dashboard = () => {
   const [previewData, setPreviewData] = useState({ x: [], y: [] })
   const [selectedPoints, setSelectedPoints] = useState([])
   const [openDialog, setOpenDialog] = useState(false)
+  const [contextMenu, setContextMenu] = useState(null)
+  const [openMarkDialog, setOpenMarkDialog] = useState(false)
 
-  useEffect(() => {
-    if (selectedPoints.length == 2 && !openDialog) {
-      setOpenDialog(true)
-      if(!tabArduinoIsMinimized) handleToggleTabArduinoMinimized()
-      if(!tabDatasetsIsMinimized) handleToggleTabDatasetsMinimized()
+  const handleChartContextMenu = (event) => {
+    event.preventDefault()
+    if (selectedPoints.length === 1 || selectedPoints.length === 2) {
+      setContextMenu({
+        mouseX: event.clientX - 2,
+        mouseY: event.clientY - 4,
+      })
     }
-  }, [selectedPoints])
+    if (selectedPoints.length === 2) {
+      setContextMenu({
+        mouseX: event.clientX - 2,
+        mouseY: event.clientY - 4,
+      })
+    }
+  }
+
+  const handleOpenDialogFromMenu = (type) => {
+    if(type == "markers")
+      setOpenMarkDialog(true)
+    else
+      setOpenDialog(true)
+
+    setContextMenu(null)
+    if(!tabArduinoIsMinimized) handleToggleTabArduinoMinimized()
+    if(!tabDatasetsIsMinimized) handleToggleTabDatasetsMinimized()
+  }
+
+  const handleCloseContextMenu = () => {
+    setContextMenu(null)
+  }
+
+  const handleClearSelection = () => {
+    setSelectedPoints([])
+    setContextMenu(null)
+  }
 
   const handleCloseDialog = () => {
     setOpenDialog(false)
+    setOpenMarkDialog(false)
     setSelectedPoints([]) 
   }
 
@@ -73,6 +96,38 @@ export const Dashboard = () => {
       onClose={handleCloseDialog}
       selectedPoints={selectedPoints}
     />
+    <AddMarkDialog
+      open={openMarkDialog}
+      onClose={handleCloseDialog}
+      point={selectedPoints[0]}
+    />
+
+    <Menu
+      open={contextMenu !== null}
+      onClose={handleCloseContextMenu}
+      anchorReference="anchorPosition"
+      anchorPosition={
+        contextMenu !== null
+          ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+          : undefined
+      }
+    >
+      {selectedPoints.length === 1 && (
+        <MenuItem onClick={() => handleOpenDialogFromMenu("markers")}>
+          Add Markup
+        </MenuItem>
+      )}
+      {selectedPoints.length === 2 && (
+        <Box>
+          <MenuItem onClick={() => handleOpenDialogFromMenu("interpolation-area")}>
+            New Interpolation / Calculate Area
+          </MenuItem>
+          <MenuItem onClick={handleClearSelection}>
+            Uncheck interval
+          </MenuItem>
+        </Box>
+      )}
+    </Menu>
 
     <Box 
       height="100%" width="100%" 
@@ -85,6 +140,7 @@ export const Dashboard = () => {
         previewData={previewData}
         setSelectedPoints={setSelectedPoints}
         selectedPoints={selectedPoints}
+        onContextMenu={handleChartContextMenu}
       />
 
       <TabDataset 

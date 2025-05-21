@@ -32,6 +32,7 @@ import {
   ParametersComponent,
   PointsComponent,
   AreaMarkers,
+  PointMarkers,
   ImportExportDialog
 } from '..'
 
@@ -258,6 +259,11 @@ export const TabStorage = ({ setTabIndex }) => {
                     formatPoint={formatPoint}
                     xArray={xArray}
                     yArray={yArray}
+                  />
+
+                  <PointMarkers
+                    datasetIndex={index} 
+                    points={dataset.markers}
                   />
 
                   <AreaMarkers 

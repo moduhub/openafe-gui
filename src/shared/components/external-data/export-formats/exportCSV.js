@@ -30,6 +30,18 @@ export const exportCSV = (ds, baseName, includeInterpPoints = true) => {
   })
   csvLines.push('')
 
+  // Point markers section (antes das áreas)
+  csvLines.push('Markers')
+  const markers = Array.isArray(ds.markers) ? ds.markers : []
+  markers.forEach((marker, idx) => {
+    csvLines.push(`Marker ${idx + 1}`)
+    csvLines.push(`${marker.label}`)
+    csvLines.push(`symbol,${marker.symbol}`)
+    csvLines.push(`x,${marker.x}`)
+    csvLines.push(`y,${marker.y}`)
+    csvLines.push('')
+  })
+
   // Area markers section
   csvLines.push('Areas')
   const areas = Array.isArray(ds.areas) ? ds.areas : []

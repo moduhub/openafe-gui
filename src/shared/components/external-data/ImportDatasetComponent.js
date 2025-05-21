@@ -100,6 +100,18 @@ export const ImportDataset = ({ onClose }) => {
               )
             )
           },
+          addPointMarker: (marker) => {
+            handleSetDataset((prevDatasets) =>
+              prevDatasets.map((dataset) =>
+                dataset.name === ds.name
+                  ? {
+                      ...dataset,
+                      markers: [...dataset.markers, marker],
+                    }
+                  : dataset
+              )
+            )
+          },
         }))
 
         handleSetDataset(prev => [...prev, ...enriched])

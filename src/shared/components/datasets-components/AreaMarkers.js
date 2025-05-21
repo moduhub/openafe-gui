@@ -2,9 +2,9 @@ import { Box, Typography, Chip, Stack, Accordion, AccordionSummary, AccordionDet
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 
 /**
- * AreaMarkers exibe a lista de áreas salvas para um dataset.
+ * AreaMarkers displays the list of saved areas for a dataset
  *
- * @param {Object[]} areas - Array de áreas [{ value, start, end }]
+ * @param {Object[]} areas - Array of areas [{ value, start, end }]
  */
 export const AreaMarkers = ({ areas }) => {
   if (!areas || areas.length === 0) return null
@@ -21,11 +21,11 @@ export const AreaMarkers = ({ areas }) => {
           {areas.map((area, idx) => (
             <Box key={idx} display="flex" flexDirection="column" gap={0.5}>
               <Box display="flex" alignItems="center" gap={2}>
-                <Chip label={`#${idx + 1}`} size="small" />
-                <Typography variant="body2">
-                  Value: <b>{area.value?.toExponential?.(3) ?? area.value}</b> [mV·uA]
-                </Typography>
+                <Chip label={`#${idx + 1} Area`} size="small" />
               </Box>
+              <Typography variant="body2">
+                  Value: <b>{area.value?.toExponential?.(3) ?? area.value}</b> [V·A]
+                </Typography>
               <Typography variant="caption" color="text.secondary">
                 (from {area.start} to {area.end})
               </Typography>

@@ -105,7 +105,7 @@ export const AreaTab = ({ open, onClose, selectedPoints }) => {
     <>
     <Box sx={{ mt: 2 }}>
       <Typography>
-        Area: {formatEngineeringNotation(area)}  [ mV*uA ]
+        Area: {formatEngineeringNotation(area)}  [ V·A ]
       </Typography>
     </Box>
     <Box sx={{ mt: 2 }}>
