@@ -36,8 +36,11 @@ export const AddMarkDialog = ({ open, onClose, point }) => {
 
   const handleSave = () => {
     const newMarker = { 
-      ...point, label, symbol, color, 
-      isVisible:true,
+      ...point, 
+      label, 
+      symbol, 
+      color, 
+      isVisible: true,
     }
 
     datasets[datasetSelected]?.addPointMarker(newMarker)

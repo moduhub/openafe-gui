@@ -79,7 +79,7 @@ function createWindow() {
     mainWindow.webContents.executeJavaScript(`
       const meta = document.createElement('meta')
       meta.httpEquiv = 'Content-Security-Policy'
-      meta.content = "default-src 'self' script-src 'self' style-src 'self' 'unsafe-inline' img-src 'self' data: font-src 'self'"
+      meta.content = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self';"
       document.getElementsByTagName('head')[0].appendChild(meta)
     `)
   })

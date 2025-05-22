@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { 
   Button, 
   AppBar, 
@@ -25,6 +26,11 @@ import RefreshIcon from '@mui/icons-material/Refresh'
 import MenuIcon from '@mui/icons-material/Menu'
 import SettingsIcon from '@mui/icons-material/Settings'
 import CircularProgress from '@mui/material/CircularProgress'
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera'
+
+import { SaveImageDialog } from '../dialogs/SaveImageDialog'
+import { exportPNG } from '../external-data/export-formats/exportPNG'
+import { exportJPEG } from '../external-data/export-formats/exportJPEG'
 
 /**
  * TopMenu component renders the app's top navigation bar with controls for:
@@ -39,6 +45,8 @@ import CircularProgress from '@mui/material/CircularProgress'
  * @returns {JSX.Element} 
  */
 export const TopMenu = ({ children }) => {
+
+  const [openSaveImage, setOpenSaveImage] = useState(false)
 
   const theme = useTheme()
 
@@ -60,10 +68,25 @@ export const TopMenu = ({ children }) => {
     handleToggleTabArduinoMinimized: setIsArduinoMinimized, 
     tabDatasetsIsMinimized: isDatasetMinimized, 
     handleToggleTabDatasetsMinimized: setIsMinimizedDataset,
-} = useDashboardContext()
+  } = useDashboardContext()
+
+  const handleSaveImage = async ({ format, width, height, dpi }) => {
+    const baseName = 'grafico'
+    if (format === 'png') {
+      await exportPNG(baseName, width, height, dpi)
+    } else {
+      await exportJPEG(baseName, width, height, dpi)
+    }
+  }
 
   return (
     <>
+      <SaveImageDialog
+        open={openSaveImage}
+        onClose={() => setOpenSaveImage(false)}
+        onSave={handleSaveImage}
+      />
+
       <AppBar position="static" sx={{ bgcolor: theme.palette.background.paper, color: theme.palette.text.primary, height: theme.spacing(8) }}>
         <Toolbar>
           <Button variant='papel' onClick={toggleDrawerOpen} width={theme.spacing(28)} height={theme.spacing(8)} display="flex">
@@ -115,6 +138,19 @@ export const TopMenu = ({ children }) => {
             onClick={setIsArduinoMinimized}
           >
             <SdStorageIcon />
+          </Button>
+
+          <Button
+            variant="contained"
+            style={{
+              marginRight: theme.spacing(1),
+              borderRadius: 0,
+              minWidth: "48px",
+              backgroundColor: theme.palette.primary.main
+            }}
+            onClick={() => setOpenSaveImage(true)}
+          >
+            <PhotoCameraIcon />
           </Button>
     
           <Button 

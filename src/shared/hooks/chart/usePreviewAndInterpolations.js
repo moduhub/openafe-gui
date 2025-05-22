@@ -57,6 +57,40 @@ export const usePreviewAndInterpolations = (chartRef, datasets, previewData, the
             })
           })
       }
+
+      if (Array.isArray(ds.areas) && ds.areas.length > 0) {
+        ds.areas
+          .filter(area => area.isVisible)
+          .forEach((area, idx) => {
+            const x = ds.data[0].x.slice(area.start, area.end + 1)
+            const y = ds.data[0].y.slice(area.start, area.end + 1)
+            data.push({
+              x,
+              y,
+              mode: 'lines',
+              name: `Área ${idx + 1}`,
+              fill: 'tozeroy',
+              //fillcolor: "rgba(0,0,0,0)", // color area
+              //line: { color: fillColor, width: 0 }, //mark the interval line
+              showlegend: false,
+            })
+            // Mark start and end
+            /*
+            data.push({
+              x: [x[0], x[x.length - 1]],
+              y: [y[0], y[y.length - 1]],
+              mode: 'markers',
+              marker: { 
+                //color: fillColor, 
+                size: 10, 
+                symbol: 'diamond' 
+              },
+              name: 'Início/Fim Área',
+              showlegend: false,
+            })
+            */
+          })
+      }
     })
 
     if (previewData?.x && previewData?.y) {

@@ -266,7 +266,8 @@ export const TabStorage = ({ setTabIndex }) => {
                     points={dataset.markers}
                   />
 
-                  <AreaMarkers 
+                  <AreaMarkers
+                    datasetIndex={index} 
                     areas={dataset.areas} 
                   />
 

@@ -90,8 +90,11 @@ export const AreaTab = ({ open, onClose, selectedPoints }) => {
       value: area,
       start: start,
       end: end,
+      isVisible: true,
     }
     datasets[datasetSelected]?.addAreaMarker(newAreaMarker)
+
+    console.log(datasets)
   
     handleCloseDialog()
   }

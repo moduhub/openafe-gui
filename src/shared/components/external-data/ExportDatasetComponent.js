@@ -18,6 +18,8 @@ import { exportJSON } from './export-formats/exportJSON'
 import { exportXLSX } from './export-formats/exportXLSX'
 import { exportCSV } from './export-formats/exportCSV'
 import { exportYAML } from './export-formats/exportYAML'
+import { exportJPEG } from './export-formats/exportJPEG'
+import { exportPNG } from './export-formats/exportPNG'
 
 /**
  * A component that allows the user to export selected datasets in either JSON or Excel format
@@ -50,36 +52,45 @@ export const ExportDataset = ({ onClose, defaultIndex }) => {
     )
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (selectedKeys.length === 0) return
 
-    selectedKeys.forEach((key) => {
+    for (const key of selectedKeys) {
       const ds = datasets[key]
-      if (!ds) return
+      if (!ds) continue
 
       const baseName = ds.name || `dataset-${key}`
-      
+
       if (format === 'json') {
         exportJSON(ds, baseName)
-        return
+        continue
       }
 
       if (format === 'excel') {
         exportXLSX(ds, baseName, includeInterpPoints)
-        return
+        continue
       }
 
       if (format === 'csv') {
         exportCSV(ds, baseName, includeInterpPoints)
-        return
+        continue
       }
 
       if (format === 'yaml') {
         exportYAML(ds, baseName)
-        return
+        continue
       }
 
-    })
+      if (format === 'png') {
+        await exportPNG(ds, baseName)
+        continue
+      }
+
+      if (format === 'jpeg') {
+        await exportJPEG(ds, baseName)
+        continue
+      }
+    }
 
     onClose()
   }
@@ -117,8 +128,10 @@ export const ExportDataset = ({ onClose, defaultIndex }) => {
         >
           <MenuItem value="json">JSON ( Default )</MenuItem>
           <MenuItem value="excel">XLSX ( Excel )</MenuItem>
+          <MenuItem value="png">PNG</MenuItem>
+          <MenuItem value="jpeg">JPEG</MenuItem>
           <MenuItem value="csv">CSV</MenuItem>
-           <MenuItem value="yaml">YAML</MenuItem>
+          <MenuItem value="yaml">YAML</MenuItem>
         </Select>
       </FormControl>
 
@@ -141,6 +154,7 @@ export const ExportDataset = ({ onClose, defaultIndex }) => {
         color="primary"
         variant="contained"
         fullWidth
+        disabled={selectedKeys.length === 0} // <-- Adicionado aqui
       >
         Save
       </Button>
