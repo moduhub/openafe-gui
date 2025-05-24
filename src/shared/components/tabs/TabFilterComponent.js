@@ -15,6 +15,7 @@ import {
 import AspectRatioIcon from '@mui/icons-material/AspectRatio'
 import FilterListIcon from '@mui/icons-material/FilterList'
 
+import { FiltersDialog } from '..'
 import { useDatasetsContext } from '../../contexts'
 import { MovingAverage , LowPass , HighPass , BandPass , BandStop } from '..'
 
@@ -33,13 +34,13 @@ export const TabFilter = ({
     setTabIndex
 }) => {
     const theme = useTheme()
+
     const [selectedFilter, setSelectedFilter] = useState('')
+    const [openFilters, setOpenFilters] = useState(false)
+
     const {
-        datasets,
-        datasetSelected, 
-        handleNewDataset,
-        handleSetDatasetSelected,
-        toggleDatasetVisibility,
+        datasets, handleNewDataset,
+        datasetSelected, handleSetDatasetSelected,
         showOnlyDataset,
     } = useDatasetsContext()
 
@@ -49,25 +50,14 @@ export const TabFilter = ({
             { label: "HP", tooltip: "High Pass", component: <HighPass setPreviewFilter={setPreviewData}/> },
             { label: "BP", tooltip: "Band Pass", component: <BandPass setPreviewFilter={setPreviewData}/> },
             { label: "BS", tooltip: "Band Stop", component: <BandStop setPreviewFilter={setPreviewData}/> },
-        ]
+    ]
 
     const handleOpenSettings = () => {
-        if (window.electron) {
-            const settingsData = {
-                datasets: datasets.map(dataset => ({
-                    name: dataset.name,
-                    data: dataset.data.map(point => ({
-                        x: Array.from(point.x),
-                        y: Array.from(point.y)
-                    })),
-                    params: {
-                        ...dataset.params,
-                    }
-                })),
-                ...(datasetSelected && { selectedDataset: datasetSelected })
-            }
-            window.electron.openSettingsWindow(settingsData)
-        }
+        setOpenFilters(true)
+    }
+    const handleCloseFilters = () => {
+        setOpenFilters(false)
+        setTabIndex(0)
     }
 
     const getSelectedFilterComponent = () => {
@@ -91,18 +81,22 @@ export const TabFilter = ({
     
     const renderSelected = (value) => {
         if (!value) {
-            return <>Select a filter</>;
+            return <>Select a filter</>
         }
-        const { tooltip } = filtersConfig.find((f) => f.label === value) || {};
-        return tooltip || '';
+        const { tooltip } = filtersConfig.find((f) => f.label === value) || {}
+        return tooltip || ''
     }
 
     const handleUpdateVisibility = (e) => {
-        handleSetDatasetSelected(e.target.value)
-        showOnlyDataset(e.target.value)
+        const value = Number(e.target.value) 
+        handleSetDatasetSelected(value)
+        showOnlyDataset(value)
     }
     
     return (
+        <>
+        <FiltersDialog open={openFilters} onClose={handleCloseFilters} />
+
         <Box
             sx={{
                 height: 440,
@@ -135,7 +129,7 @@ export const TabFilter = ({
                             <Select
                                 labelId="dataset-label"
                                 label="Dataset"
-                                value={datasetSelected}
+                                value={Number(datasetSelected)} // Garante que é número
                                 onChange={handleUpdateVisibility}
                             >
                                 {datasets.map((dataset, index) => (
@@ -194,5 +188,6 @@ export const TabFilter = ({
                 </>
             )}
         </Box>
+        </>
     )
 }

@@ -19,6 +19,7 @@ export * from './dialogs/ParametersInsertionDialog'
 export * from './dialogs/ImportExportDialog'
 export * from './dialogs/PointsSelectedDialog'
 export * from './dialogs/AddMarkDialog'
+export * from './dialogs/FiltersDialog'
 
 export * from './external-data/ExportDatasetComponent'
 export * from './external-data/ImportDatasetComponent'

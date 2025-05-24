@@ -4,7 +4,8 @@ import {
     Stack,
     Typography,
     TextField,
-    InputAdornment
+    InputAdornment,
+    Slider
 } from '@mui/material'
 
 import { useDatasetsContext } from '../../contexts'
@@ -24,35 +25,40 @@ export const BandStop = ({ setPreviewFilter }) => {
     const { datasets } = useDatasetsContext()
     const [lowCutoffFrequency, setLowCutoffFrequency] = useState(10)
     const [highCutoffFrequency, setHighCutoffFrequency] = useState(50)
-    
-    const calculateBandStop = (x, y, lowCutoffFreq, highCutoffFreq, fs) => {
-        const result = { x: [], y: [] }
-        const dt = 1 / fs
-        
-        const RC_low = 1 / (2 * Math.PI * lowCutoffFreq)
-        const RC_high = 1 / (2 * Math.PI * highCutoffFreq)
-        const alpha_low = dt / (RC_low + dt)
-        const alpha_high = RC_high / (RC_high + dt)
-        
-        result.x = [...x]
-        result.y = new Array(y.length)
-        
-        let lowPassResult = new Array(y.length)
-        lowPassResult[0] = y[0]
-        
-        for (let i = 1; i < y.length; i++) {
-            lowPassResult[i] = lowPassResult[i-1] + alpha_low * (y[i] - lowPassResult[i-1])
+    const [order, setOrder] = useState(1) 
+
+    const calculateBandStop = (x, y, lowCutoffFreq, highCutoffFreq, fs, order = 1) => {
+        let lowPassed = [...y]
+        let highPassed = [...y]
+
+        for (let n = 0; n < order; n++) {
+            const RC_low = 1 / (2 * Math.PI * lowCutoffFreq)
+            const dt = 1 / fs
+            const alpha_low = dt / (RC_low + dt)
+            let filtered = []
+            filtered[0] = lowPassed[0]
+            for (let i = 1; i < lowPassed.length; i++) {
+                filtered[i] = filtered[i-1] + alpha_low * (lowPassed[i] - filtered[i-1])
+            }
+            lowPassed = filtered
         }
-        
-        let highPassResult = new Array(y.length)
-        highPassResult[0] = y[0]
-        
-        for (let i = 1; i < y.length; i++) {
-            highPassResult[i] = alpha_high * (highPassResult[i-1] + y[i] - y[i-1])
+
+        for (let n = 0; n < order; n++) {
+            const RC_high = 1 / (2 * Math.PI * highCutoffFreq)
+            const dt = 1 / fs
+            const alpha_high = RC_high / (RC_high + dt)
+            let filtered = []
+            filtered[0] = highPassed[0]
+            for (let i = 1; i < highPassed.length; i++) {
+                filtered[i] = alpha_high * (filtered[i-1] + highPassed[i] - highPassed[i-1])
+            }
+            highPassed = filtered
         }
-        
-        result.y = lowPassResult.map((low, i) => (low + highPassResult[i]) / 2)
-        
+
+        const result = {
+            x: [...x],
+            y: lowPassed.map((low, i) => (low + highPassed[i]))
+        }
         return result
     }
 
@@ -77,16 +83,17 @@ export const BandStop = ({ setPreviewFilter }) => {
             visibleDataset.data[0].y,
             lowCutoffFrequency,
             highCutoffFrequency,
-            fs
+            fs,
+            order 
         )
 
         setPreviewFilter(filteredSignal)
 
-    }, [lowCutoffFrequency, highCutoffFrequency, visibleDataset, setPreviewFilter])
+    }, [lowCutoffFrequency, highCutoffFrequency, order, visibleDataset, setPreviewFilter])
 
     return (
         <Box>
-            <Box sx={{ mt: 1, p: 2, boxShadow: 1, borderRadius: 1 }}>
+            <Box sx={{ mt: 1, p: 2, borderRadius: 1, backgroundColor: 'white', height: '100%' }}>
                 <Stack spacing={2}>
                     <Typography variant="h6" sx={{ fontSize: '1.125rem' }}>
                         BandStop Filter
@@ -131,6 +138,26 @@ export const BandStop = ({ setPreviewFilter }) => {
                             }}
                             size="small"
                             fullWidth
+                        />
+                    </Box>
+
+                    <Box>
+                        <Typography variant="body2">
+                            Filter order:
+                        </Typography>
+                        <Slider
+                            type="range"
+                            min={1}
+                            max={7}
+                            step={1}
+                            marks={[
+                                { value: 1, label: '1' },
+                                { value: 4, label: '4' },
+                                { value: 7, label: '7' },
+                            ]}
+                            value={order}
+                            onChange={e => setOrder(Number(e.target.value))}
+                            style={{ width: '100%' }}
                         />
                     </Box>
                 </Stack>

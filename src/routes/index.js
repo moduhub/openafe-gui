@@ -1,6 +1,6 @@
 import { Navigate, Routes, Route } from 'react-router-dom'
 
-import { Dashboard, DataProcessing, Settings, Filters } from '../pages'
+import { Dashboard, DataProcessing, Settings } from '../pages'
 
 /**
  * Defines the routing structure for the application
@@ -19,8 +19,6 @@ export const AppRoutes = () => {
       <Route path="/home"  element={<Dashboard />} />
       <Route path="/data-processing" element={<DataProcessing />} />
       <Route path="/settings" element={<Settings />} />
-      
-      <Route path="/filters" element={<Filters />} />
 
       {/* If the user enters an invalid path, it redirects to the default */}
       <Route path='*' element={<Navigate to='/home'/>}/>

@@ -4,7 +4,7 @@ const { ReadlineParser } = require('@serialport/parser-readline')
 const path = require('path')
 
 let mainWindow
-let settingsWindow
+//let settingsWindow
 let port
 
 let isDev = false
@@ -89,7 +89,7 @@ function createWindow() {
  * Creates and displays the settings window.
  * 
  * @param {Object} settingsData - The settings data to be passed to the renderer via IPC
- */
+ *//*
 function createSettingsWindow(settingsData) {
   if (settingsWindow) {
       settingsWindow.focus()
@@ -124,7 +124,7 @@ function createSettingsWindow(settingsData) {
   settingsWindow.on('closed', () => {
       settingsWindow = null
   })
-}
+}*/
 
 /**
  * Executes initialization logic once the Electron app is ready.
@@ -202,20 +202,19 @@ ipcMain.on('send-command', (event, arg) => {
  * Handles request to open the settings window
  * 
  * @param {Object} settingsData - The data to pass to the settings window
- */
+ *//*
 ipcMain.on('open-settings-window', (event, settingsData) => {
   createSettingsWindow(settingsData)
-})
+})*/
 
 /**
  * Handles request to save settings from the settings window
  * 
  * @param {Object} data - The settings data submitted by the user
- */
-
+ *//*
 ipcMain.on('save-settings', (event, data) => {
   console.log('Configurações salvas:', data) 
   if (settingsWindow) {
       settingsWindow.close() 
   }
-})
+})*/

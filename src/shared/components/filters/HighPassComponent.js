@@ -23,21 +23,22 @@ import { useDatasetsContext } from '../../contexts'
 export const HighPass = ({ setPreviewFilter }) => {
     const { datasets } = useDatasetsContext()
     const [cutoffFrequency, setCutoffFrequency] = useState(50)
-    
-    const calculateHighPass = (x, y, cutoffFreq, fs) => {
-        const result = { x: [], y: [] }
-        const dt = 1 / fs
-        const RC = 1 / (2 * Math.PI * cutoffFreq)
-        const alpha = RC / (RC + dt)
-        
-        result.x = [...x]
-        result.y = new Array(y.length)
-        result.y[0] = y[0]
-        
-        for (let i = 1; i < y.length; i++) 
-            result.y[i] = alpha * (result.y[i-1] + y[i] - y[i-1])
-        
-        return result
+    const [order, setOrder] = useState(1) 
+
+    const calculateHighPass = (x, y, cutoffFreq, fs, order = 1) => {
+        let resultY = [...y]
+        for (let n = 0; n < order; n++) {
+            const dt = 1 / fs
+            const RC = 1 / (2 * Math.PI * cutoffFreq)
+            const alpha = RC / (RC + dt)
+            let filtered = new Array(resultY.length)
+            filtered[0] = resultY[0]
+            for (let i = 1; i < resultY.length; i++) {
+                filtered[i] = alpha * (filtered[i-1] + resultY[i] - resultY[i-1])
+            }
+            resultY = filtered
+        }
+        return { x: [...x], y: resultY }
     }
 
     const visibleDataset = useMemo(
@@ -49,7 +50,7 @@ export const HighPass = ({ setPreviewFilter }) => {
         if (!visibleDataset?.data?.[0]?.x?.length || !visibleDataset?.data?.[0]?.y?.length) {
             setPreviewFilter({ x: [], y: [] })
             return
-          }
+        }
 
         const { scanRate, step } = visibleDataset.params || {}
         if (!scanRate || !step) return
@@ -60,21 +61,27 @@ export const HighPass = ({ setPreviewFilter }) => {
             visibleDataset.data[0].x,
             visibleDataset.data[0].y,
             cutoffFrequency,
-            fs
-          )
+            fs,
+            order
+        )
 
         setPreviewFilter(filteredSignal)
 
-    }, [cutoffFrequency, visibleDataset, setPreviewFilter])
+    }, [cutoffFrequency, order, visibleDataset, setPreviewFilter])
 
     const handleSliderChange = (_evt, newValue) => {
         const value = Array.isArray(newValue) ? newValue[0] : newValue
         setCutoffFrequency(value)
     }
 
+    const handleOrderChange = (_evt, newValue) => {
+        const value = Array.isArray(newValue) ? newValue[0] : newValue
+        setOrder(value)
+    }
+
     return (
     <Box>
-        <Box sx={{ mt: 1, p: 2, boxShadow: 1, borderRadius: 1 }}>
+        <Box sx={{ mt: 1, p: 2, borderRadius: 1, backgroundColor: 'white', height: '100%' }}>
         <Stack spacing={2}>
             <Typography variant="h6" sx={{ fontSize: '1.125rem' }}>
                 HighPass Filter
@@ -114,6 +121,25 @@ export const HighPass = ({ setPreviewFilter }) => {
             size="small"
             fullWidth
             />
+
+            <Box>
+                <Typography variant="body2">
+                   Filter order:
+                </Typography>
+                <Slider
+                    value={order}
+                    onChange={handleOrderChange}
+                    min={1}
+                    max={7}
+                    step={1}
+                    marks={[
+                        { value: 1, label: '1' },
+                        { value: 4, label: '4' },
+                        { value: 7, label: '7' },
+                    ]}
+                    valueLabelDisplay="auto"
+                />
+            </Box>
         </Stack>
         </Box>
     </Box>

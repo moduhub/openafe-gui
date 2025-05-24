@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 import {
   Box,
@@ -47,19 +47,35 @@ export const TabDataset = ({ setPreviewData , previewData }) => {
     handleToggleTabDatasetsMinimized: setIsMinimized,
   }= useDashboardContext()
   const{
-    datasetSelected,
+    datasets,
+    datasetSelected, handleSetDatasetSelected,
     showOnlyDataset
   } = useDatasetsContext()
   
   const [tabIndex, setTabIndex] = useState(0)
+  const shouldShowOnlyDataset = useRef(false)
+
   const handleTabIndex = (_, newIndex) => {
     if (newIndex !== undefined) {
-      setTabIndex(newIndex)
       setPreviewData({ x: [], y: [] })
-      if(newIndex == 1) showOnlyDataset(datasetSelected)
+      if (newIndex === 1) {
+        if (!datasetSelected) {
+          handleSetDatasetSelected(0)
+          shouldShowOnlyDataset.current = true
+        } else {
+          showOnlyDataset(datasetSelected)
+        }
+      }
+      setTabIndex(newIndex)
     }
-    
   }
+
+  useEffect(() => {
+    if (shouldShowOnlyDataset.current) {
+      showOnlyDataset(datasetSelected)
+      shouldShowOnlyDataset.current = false
+    }
+  }, [datasetSelected, showOnlyDataset])
 
   if (isMinimized) return null
 

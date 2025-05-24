@@ -21,20 +21,25 @@ import { useDatasetsContext } from '../../contexts'
  * @returns {JSX.Element}
  */
 export const LowPass = ({ setPreviewFilter }) => {
+  
   const { datasets } = useDatasetsContext()
   const [cutoffFrequency, setCutoffFrequency] = useState(50)
+  const [order, setOrder] = useState(1)
 
-  const calculateLowPass = (x, y, cutoffFreq, fs) => {
-    const result = { x: [...x], y: [] }
-    const dt = 1 / fs
-    const RC = 1 / (2 * Math.PI * cutoffFreq)
-    const alpha = dt / (RC + dt)
-
-    result.y[0] = y[0]
-    for (let i = 1; i < y.length; i++)
-      result.y[i] = result.y[i-1] + alpha * (y[i] - result.y[i-1])
-
-    return result
+  const calculateLowPass = (x, y, cutoffFreq, fs, order = 1) => {
+    let resultY = [...y]
+    for (let n = 0; n < order; n++) {
+      const RC = 1 / (2 * Math.PI * cutoffFreq)
+      const dt = 1 / fs
+      const alpha = dt / (RC + dt)
+      let filtered = []
+      filtered[0] = resultY[0]
+      for (let i = 1; i < resultY.length; i++) {
+        filtered[i] = filtered[i-1] + alpha * (resultY[i] - filtered[i-1])
+      }
+      resultY = filtered
+    }
+    return { x: [...x], y: resultY }
   }
 
   const visibleDataset = useMemo(
@@ -56,20 +61,26 @@ export const LowPass = ({ setPreviewFilter }) => {
       visibleDataset.data[0].x,
       visibleDataset.data[0].y,
       cutoffFrequency,
-      fs
+      fs,
+      order 
     )
     
     setPreviewFilter(filteredSignal)
-  }, [cutoffFrequency, visibleDataset, setPreviewFilter])
+  }, [cutoffFrequency, order, visibleDataset, setPreviewFilter])
 
   const handleSliderChange = (_evt, newValue) => {
     const value = Array.isArray(newValue) ? newValue[0] : newValue
     setCutoffFrequency(value)
   }
 
+  const handleOrderChange = (_evt, newValue) => {
+    const value = Array.isArray(newValue) ? newValue[0] : newValue
+    setOrder(value)
+  }
+
   return (
     <Box>
-      <Box sx={{ mt: 1, p: 2, boxShadow: 1, borderRadius: 1 }}>
+      <Box sx={{ mt: 1, p: 2, borderRadius: 1, backgroundColor: 'white', height: '100%' }}>
         <Stack spacing={2}>
           <Typography variant="h6" sx={{ fontSize: '1.125rem' }}>
             LowPass Filter
@@ -109,6 +120,25 @@ export const LowPass = ({ setPreviewFilter }) => {
             size="small"
             fullWidth
           />
+
+          <Box>
+            <Typography variant="body2">
+              Filter order:
+            </Typography>
+            <Slider
+              value={order}
+              onChange={handleOrderChange}
+              min={1}
+              max={7}
+              step={1}
+              marks={[
+                { value: 1, label: '1' },
+                { value: 4, label: '4' },
+                { value: 7, label: '7' },
+              ]}
+              valueLabelDisplay="auto"
+            />
+          </Box>
         </Stack>
       </Box>
     </Box>
