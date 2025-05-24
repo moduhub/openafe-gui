@@ -1,11 +1,3 @@
-#include <Arduino.h>
-#include <math.h>
-
-// Variables to store the cyclic scan data
-float x = 0;  // Initial potential
-float y = 0;   // End potential
-float kNoise = 0.15; // Amount of noise
-
 // Structure for storing the scan parameters
 #include <Arduino.h>
 #include <math.h>
@@ -23,6 +15,13 @@ struct CVWParams {
   float step;
   float scanRate;
   float cycles;
+};
+struct EISParams {
+  float settlingTime;
+  float startOmega;
+  float endOmega;
+  float step;
+  float scanRate;
 };
 
 // Structures for storing functions and points
@@ -51,38 +50,10 @@ struct Functions {
 };
 
 // Global variables
-// Structures for string functions and points
-struct Params {
-    Params* prev;
-    Params* next;
-    float param;
-};
-struct Coord {
-  float x;
-  float y;
-};
-struct Points {
-  Points* prev;
-  Points* next;
-  Coord coord;
-};
-struct Function {
-    Params* params;
-    int qParams;
-    Function* next;
-};
-struct Functions {
-    Function* functions;
-    Points* points;
-};
-
-// Global variables
 CVWParams cvwParams;
-bool scanBool = false;
+EISParams eisParams;
 bool scanBool = false;
 int currentCycle = 0;
-String commandReceived = "";
-const int ledPin = 13; // LED Pin
 String commandReceived = "";
 const int ledPin = 13; // LED Pin
 float directionStep = 1;
@@ -96,29 +67,9 @@ float calculateCurrent(
   float endPotential
 );
 String calculateChecksum(String s);
-// Prototyping of functions
-float calculateCurrent(
-  Functions functions_dummy, 
-  float potential, 
-  float directionStep, 
-  float startPotential, 
-  float endPotential
-);
-String calculateChecksum(String s);
 void inputCVW(String str);
+void inputEIS(String str);
 Functions functionGenerator(float xo, float xf); 
-void normalizeMatrix(float* mat, int N);
-float* gaussElimination(float* mat, int N);
-void printFunction(Functions functions);
-void addFunction(
-  Function** functions, 
-  float solution[], 
-  int order
-);
-float applyNoise(float number);
-Functions functionGenerator(
-  float xo, float xf
-); 
 void normalizeMatrix(float* mat, int N);
 float* gaussElimination(float* mat, int N);
 void printFunction(Functions functions);
@@ -143,35 +94,25 @@ void setup() {
 void loop() {
   if (Serial.available()) {
     commandReceived = Serial.readStringUntil('\n');
-    commandReceived = Serial.readStringUntil('\n');
 
-    if(commandReceived.startsWith("$RESET")) {
     if(commandReceived.startsWith("$RESET")) {
       asm volatile ("  jmp 0");
     }
-    else if (commandReceived.startsWith("$CVW")) {
-      inputCVW(commandReceived);
-      scanBool = true;
+
     else if (commandReceived.startsWith("$CVW")) {
       inputCVW(commandReceived);
       scanBool = true;
       directionStep = 1;
       x = cvwParams.startPotential;
-      Functions functions_dummy = functionGenerator(
-        cvwParams.startPotential, 
-        cvwParams.endPotential
-      ); 
 
       //printFunction(functions_dummy);
       Functions functions_dummy = functionGenerator(
         cvwParams.startPotential, 
         cvwParams.endPotential
       ); 
-      printFunction(functions_dummy);
+      //printFunction(functions_dummy);
       
-      Serial.println("$START");
-          
-      // Waiting for stabilization
+      Serial.println("$START-CVW");
       currentCycle = 0;
           
       // Waiting for stabilization
@@ -187,11 +128,11 @@ void loop() {
           cvwParams.endPotential
         );
         
-        String mensagem = "$SGL," + String(x, 6) + "," + String(y, 6);
-        String checksum = calculateChecksum(mensagem);
-        mensagem += "*" + checksum;
+        String message = "$SGL," + String(x, 6) + "," + String(y, 6);
+        String checksum = calculateChecksum(message);
+        message += "*" + checksum;
         
-        Serial.println(mensagem);
+        Serial.println(message);
 
         // Control time (in seconds)
         float readingPeriod = 1000 * (cvwParams.step/cvwParams.scanRate);
@@ -208,10 +149,10 @@ void loop() {
           currentCycle++;  // Accounts for the cycle
           // Verify that the process has been completed by cycles
           if (currentCycle >= cvwParams.cycles) {
-            String mensagem = "$SGL," + String(cvwParams.startPotential, 6) + "," + String(0.000000, 6);
-            String checksum = calculateChecksum(mensagem);
-            mensagem += "*" + checksum;
-            Serial.println(mensagem);
+            String message = "$SGL," + String(cvwParams.startPotential, 6) + "," + String(0.000000, 6);
+            String checksum = calculateChecksum(message);
+            message += "*" + checksum;
+            Serial.println(message);
 
             freeFunctions(functions_dummy);
             Serial.println("$MEM,Memória limpa");
@@ -246,6 +187,71 @@ void loop() {
         }
       }
     }
+
+    else if (commandReceived.startsWith("$EIS")) {
+      inputEIS(commandReceived);
+
+      String message = "Recebido: ";
+      message += " -Se:"+ String(eisParams.settlingTime);
+      message += " -StartOmega:"+ String(eisParams.startOmega);
+      message += " -EndOmega:"+ String(eisParams.endOmega);
+      message += " -Step:"+  String(eisParams.step);
+      message += " -ScanRate:"+ String(eisParams.scanRate);
+      Serial.println(message);
+
+      scanBool = true;
+      directionStep = 1;
+      int omega = floor(eisParams.startOmega); 
+      if (omega <= 0) 
+        omega = 1; 
+      int omega_end = eisParams.endOmega;
+    
+
+      float R = 1000.0; // 1k Ohm
+      float C = 1e-3;   // 1mF
+
+      Serial.println("$START-IES");
+
+      // Waiting for stabilization
+      //delay(eisParams.settlingTime);
+
+      while (scanBool) {
+        digitalWrite(ledPin, HIGH);
+
+        // Caltulate Z
+        float realZ = R;
+        float imagZ = -1.0 / (omega * C);
+        float modZ = sqrt(realZ * realZ + imagZ * imagZ);
+        float angZ = atan2(imagZ, realZ); // in radians
+
+        // Pack message: omega, |Z|, angZ(rad), realZ, imagZ
+        String message = 
+          "$EIS-OUT," + 
+          String(omega) + "," + 
+          String(modZ, 6) + "," + 
+          String(angZ, 6) + "," + 
+          String(realZ, 6) + "," + 
+          String(imagZ, 6);
+        //String checksum = calculateChecksum(message);
+        //message += "*" + checksum;
+
+        Serial.println(message);
+
+        // Control time (in seconds)
+        float readingPeriod = 1000 * (eisParams.step/eisParams.scanRate);
+        delay(readingPeriod);
+
+        omega++;
+
+        if (omega > omega_end) {
+          omega = omega_end; 
+          Serial.println("$END,Caminho completo");
+          digitalWrite(ledPin, LOW);
+          scanBool = false;
+        }
+      }
+    }
+
   }
 }
 
@@ -274,6 +280,31 @@ void inputCVW(String str) {
   cvwParams.scanRate = elementos[5].toFloat();
   
   cvwParams.cycles = elementos[6].substring(0, elementos[6].indexOf('*')).toFloat();
+}
+
+// Function to process the $EIS command and extract the parameters
+// example: $EIS,1000,0,60,1,60
+void inputEIS(String str){
+
+  int index = 0;
+  String elementos[6];
+  int startIndex = 0;
+  int endIndex = str.indexOf(',');
+
+  // Splits the string into parts using comma as a delimiter
+  while (endIndex >= 0) {
+    elementos[index++] = str.substring(startIndex, endIndex);
+    startIndex = endIndex + 1;
+    endIndex = str.indexOf(',', startIndex);
+  }
+  elementos[index] = str.substring(startIndex); 
+
+  // Converts the elements to float and assigns them to the parameters
+  eisParams.settlingTime = elementos[1].toFloat();
+  eisParams.startOmega = elementos[2].toFloat();
+  eisParams.endOmega = elementos[3].toFloat();
+  eisParams.step = elementos[4].toFloat();
+  eisParams.scanRate = elementos[5].toFloat();
 }
 
 // Function to calculate the checksum of a string
@@ -374,9 +405,7 @@ float calculateCurrent(
 }
 
 //
-Functions functionGenerator(
-  float xo, float xf
-) {
+Functions functionGenerator(float xo, float xf) {
   Points* points = nullptr;
   Function* functions = nullptr;
   

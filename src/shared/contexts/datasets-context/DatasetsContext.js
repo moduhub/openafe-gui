@@ -9,6 +9,23 @@ import {
 
 const DatasetsContext = createContext({})
 
+const defaultCVParams = {
+  settlingTime: 1000,
+  startPotential: -800,
+  endPotential: 0,
+  step: 10,
+  scanRate: 1000,
+  cycles: 1,
+}
+
+const defaultEISParams = {
+  settlingTime: 1000,
+  startOmega: 0, // Hz
+  endOmega: 60, // Hz
+  step: 1,
+  scanRate: 60,
+}
+
 /**
  * Custom hook to access the Datasets context
  *
@@ -48,14 +65,8 @@ export const DataSetsProvider = ({ children }) => {
   } = useDashboardContext()
 
   const [currentName, setCurrentName] = useState(defaultName)
-  const [currentParams, setCurrentParams] = useState({
-    settlingTime: 1000,
-    startPotential: -800,
-    endPotential: 0,
-    step: 10,
-    scanRate: 1000,
-    cycles: 1,
-  })
+  const [experimentType, setExperimentType] = useState('CV') // ou 'EIS'
+  const [currentParams, setCurrentParams] = useState(defaultCVParams)
   const [datasets, setDatasets]= useState([])
   const [isDatasetSelected, setIsDatasetSelected] = useState(false)
   const [datasetSelected, setDatasetSelected] = useState("")
@@ -108,7 +119,7 @@ export const DataSetsProvider = ({ children }) => {
     }
   }
 
-  const setNewDataSet = (name_, parameters_) => {
+  const setNewDataSet = (name_, parameters_, type_) => {
     const visible_ = true
   
     const handleSetIsVisible = () => {
@@ -162,12 +173,28 @@ export const DataSetsProvider = ({ children }) => {
       console.log(marker)
     }
     
+    let data_ = []
+    if(type_ === "CVW")
+      data_ = [{
+            x: [], y: [],
+            mode: 'lines',
+            line: { color: theme.palette.primary.main },
+            name: toString(name_),
+          }]
+    else if (type_ === "IES")
+      data_ = [{
+            omega: [], modZ: [], angZ: [], realZ: [], imagZ: [],
+            mode: 'lines',
+            line: { color: theme.palette.primary.main },
+            name: toString(name_),
+          }]
   
     cacheDatasetsManager()
     setDatasets((prevDatasets) => [
       ...prevDatasets,
       {
         name: name_,
+        type: type_,
         params: parameters_,
         visible: visible_,
         setIsVisible: handleSetIsVisible,
@@ -177,15 +204,7 @@ export const DataSetsProvider = ({ children }) => {
         interpolations: [],
         areas: [],
         markers: [],
-        data: [
-          {
-            x: [],
-            y: [],
-            mode: 'lines',
-            line: { color: theme.palette.primary.main },
-            name: toString(name_),
-          },
-        ],
+        data: data_,
       },
     ])
 
@@ -248,6 +267,34 @@ export const DataSetsProvider = ({ children }) => {
     })
   }
 
+  const addComplexPoint = (omega_, modZ_, angZ_, realZ_, imagZ_) => {
+    setDatasets((prevDatasets) => {
+      const updatedDatasets = prevDatasets.map((dataset, index) => {
+        if (index === prevDatasets.length - 1) {
+          const newData = dataset.data ? [...dataset.data] : []
+          if (!newData[0]) newData[0] = { omega: [], modZ: [], angZ: [], realZ: [], imagZ: [] }
+  
+          return {
+            ...dataset,
+            data: [
+              {
+                ...newData[0],
+                omega: [...newData[0].omega, omega_],
+                modZ: [...newData[0].modZ, modZ_],
+                angZ: [...newData[0].angZ, angZ_],
+                realZ: [...newData[0].realZ, realZ_],
+                imagZ: [...newData[0].imagZ, imagZ_],
+              },
+            ],
+          }
+        }
+        return dataset
+      })
+  
+      return updatedDatasets
+    })
+  }
+
   const toggleDatasetVisibility = useCallback((pos) => {
     datasets[pos].setIsVisible(!datasets[pos].visible)
   })
@@ -274,8 +321,16 @@ export const DataSetsProvider = ({ children }) => {
       )
     )
   }
+
+  const handleExperimentType = useCallback((type) => {
+    setExperimentType(type)
+    setCurrentParams(type === 'CV' ? defaultCVParams : defaultEISParams)
+  }, [])
   
   useEffect(()=>{
+
+    //console.log(arduinoData)
+      
     // Data graph
     if (arduinoData.startsWith('$SGL')) {
       const dataParts = arduinoData.split(',')
@@ -294,10 +349,39 @@ export const DataSetsProvider = ({ children }) => {
         }
       }
     }
+    else if (arduinoData.startsWith('$EIS-OUT')) {
+      const dataParts = arduinoData.split(',')
+      
+
+      if(dataParts.length >= 6){
+        //console.log(dataParts)
+        const omega = parseFloat(dataParts[1])
+        const modZ = parseFloat(dataParts[2])
+        const angZ = parseFloat(dataParts[3])
+        const realZ = parseFloat(dataParts[4])
+        const imagZ = parseFloat(dataParts[5])
+        addComplexPoint(omega, modZ, angZ, realZ, imagZ)
+      }
+
+      //console.log(datasets)
+      /*
+      if(datasets[datasets.length - 1].data[0]!=null){
+        if( datasets[datasets.length - 1].data[0].omega.length === 1 ){
+          if(!isDatasetSelected)
+            handleSetIsDatasetSelected(true)
+          handleSetDatasetSelected(datasets.length - 1)
+          if (priorityMode) 
+            showOnlyDataset(datasets.length - 1)
+        }
+      }*/
+    }
 
     // Data start
     else if(arduinoData.startsWith('$START')){
-      setNewDataSet(currentName, currentParams)
+      if(arduinoData.startsWith('$START-CVW'))
+        setNewDataSet(currentName, currentParams, "CVW")
+      else if(arduinoData.startsWith('$START-IES'))
+        setNewDataSet(currentName, currentParams, "IES")
     }
     
     // Data end
@@ -317,6 +401,7 @@ export const DataSetsProvider = ({ children }) => {
   return (
     <DatasetsContext.Provider value={{ 
       currentName, handleCurrentName,
+      experimentType, handleExperimentType,
       currentParams, handleCurrentParams,
       isDatasetSelected, handleSetIsDatasetSelected,
       datasetSelected, handleSetDatasetSelected,

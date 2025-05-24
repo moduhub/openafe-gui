@@ -255,10 +255,8 @@ export const TabStorage = ({ setTabIndex }) => {
                     dataset={dataset}
                   />
 
-                  <PointsComponent
-                    formatPoint={formatPoint}
-                    xArray={xArray}
-                    yArray={yArray}
+                  <PointsComponent 
+                    dataset={dataset} 
                   />
 
                   <PointMarkers

@@ -86,47 +86,6 @@ function createWindow() {
 }
 
 /**
- * Creates and displays the settings window.
- * 
- * @param {Object} settingsData - The settings data to be passed to the renderer via IPC
- *//*
-function createSettingsWindow(settingsData) {
-  if (settingsWindow) {
-      settingsWindow.focus()
-      return
-  }
-
-  settingsWindow = new BrowserWindow({
-      width: 720,
-      height: 480,
-      webPreferences: {
-          contextIsolation: true,
-          sandbox: false,
-          webSecurity: true,
-          preload: path.join(__dirname, "./preload.js"),
-      },
-      autoHideMenuBar: !isDev,
-      maximizable: false,
-      resizable: false
-  })
-
-  // Pass datasets as query parameters
-  //const datasetsParam = encodeURIComponent(JSON.stringify(datasets))
-  //settingsWindow.loadURL(`http://localhost:3000/filters?datasets=${datasetsParam}`) 
-
-  // Load the URL without datasets parameter
-  settingsWindow.loadURL('http://localhost:3000/filters')  
-  // Wait for the window to be ready and then send the data
-  settingsWindow.webContents.on('did-finish-load', () => {
-    settingsWindow.webContents.send('settings-data', settingsData)
-  })
-
-  settingsWindow.on('closed', () => {
-      settingsWindow = null
-  })
-}*/
-
-/**
  * Executes initialization logic once the Electron app is ready.
  *  
  */
@@ -197,24 +156,3 @@ ipcMain.on('send-command', (event, arg) => {
       else console.log('Comando enviado para o Arduino:', arg)
     })
 })
-
-/**
- * Handles request to open the settings window
- * 
- * @param {Object} settingsData - The data to pass to the settings window
- *//*
-ipcMain.on('open-settings-window', (event, settingsData) => {
-  createSettingsWindow(settingsData)
-})*/
-
-/**
- * Handles request to save settings from the settings window
- * 
- * @param {Object} data - The settings data submitted by the user
- *//*
-ipcMain.on('save-settings', (event, data) => {
-  console.log('Configurações salvas:', data) 
-  if (settingsWindow) {
-      settingsWindow.close() 
-  }
-})*/
