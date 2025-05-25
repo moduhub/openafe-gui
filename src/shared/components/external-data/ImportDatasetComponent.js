@@ -72,7 +72,9 @@ export const ImportDataset = ({ onClose }) => {
               prev.map(dataset =>
                 dataset.name === ds.name
                   ? { ...dataset, visible: !dataset.visible }
-                  : dataset
+                  : (dataset.type === "CVW" || dataset.type === "IES")
+                    ? (ds.type !== dataset.type ? { ...dataset, visible: false } : dataset)
+                    : dataset
               )
             )
           },

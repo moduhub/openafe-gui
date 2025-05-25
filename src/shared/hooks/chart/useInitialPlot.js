@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import Plotly from 'plotly.js-dist'
 
-export const useInitialPlot = (chartRef, datasets, theme) => {
+export const useInitialPlot = (chartRef, datasets, theme, xName, yName) => {
   const layout = useMemo(() => ({
     font: { size: 14, color: theme.palette.text.primary },
     showlegend: false,
@@ -9,7 +9,7 @@ export const useInitialPlot = (chartRef, datasets, theme) => {
     plot_bgcolor: theme.palette.background.paper,
     margin: { l: 20, r: 10, t: 10, b: 20 },
     xaxis: {
-      title: { text: 'Voltage (mV)', standoff: 15 },
+      title: { text: xName, standoff: 15 },
       linecolor: theme.palette.text.primary,
       mirror: true,
       gridcolor: theme.palette.divider,
@@ -17,7 +17,7 @@ export const useInitialPlot = (chartRef, datasets, theme) => {
       automargin: true,
     },
     yaxis: {
-      title: { text: 'Current (uA)', standoff: 15 },
+      title: { text: yName, standoff: 15 },
       linecolor: theme.palette.text.primary,
       mirror: true,
       gridcolor: theme.palette.divider,

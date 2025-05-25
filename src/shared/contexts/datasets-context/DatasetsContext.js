@@ -70,6 +70,7 @@ export const DataSetsProvider = ({ children }) => {
   const [datasets, setDatasets]= useState([])
   const [isDatasetSelected, setIsDatasetSelected] = useState(false)
   const [datasetSelected, setDatasetSelected] = useState("")
+  const [typeReading, setTypeReading] = useState('CV') // or 'EIS'
   
   const handleCurrentName = useCallback((newName)=>{
     setCurrentName(newName)
@@ -120,16 +121,30 @@ export const DataSetsProvider = ({ children }) => {
   }
 
   const setNewDataSet = (name_, parameters_, type_) => {
+    // Before adding, hide all datasets of a different type
+    setDatasets((prevDatasets) =>
+      prevDatasets.map((dataset) =>
+        dataset.type !== type_ && (dataset.type === "CVW" || dataset.type === "IES")
+          ? { ...dataset, visible: false }
+          : dataset
+      )
+    )
+
     const visible_ = true
   
+    // Function to toggle visibility ensuring exclusivity by type
     const handleSetIsVisible = () => {
-      setDatasets((prevDatasets) =>
-        prevDatasets.map((dataset) =>
-          dataset.name === name_
-            ? { ...dataset, visible: !dataset.visible }
-            : dataset
-        )
-      )
+      setDatasets((prevDatasets) => {
+        const currentType = type_
+        return prevDatasets.map((dataset) => {
+          if (dataset.name === name_) {
+            return { ...dataset, visible: !dataset.visible }
+          } else if (dataset.type === "CVW" || dataset.type === "IES") {
+            return dataset.type !== currentType ? { ...dataset, visible: false } : dataset
+          }
+          return dataset
+        })
+      })
     }
   
     const addInterpolation = (interpolation) => {
@@ -324,8 +339,39 @@ export const DataSetsProvider = ({ children }) => {
 
   const handleExperimentType = useCallback((type) => {
     setExperimentType(type)
+    setTypeReading(type)
     setCurrentParams(type === 'CV' ? defaultCVParams : defaultEISParams)
   }, [])
+
+  const setExclusiveVisibility = useCallback((typeToShow) => {
+    setDatasets((prevDatasets) =>
+      prevDatasets.map((dataset) => {
+        if (dataset.type === typeToShow) {
+          return { ...dataset, visible: true }
+        } else if (dataset.type === "CVW" || dataset.type === "IES") {
+          return { ...dataset, visible: false }
+        }
+        return dataset
+      })
+    )
+  }, [])
+
+  const toggleExclusiveVisibility = useCallback((pos) => {
+    setDatasets((prevDatasets) => {
+      const target = prevDatasets[pos]
+      if (!target) return prevDatasets
+      const typeToShow = target.type
+      return prevDatasets.map((dataset, idx) => {
+        if (idx === pos) {
+          return { ...dataset, visible: !dataset.visible }
+        } else if (dataset.type === "CVW" || dataset.type === "IES") {
+          return typeToShow !== dataset.type ? { ...dataset, visible: false } : dataset
+        }
+        return dataset
+      })
+    })
+  }, [])
+
   
   useEffect(()=>{
 
@@ -413,6 +459,8 @@ export const DataSetsProvider = ({ children }) => {
       toggleDatasetVisibility,
       showOnlyDataset,
       addDatasetParam,
+      setExclusiveVisibility, toggleExclusiveVisibility,
+      typeReading, setTypeReading,
     }}>
       {children}
     </DatasetsContext.Provider>

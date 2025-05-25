@@ -7,7 +7,7 @@ let mainWindow
 //let settingsWindow
 let port
 
-let isDev = false
+let isDev = true
 
 /**
  * Initializes and configures the serial port communication with the Arduino
