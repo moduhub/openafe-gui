@@ -65,12 +65,12 @@ export const DataSetsProvider = ({ children }) => {
   } = useDashboardContext()
 
   const [currentName, setCurrentName] = useState(defaultName)
-  const [experimentType, setExperimentType] = useState('CV') // ou 'EIS'
+  const [experimentType, setExperimentType] = useState('CVW') // ou 'EIS'
   const [currentParams, setCurrentParams] = useState(defaultCVParams)
   const [datasets, setDatasets]= useState([])
   const [isDatasetSelected, setIsDatasetSelected] = useState(false)
   const [datasetSelected, setDatasetSelected] = useState("")
-  const [typeReading, setTypeReading] = useState('CV') // or 'EIS'
+  const [typeReading, setTypeReading] = useState('CVW') // or 'EIS'
   
   const handleCurrentName = useCallback((newName)=>{
     setCurrentName(newName)
@@ -134,8 +134,9 @@ export const DataSetsProvider = ({ children }) => {
   
     // Function to toggle visibility ensuring exclusivity by type
     const handleSetIsVisible = () => {
+      const currentType = experimentType
+
       setDatasets((prevDatasets) => {
-        const currentType = type_
         return prevDatasets.map((dataset) => {
           if (dataset.name === name_) {
             return { ...dataset, visible: !dataset.visible }
@@ -312,6 +313,11 @@ export const DataSetsProvider = ({ children }) => {
 
   const toggleDatasetVisibility = useCallback((pos) => {
     datasets[pos].setIsVisible(!datasets[pos].visible)
+    const type = datasets[pos].type
+    if(experimentType!=type)
+      handleExperimentType(type)
+    console.log("Alterado visibilidade")
+    console.log("Novo padra^:"+type)
   })
 
   const showOnlyDataset = useCallback((pos) => {
@@ -340,7 +346,7 @@ export const DataSetsProvider = ({ children }) => {
   const handleExperimentType = useCallback((type) => {
     setExperimentType(type)
     setTypeReading(type)
-    setCurrentParams(type === 'CV' ? defaultCVParams : defaultEISParams)
+    setCurrentParams(type === 'CVW' ? defaultCVParams : defaultEISParams)
   }, [])
 
   const setExclusiveVisibility = useCallback((typeToShow) => {

@@ -4,6 +4,7 @@ import { useDatasetsContext } from '../../contexts'
 export const useClickHandler = (chartRefs, setSelectedPoints, theme) => {
 
   const { 
+    datasets,
     handleSetDatasetSelected, 
     handleSetIsDatasetSelected 
   } = useDatasetsContext()
@@ -20,12 +21,17 @@ export const useClickHandler = (chartRefs, setSelectedPoints, theme) => {
 
           setSelectedPoints(prev => {
             let newPoints
+            const datasetX = pt.data.x
+            const datasetY = pt.data.y
+
+            const index = datasetX.findIndex((xVal, i) => xVal === pt.x && datasetY[i] === pt.y)
+
             if (prev.length && prev[0].dataset !== pt.data.name) {
               newPoints = [{
-                x: pt.x,
-                y: pt.y,
                 dataset: pt.data.name,
-                color: pt.fullData.line?.color || theme.palette.secondary.main
+                type: datasets[pt.data.name].type,
+                color: pt.fullData.line?.color || theme.palette.secondary.main,
+                index: index
               }]
             } else {
               const dup = prev.some(p => p.x === pt.x && p.y === pt.y)
@@ -33,10 +39,10 @@ export const useClickHandler = (chartRefs, setSelectedPoints, theme) => {
                 newPoints = [
                   ...prev,
                   {
-                    x: pt.x,
-                    y: pt.y,
                     dataset: pt.data.name,
-                    color: pt.fullData.line?.color || theme.palette.secondary.main
+                    type: datasets[pt.data.name].type,
+                    color: pt.fullData.line?.color || theme.palette.secondary.main,
+                    index: index
                   }
                 ]
               } else {
@@ -46,6 +52,9 @@ export const useClickHandler = (chartRefs, setSelectedPoints, theme) => {
 
             handleSetDatasetSelected(pt.data.name)
             handleSetIsDatasetSelected(true)
+
+            console.log(newPoints)            
+            
             return newPoints
           })
         }

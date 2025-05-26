@@ -1,46 +1,49 @@
-import { Box, Card, CardContent, Tab, Tabs } from '@mui/material'
-import IconButton from '@mui/material/IconButton'
+import { useEffect, useState } from 'react'
+import { Box, Card, CardContent, Tab, Tabs, IconButton } from '@mui/material'
 import MinimizeIcon from '@mui/icons-material/Minimize'
-import { useState } from "react"
-import { useTheme } from "@mui/material"
+import { useTheme } from '@mui/material'
 import { useDashboardContext, useDatasetsContext } from '../../contexts'
 import { CVComponent, DPVComponent, EISComponent } from '..'
 
 /**
- * TabArduino component provides a UI panel for 
+ * TabArduino component provides a UI panel for
  * configuring and controlling Arduino data acquisition
- * 
- * @returns {JSX.Element|null}
  */
 export const TabArduino = () => {
-
   const theme = useTheme()
-
   const {
+    experimentType,
     tabArduinoIsMinimized: isMinimized,
-    handleToggleTabArduinoMinimized: setIsMinimized,
+    handleToggleTabArduinoMinimized: toggleMinimized,
   } = useDashboardContext()
   const { handleExperimentType } = useDatasetsContext()
 
-  const [tabIndex, setTabIndex] = useState(0)
+  const tabTypes = ['CVW', 'DPV', 'EIS']
+  const [tabIndex, setTabIndex] = useState( Math.max(0, tabTypes.indexOf(experimentType)))
+  
+  useEffect(() => {
+    handleExperimentType(tabTypes[tabIndex])
+  }, [tabIndex, handleExperimentType])
 
-  if (isMinimized)
-    return null
+  useEffect(() => {
+    const idx = tabTypes.indexOf(experimentType)
+    if (idx >= 0 && idx !== tabIndex) {
+      setTabIndex(idx)
+    }
+  }, [experimentType, tabIndex])
 
-  const handleTabChange = (_, idx) => {
-    setTabIndex(idx)
-    if (idx === 0) handleExperimentType('CV')
-    else if (idx === 1) handleExperimentType('DPV')
-    else if (idx === 2) handleExperimentType('EIS')
-  }
+  if (isMinimized) return null
 
   return (
     <Box
-      width={theme.spacing(35)} minWidth={theme.spacing(35)}
-      height={530} minHeight={530}
+      width={theme.spacing(35)}
+      minWidth={theme.spacing(35)}
+      height={530}
+      minHeight={530}
       display="flex"
-      flexShrink="0"
-      marginTop={theme.spacing(2)} marginBottom={theme.spacing(2)}
+      flexShrink={0}
+      mt={2}
+      mb={2}
       transition="width 0.3s ease"
       alignItems="start"
       position="absolute"
@@ -50,66 +53,48 @@ export const TabArduino = () => {
     >
       <Card
         sx={{
-          borderRadius: "16px",
+          borderRadius: 2,
           backgroundColor: theme.palette.background.paper,
-          boxShadow: `0 2px 10px rgba(0, 0, 0, 0.2)`,
-          border: "1px solid rgba(0, 0, 0, 0.12)",
-          width: "100%", height: "100%",
+          boxShadow: 2,
+          border: '1px solid rgba(0, 0, 0, 0.12)',
+          width: '100%',
+          height: '100%',
         }}
       >
         <CardContent
           sx={{
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-            padding: null,
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            p: 0,
             color: theme.palette.text.primary,
           }}
         >
-          <Box 
-            width="100%" gap={1} 
-            display="flex" 
-            flexDirection="row" justifyContent="space-between"
-          >
-            <Box display="flex" alignItems="flex-start">
-              <Tabs
-                value={tabIndex}
-                onChange={handleTabChange}
-                variant="fullWidth"
-              >
-                <Tab 
-                  value={0} label="CV"
-                  sx={{ minWidth: 70, padding: '0px' }}
-                />
-                <Tab
-                  value={1} label="DPV"
-                  sx={{ minWidth: 70, padding: '0px' }}
-                />
-                <Tab
-                  value={2} label="EIS"
-                  sx={{ minWidth: 70, padding: '0px' }}
-                />
-              </Tabs>
-            </Box>
-            <Box display="flex" justifyContent="center" height="34px" width="16px">
-              <IconButton
-                aria-label="toggle"
-                size="small"
-                onClick={() => setIsMinimized(true)}
-              >
-                <MinimizeIcon />
-              </IconButton>
-            </Box>
+          <Box display="flex" justifyContent="space-between" alignItems="center" p={1}>
+            <Tabs
+              value={tabIndex}
+              onChange={(_, idx) => setTabIndex(idx)}
+              variant="fullWidth"
+            >
+              <Tab label="CVW" sx={{ minWidth: 70, p: 0 }} />
+              <Tab label="DPV" sx={{ minWidth: 70, p: 0 }} />
+              <Tab label="EIS" sx={{ minWidth: 70, p: 0 }} />
+            </Tabs>
+            <IconButton size="small" onClick={() => toggleMinimized(true)}>
+              <MinimizeIcon />
+            </IconButton>
           </Box>
-          <Box 
-            width="100%" height="100%"
-            display="flex" 
-            flexDirection="column" alignItems="center"
+
+          <Box
+            flex={1}
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
             overflow="auto"
           >
-            {tabIndex === 0 && <CVComponent />}
-            {tabIndex === 1 && <DPVComponent />}
-            {tabIndex === 2 && <EISComponent />}
+            {tabIndex === 0 && <CVComponent key="cv" />}
+            {tabIndex === 1 && <DPVComponent key="dpv" />}
+            {tabIndex === 2 && <EISComponent key="eis" />}
           </Box>
         </CardContent>
       </Card>

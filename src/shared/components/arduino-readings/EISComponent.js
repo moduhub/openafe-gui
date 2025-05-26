@@ -99,13 +99,13 @@ export const EISComponent = () => {
   }
 
   return (
-    <Box display="flex" flexDirection="column" height="440px" width="100%">
+    <Box display="flex" flexDirection="column" height="440px">
       
       <Box flex="1" overflow="auto">
         <List>
           <ListItem>
             <TextField
-              label="Nome"
+              label="Name"
               value={currentName}
               onChange={(e) => handleCurrentName(e.target.value)}
               size="small"

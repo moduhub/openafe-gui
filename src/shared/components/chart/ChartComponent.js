@@ -144,8 +144,8 @@
   // EIS
   if (typeReading === 'EIS') {
     return (
-      <Box key={typeReading} {...commonProps} display="flex" flexDirection="column">
-        <Box display="flex" flexDirection="row" flex={1}>
+      <Box key={typeReading} {...commonProps} display="flex" flexDirection="row">
+        <Box display="flex" flexDirection="column" flex={1}>
           <Box flex={1} p={1}>
             <div ref={bodeModRef} style={{ width: '100%', height: '100%' }} />
           </Box>
@@ -153,7 +153,7 @@
             <div ref={bodeAngRef} style={{ width: '100%', height: '100%' }} />
           </Box>
         </Box>
-        <Box height="50%" p={1}>
+        <Box height="97%" width="50%" p={1}>
           <div ref={nyquistRef} style={{ width: '100%', height: '100%' }} />
         </Box>
       </Box>

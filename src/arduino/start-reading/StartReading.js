@@ -8,7 +8,7 @@
 export const StartReading = (handleSetIsReading, currentParams, experimentType) => {
   handleSetIsReading(true)
 
-  if (experimentType === 'CV') {
+  if (experimentType === 'CVW') {
     window.electron.sendCommand(
       '$CVW,' +
       currentParams.settlingTime + ',' +

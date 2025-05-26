@@ -15,7 +15,11 @@ import { useDatasetsContext } from '../../contexts'
  * @returns {JSX.Element}
  */
 export const ImportDataset = ({ onClose }) => {
-  const { datasets, handleSetDataset } = useDatasetsContext()
+  const { 
+    datasets, 
+    handleSetDataset,
+    handleExperimentType, experimentType
+  } = useDatasetsContext()
   const [error, setError] = useState('')
 
   const handleFileChange = (event) => {
@@ -67,7 +71,7 @@ export const ImportDataset = ({ onClose }) => {
         const enriched = renamedDatasets.map(ds => ({
           ...ds,
           visible: typeof ds.visible === 'boolean' ? ds.visible : true,
-          setIsVisible: () => {
+          setIsVisible: () => { 
             handleSetDataset(prev =>
               prev.map(dataset =>
                 dataset.name === ds.name
