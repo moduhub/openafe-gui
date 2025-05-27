@@ -12,28 +12,30 @@ export const useSelectionRenderer = (
     const refs = Array.isArray(chartRefs) ? chartRefs : [chartRefs]
 
     // Detect type: if any selected point is EIS, treat as EIS
-    const isEIS = selectedPoints.length && selectedPoints[0].type === "IES"
+    const isEIS = selectedPoints.length && selectedPoints[0].type === "EIS"
     const isCVW = selectedPoints.length && selectedPoints[0].type === "CVW"
-    //console.log("Recebido:")
-    //console.log(selectedPoints.length && selectedPoints[0].type)
-    //console.log(isEIS)
+
+    console.log("Recebido: "+isEIS+" "+isCVW)
 
     // Helper to remove previous selection/highlight traces
     const removeSelectionTraces = (el) => {
+      console.log("Entrado para remoção")
       if (!el || !el.data) return
+
       const removeIdx = el.data
         .map((t, i) =>
           t.name === 'Selected Points' || t.name === 'Highlight Range' ? i : -1
         )
         .filter(i => i >= 0)
       if (removeIdx.length) {
+        console.log('GRÁFICO:', el)
         Plotly.deleteTraces(el, removeIdx)
       }
     }
 
     if (isCVW) {
 
-      //console.log("Encontrado aqui CV")
+      console.log("Encontrado aqui CV")
       
 
       refs.forEach(ref => {
@@ -88,7 +90,8 @@ export const useSelectionRenderer = (
     } 
     else if (isEIS) {
       // EIS: refs[0]=bodeMod, refs[1]=bodeAng, refs[2]=nyquist
-      //console.log("Encontrado aqui EIS")
+      
+      console.log("Encontrado aqui EIS")
 
       const [bodeModRef, bodeAngRef, nyquistRef] = refs
       const p = selectedPoints[0]

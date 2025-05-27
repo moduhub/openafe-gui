@@ -1,6 +1,5 @@
   import { useRef, useContext, useEffect } from 'react'
   import { Box } from '@mui/material'
-  import Plotly from 'plotly.js-dist'
   import {
     ThemeContext,
     useDatasetsContext,
@@ -49,7 +48,7 @@
     onContextMenu
   }) => {
     const { theme } = useContext(ThemeContext)
-    const { datasets, handleSetDatasetSelected, typeReading } = useDatasetsContext()
+    const { datasets, handleSetDatasetSelected, experimentType } = useDatasetsContext()
 
     const bodeModRef = useRef(null)
     const bodeAngRef = useRef(null)
@@ -57,12 +56,12 @@
     const chartRef = useRef(null)
     const prevLengths = useRef({})
 
-    const eisDatasets = datasets.filter(ds => ds.visible && ds.type === 'IES')
+    const eisDatasets = datasets.filter(ds => ds.visible && ds.type === 'EIS')
 
     // EIS: Bode |Z| vs omega
     useInitialPlot(
       bodeModRef,
-      typeReading === 'EIS'
+      experimentType === 'EIS'
         ? eisDatasets.map(ds => ({
             ...ds,
             data: [{ x: ds.data[0].omega, y: ds.data[0].modZ }]
@@ -77,7 +76,7 @@
     // EIS: Bode angZ vs omega
    useInitialPlot(
       bodeAngRef,
-      typeReading === 'EIS'
+      experimentType === 'EIS'
         ? eisDatasets.map(ds => ({
             ...ds,
             data: [{ x: ds.data[0].omega, y: ds.data[0].angZ }]
@@ -92,7 +91,7 @@
     // EIS: Nyquist realZ vs imagZ
     useInitialPlot(
       nyquistRef,
-      typeReading === 'EIS'
+      experimentType === 'EIS'
         ? eisDatasets.map(ds => ({
             ...ds,
             data: [{ x: ds.data[0].realZ, y: ds.data[0].imagZ }]
@@ -106,12 +105,12 @@
 
     // CV hooks
     useResizeHandler(chartRef)
-    useInitialPlot( chartRef, typeReading !== 'EIS' ? datasets : [], theme, 'Voltage (mV)', 'Current (µA)')
-    useExtendTraces(chartRef, typeReading !== 'EIS' ? datasets : [], prevLengths)
-    usePreviewAndInterpolations(chartRef, typeReading !== 'EIS' ? datasets : [], previewData, theme, prevLengths)
+    useInitialPlot( chartRef, experimentType !== 'EIS' ? datasets : [], theme, 'Voltage (mV)', 'Current (µA)')
+    useExtendTraces(chartRef, experimentType !== 'EIS' ? datasets : [], prevLengths)
+    usePreviewAndInterpolations(chartRef, experimentType !== 'EIS' ? datasets : [], previewData, theme, prevLengths)
 
     //Clicks
-    const clickRefs = typeReading === 'EIS'
+    const clickRefs = experimentType === 'EIS'
       ? [bodeModRef, bodeAngRef, nyquistRef]
       : [chartRef]
     useClickHandler(clickRefs, setSelectedPoints, theme)
@@ -142,9 +141,9 @@
   }
 
   // EIS
-  if (typeReading === 'EIS') {
+  if (experimentType === 'EIS') {
     return (
-      <Box key={typeReading} {...commonProps} display="flex" flexDirection="row">
+      <Box key={`chart-${experimentType}`} {...commonProps} display="flex" flexDirection="row">
         <Box display="flex" flexDirection="column" flex={1}>
           <Box flex={1} p={1}>
             <div ref={bodeModRef} style={{ width: '100%', height: '100%' }} />
@@ -162,7 +161,7 @@
 
   // CV
   return (
-    <Box key={typeReading} {...commonProps} ref={chartRef} />
+    <Box key={`chart-${experimentType}`} {...commonProps} ref={chartRef} />
   )
 
 }

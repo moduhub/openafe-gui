@@ -70,7 +70,6 @@ export const DataSetsProvider = ({ children }) => {
   const [datasets, setDatasets]= useState([])
   const [isDatasetSelected, setIsDatasetSelected] = useState(false)
   const [datasetSelected, setDatasetSelected] = useState("")
-  const [typeReading, setTypeReading] = useState('CVW') // or 'EIS'
   
   const handleCurrentName = useCallback((newName)=>{
     setCurrentName(newName)
@@ -124,7 +123,7 @@ export const DataSetsProvider = ({ children }) => {
     // Before adding, hide all datasets of a different type
     setDatasets((prevDatasets) =>
       prevDatasets.map((dataset) =>
-        dataset.type !== type_ && (dataset.type === "CVW" || dataset.type === "IES")
+        dataset.type !== type_ && (dataset.type === "CVW" || dataset.type === "EIS")
           ? { ...dataset, visible: false }
           : dataset
       )
@@ -134,18 +133,13 @@ export const DataSetsProvider = ({ children }) => {
   
     // Function to toggle visibility ensuring exclusivity by type
     const handleSetIsVisible = () => {
-      const currentType = experimentType
-
-      setDatasets((prevDatasets) => {
-        return prevDatasets.map((dataset) => {
-          if (dataset.name === name_) {
-            return { ...dataset, visible: !dataset.visible }
-          } else if (dataset.type === "CVW" || dataset.type === "IES") {
-            return dataset.type !== currentType ? { ...dataset, visible: false } : dataset
-          }
-          return dataset
-        })
-      })
+      setDatasets((prevDatasets) =>
+        prevDatasets.map((dataset) =>
+          dataset.name === name_
+            ? { ...dataset, visible: !dataset.visible }
+            : dataset
+        )
+      )
     }
   
     const addInterpolation = (interpolation) => {
@@ -197,7 +191,7 @@ export const DataSetsProvider = ({ children }) => {
             line: { color: theme.palette.primary.main },
             name: toString(name_),
           }]
-    else if (type_ === "IES")
+    else if (type_ === "EIS")
       data_ = [{
             omega: [], modZ: [], angZ: [], realZ: [], imagZ: [],
             mode: 'lines',
@@ -282,7 +276,7 @@ export const DataSetsProvider = ({ children }) => {
       return updatedDatasets
     })
   }
-
+  
   const addComplexPoint = (omega_, modZ_, angZ_, realZ_, imagZ_) => {
     setDatasets((prevDatasets) => {
       const updatedDatasets = prevDatasets.map((dataset, index) => {
@@ -311,14 +305,29 @@ export const DataSetsProvider = ({ children }) => {
     })
   }
 
+  const handleExperimentType = useCallback((type) => {
+    setExperimentType(type)
+    setCurrentParams(type === 'CVW' ? defaultCVParams : defaultEISParams)
+  }, [])
+
   const toggleDatasetVisibility = useCallback((pos) => {
-    datasets[pos].setIsVisible(!datasets[pos].visible)
-    const type = datasets[pos].type
-    if(experimentType!=type)
-      handleExperimentType(type)
-    console.log("Alterado visibilidade")
-    console.log("Novo padra^:"+type)
-  })
+    setDatasets(prevDatasets => {
+      const target = prevDatasets[pos]
+      if (!target) return prevDatasets
+
+      handleExperimentType(target.type)
+
+      return prevDatasets.map((ds, idx) => {
+        if (idx === pos) {
+          return { ...ds, visible: !ds.visible }
+        }
+        if (!target.visible && ds.type !== target.type && (ds.type === 'CVW' || ds.type === 'EIS')) {
+          return { ...ds, visible: false }
+        }
+        return ds
+      })
+    })
+  }, [handleExperimentType])
 
   const showOnlyDataset = useCallback((pos) => {
     datasets.forEach( (ds, i) => 
@@ -341,20 +350,14 @@ export const DataSetsProvider = ({ children }) => {
           : dataset
       )
     )
-  }
-
-  const handleExperimentType = useCallback((type) => {
-    setExperimentType(type)
-    setTypeReading(type)
-    setCurrentParams(type === 'CVW' ? defaultCVParams : defaultEISParams)
-  }, [])
+  }  
 
   const setExclusiveVisibility = useCallback((typeToShow) => {
     setDatasets((prevDatasets) =>
       prevDatasets.map((dataset) => {
         if (dataset.type === typeToShow) {
           return { ...dataset, visible: true }
-        } else if (dataset.type === "CVW" || dataset.type === "IES") {
+        } else if (dataset.type === "CVW" || dataset.type === "EIS") {
           return { ...dataset, visible: false }
         }
         return dataset
@@ -370,7 +373,7 @@ export const DataSetsProvider = ({ children }) => {
       return prevDatasets.map((dataset, idx) => {
         if (idx === pos) {
           return { ...dataset, visible: !dataset.visible }
-        } else if (dataset.type === "CVW" || dataset.type === "IES") {
+        } else if (dataset.type === "CVW" || dataset.type === "EIS") {
           return typeToShow !== dataset.type ? { ...dataset, visible: false } : dataset
         }
         return dataset
@@ -432,8 +435,8 @@ export const DataSetsProvider = ({ children }) => {
     else if(arduinoData.startsWith('$START')){
       if(arduinoData.startsWith('$START-CVW'))
         setNewDataSet(currentName, currentParams, "CVW")
-      else if(arduinoData.startsWith('$START-IES'))
-        setNewDataSet(currentName, currentParams, "IES")
+      else if(arduinoData.startsWith('$START-EIS'))
+        setNewDataSet(currentName, currentParams, "EIS")
     }
     
     // Data end
@@ -466,7 +469,6 @@ export const DataSetsProvider = ({ children }) => {
       showOnlyDataset,
       addDatasetParam,
       setExclusiveVisibility, toggleExclusiveVisibility,
-      typeReading, setTypeReading,
     }}>
       {children}
     </DatasetsContext.Provider>

@@ -210,7 +210,7 @@ void loop() {
       float R = 1000.0; // 1k Ohm
       float C = 1e-3;   // 1mF
 
-      Serial.println("$START-IES");
+      Serial.println("$START-EIS");
 
       // Waiting for stabilization
       //delay(eisParams.settlingTime);

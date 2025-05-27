@@ -12,25 +12,31 @@ import { CVComponent, DPVComponent, EISComponent } from '..'
 export const TabArduino = () => {
   const theme = useTheme()
   const {
-    experimentType,
     tabArduinoIsMinimized: isMinimized,
     handleToggleTabArduinoMinimized: toggleMinimized,
   } = useDashboardContext()
-  const { handleExperimentType } = useDatasetsContext()
+
+  const { 
+    handleExperimentType,
+    experimentType
+  } = useDatasetsContext()
 
   const tabTypes = ['CVW', 'DPV', 'EIS']
-  const [tabIndex, setTabIndex] = useState( Math.max(0, tabTypes.indexOf(experimentType)))
-  
-  useEffect(() => {
-    handleExperimentType(tabTypes[tabIndex])
-  }, [tabIndex, handleExperimentType])
+  const [tabIndex, setTabIndex] = useState(
+    Math.max(0, tabTypes.indexOf(experimentType))
+  )
 
   useEffect(() => {
     const idx = tabTypes.indexOf(experimentType)
     if (idx >= 0 && idx !== tabIndex) {
       setTabIndex(idx)
     }
-  }, [experimentType, tabIndex])
+  }, [experimentType, tabIndex, tabTypes])
+
+  const onTabChange = (_, idx) => {
+    setTabIndex(idx)
+    handleExperimentType(tabTypes[idx])
+  }
 
   if (isMinimized) return null
 
@@ -71,9 +77,9 @@ export const TabArduino = () => {
           }}
         >
           <Box display="flex" justifyContent="space-between" alignItems="center" p={1}>
-            <Tabs
+             <Tabs
               value={tabIndex}
-              onChange={(_, idx) => setTabIndex(idx)}
+              onChange={onTabChange}
               variant="fullWidth"
             >
               <Tab label="CVW" sx={{ minWidth: 70, p: 0 }} />

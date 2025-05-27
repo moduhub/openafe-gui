@@ -71,14 +71,12 @@ export const ImportDataset = ({ onClose }) => {
         const enriched = renamedDatasets.map(ds => ({
           ...ds,
           visible: typeof ds.visible === 'boolean' ? ds.visible : true,
-          setIsVisible: () => { 
+          setIsVisible: () => {
             handleSetDataset(prev =>
               prev.map(dataset =>
                 dataset.name === ds.name
                   ? { ...dataset, visible: !dataset.visible }
-                  : (dataset.type === "CVW" || dataset.type === "IES")
-                    ? (ds.type !== dataset.type ? { ...dataset, visible: false } : dataset)
-                    : dataset
+                  : dataset
               )
             )
           },
