@@ -21,9 +21,9 @@ const defaultCVParams = {
 const defaultEISParams = {
   settlingTime: 1000,
   startOmega: 0, // Hz
-  endOmega: 60, // Hz
-  step: 1,
-  scanRate: 60,
+  endOmega: 100, // Hz
+  stepForADecade: 10,
+  scanRate: 1000,
 }
 
 /**
@@ -277,7 +277,12 @@ export const DataSetsProvider = ({ children }) => {
     })
   }
   
-  const addComplexPoint = (omega_, modZ_, angZ_, realZ_, imagZ_) => {
+  const addComplexPoint = (omega_, realZ_, imagZ_) => {
+
+    const modZ_ = Math.sqrt(realZ_ * realZ_ + imagZ_ * imagZ_)
+    const angZ_ = Math.atan2(imagZ_, realZ_) // in radians
+    console.log("Ponto: "+omega_+" "+realZ_+" "+imagZ_+" "+modZ_+" "+angZ_)
+
     setDatasets((prevDatasets) => {
       const updatedDatasets = prevDatasets.map((dataset, index) => {
         if (index === prevDatasets.length - 1) {
@@ -384,7 +389,7 @@ export const DataSetsProvider = ({ children }) => {
   
   useEffect(()=>{
 
-    //console.log(arduinoData)
+    console.log(arduinoData)
       
     // Data graph
     if (arduinoData.startsWith('$SGL')) {
@@ -404,18 +409,17 @@ export const DataSetsProvider = ({ children }) => {
         }
       }
     }
-    else if (arduinoData.startsWith('$EIS-OUT')) {
-      const dataParts = arduinoData.split(',')
-      
+    else if (arduinoData.startsWith('$EOT')) {
+      //console.log("Recebido valores:")
+      //console.log(arduinoData.split(','))
 
-      if(dataParts.length >= 6){
+      const dataParts = arduinoData.split(',')
+      if(dataParts.length >= 4){
         //console.log(dataParts)
         const omega = parseFloat(dataParts[1])
-        const modZ = parseFloat(dataParts[2])
-        const angZ = parseFloat(dataParts[3])
-        const realZ = parseFloat(dataParts[4])
-        const imagZ = parseFloat(dataParts[5])
-        addComplexPoint(omega, modZ, angZ, realZ, imagZ)
+        const realZ = parseFloat(dataParts[2])
+        const imagZ = parseFloat(dataParts[3])
+        addComplexPoint(omega, realZ, imagZ)
       }
 
       //console.log(datasets)
@@ -432,15 +436,13 @@ export const DataSetsProvider = ({ children }) => {
     }
 
     // Data start
-    else if(arduinoData.startsWith('$START')){
-      if(arduinoData.startsWith('$START-CVW'))
-        setNewDataSet(currentName, currentParams, "CVW")
-      else if(arduinoData.startsWith('$START-EIS'))
-        setNewDataSet(currentName, currentParams, "EIS")
-    }
+    if(arduinoData.startsWith('$CVS'))
+      setNewDataSet(currentName, currentParams, "CVW")
+    else if(arduinoData.startsWith('$ESS'))
+      setNewDataSet(currentName, currentParams, "EIS")
     
     // Data end
-    else if(arduinoData.startsWith('$END')){
+    else if(arduinoData.startsWith('$END') || arduinoData.startsWith('$EBF')){
       //const motive = arduinoData.split(',')
       //console.log("Finalizado por "+ motive[1])
       handleSetIsReading(false)

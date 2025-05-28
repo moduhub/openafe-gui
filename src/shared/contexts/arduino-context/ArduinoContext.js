@@ -106,7 +106,7 @@ export const ArduinoProvider = ({ children }) => {
 
   // Data Connect
   useEffect(() => {
-    if (arduinoData.startsWith('$CONNECTED')){
+    if (arduinoData.startsWith('$CNT')){
       handleSetPortConnected(portSelected)
       handleSetIsConnecting(false)
       handleSetIsConnect(true)

@@ -15,7 +15,7 @@ export const useSelectionRenderer = (
     const isEIS = selectedPoints.length && selectedPoints[0].type === "EIS"
     const isCVW = selectedPoints.length && selectedPoints[0].type === "CVW"
 
-    console.log("Recebido: "+isEIS+" "+isCVW)
+    //console.log("Recebido: "+isEIS+" "+isCVW)
 
     // Helper to remove previous selection/highlight traces
     const removeSelectionTraces = (el) => {
@@ -88,6 +88,7 @@ export const useSelectionRenderer = (
           Plotly.addTraces(el, toAdd)
       })
     } 
+
     else if (isEIS) {
       // EIS: refs[0]=bodeMod, refs[1]=bodeAng, refs[2]=nyquist
       
@@ -106,7 +107,10 @@ export const useSelectionRenderer = (
 
         if (selectedPoints.length) {
           const x_ = selectedPoints.map(pt => datasets[pt.dataset]?.data[0]?.omega[pt.index])
-          const y_ = selectedPoints.map(pt => datasets[pt.dataset]?.data[0]?.modZ[pt.index])
+          const y_ = selectedPoints.map(pt => {
+            const v = datasets[pt.dataset]?.data[0]?.modZ[pt.index]
+            return 20 * Math.log10(v > 0 ? v : 1e-12)
+          })  // db points
           toAdd.push({
             x: x_,
             y: y_,
@@ -124,7 +128,7 @@ export const useSelectionRenderer = (
               const [s, e] = [Math.min(p1.index, p2.index), Math.max(p1.index, p2.index)]
               toAdd.push({
                 x: xs.slice(s, e + 1),
-                y: ys.slice(s, e + 1),
+                y: ys.slice(s, e + 1).map(v => 20 * Math.log10(v > 0 ? v : 1e-12)), // db lines
                 mode: 'lines',
                 line: { width: 4, color: 'red' },
                 name: 'Highlight Range',

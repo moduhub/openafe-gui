@@ -25,7 +25,7 @@ export const StartReading = (handleSetIsReading, currentParams, experimentType) 
       currentParams.settlingTime + ',' +
       currentParams.startOmega + ',' +
       currentParams.endOmega + ',' +
-      currentParams.step + ',' +
+      currentParams.stepForADecade + ',' +
       currentParams.scanRate + ','
     )
   }

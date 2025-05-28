@@ -23,7 +23,7 @@ async function setupSerialPort(selectedPort) {
     port.on('open', () => { 
       console.log('Porta serial aberta com sucesso!')
       if (mainWindow) mainWindow.webContents.send('serial-port-opened', 'Porta serial aberta com sucesso!')
-      port.write('$RESET\n', (err) => {
+      port.write('$RST\n', (err) => {
         if (err) console.error('Erro ao enviar comando de reinicializacao para o Arduino:', err)
         else console.log('Comando de reinicializacao enviado para o Arduino')
       })

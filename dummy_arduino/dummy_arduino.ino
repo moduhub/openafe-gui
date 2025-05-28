@@ -87,7 +87,7 @@ void setup() {
   digitalWrite(ledPin, LOW);
   Serial.begin(9600);
   randomSeed(analogRead(0));
-  Serial.println("$CONNECTED");
+  Serial.println("$CNT"); //Connected
 }
 
 // Looping
@@ -95,7 +95,7 @@ void loop() {
   if (Serial.available()) {
     commandReceived = Serial.readStringUntil('\n');
 
-    if(commandReceived.startsWith("$RESET")) {
+    if(commandReceived.startsWith("$RST")) {
       asm volatile ("  jmp 0");
     }
 
@@ -112,7 +112,7 @@ void loop() {
       ); 
       //printFunction(functions_dummy);
       
-      Serial.println("$START-CVW");
+      Serial.println("$CVS");
       currentCycle = 0;
           
       // Waiting for stabilization
@@ -155,8 +155,8 @@ void loop() {
             Serial.println(message);
 
             freeFunctions(functions_dummy);
-            Serial.println("$MEM,Memória limpa");
-            Serial.println("$END,Ciclos Completos");
+            Serial.println("$MEM");
+            Serial.println("$END");
             currentCycle =  0;
             digitalWrite(ledPin, LOW);
             scanBool = false;
@@ -167,22 +167,20 @@ void loop() {
               cvwParams.startPotential, 
               cvwParams.endPotential
             ); 
-            Serial.println("$CYC,Nova função gerada");
+            Serial.println("$CYC");
             printFunction(functions_dummy);
           }
-        }
-        
-        
+        }   
 
         // Checks if a stop command has been received
         if (Serial.available()) {
           String comando = Serial.readStringUntil('\n');
-          if (comando == "$CMD,DIE*2E") {
+          if (comando == "$BFE") {
             freeFunctions(functions_dummy);
-            Serial.println("$MEM,Memória limpa");
-            Serial.println("$END,Força Bruta");
+            Serial.println("$MEM");
+            Serial.println("$EBF");
             digitalWrite(ledPin, LOW);  
-            scanBool = false;  // Ends the scan
+            scanBool = false;  
           }
         }
       }
@@ -190,68 +188,76 @@ void loop() {
 
     else if (commandReceived.startsWith("$EIS")) {
       inputEIS(commandReceived);
+      scanBool = true;
 
+      
       String message = "Recebido: ";
-      message += " -Se:"+ String(eisParams.settlingTime);
-      message += " -StartOmega:"+ String(eisParams.startOmega);
-      message += " -EndOmega:"+ String(eisParams.endOmega);
-      message += " -Step:"+  String(eisParams.step);
-      message += " -ScanRate:"+ String(eisParams.scanRate);
+      message += " -Se:" + String(eisParams.settlingTime);
+      message += " -StartOmega:" + String(eisParams.startOmega);
+      message += " -EndOmega:" + String(eisParams.endOmega);
+      message += " -StepDecade:" + String(eisParams.step);
+      message += " -ScanRate:" + String(eisParams.scanRate);
       Serial.println(message);
 
-      scanBool = true;
-      directionStep = 1;
-      int omega = floor(eisParams.startOmega); 
-      if (omega <= 0) 
-        omega = 1; 
-      int omega_end = eisParams.endOmega;
-    
+      float startOmega = eisParams.startOmega;
+      if (startOmega <= 0.0) {
+        startOmega = pow(10.0, -1) / float(eisParams.step);
+      }
+      float endOmega = eisParams.endOmega;
+      int stepsPerDecade = eisParams.step;
+      float scanRate = eisParams.scanRate;
+
+      message = "Recebido: ";
+      message += " -SendOmegae:" + String(endOmega);
+      message += " -stepsPerDecade:" + String(stepsPerDecade);
+      message += " -scanRate:" + String(scanRate);
+      Serial.println(message);
 
       float R = 1000.0; // 1k Ohm
       float C = 1e-3;   // 1mF
 
-      Serial.println("$START-EIS");
+      float decades = log10(endOmega / startOmega);
+      int totalSteps = ceil(decades * stepsPerDecade) + 1;
 
-      // Waiting for stabilization
-      //delay(eisParams.settlingTime);
+      Serial.println("$ESS");
 
-      while (scanBool) {
-        digitalWrite(ledPin, HIGH);
+      // Aguarda tempo de estabilização, se necessário
+      // delay(eisParams.settlingTime);
 
-        // Caltulate Z
-        float realZ = R;
-        float imagZ = -1.0 / (omega * C);
-        float modZ = sqrt(realZ * realZ + imagZ * imagZ);
-        float angZ = atan2(imagZ, realZ); // in radians
+      for (int k = 0; k < totalSteps && scanBool; k++) {
+        float omega = startOmega * pow(10.0, float(k) / stepsPerDecade);
 
-        // Pack message: omega, |Z|, angZ(rad), realZ, imagZ
-        String message = 
-          "$EIS-OUT," + 
-          String(omega) + "," + 
-          String(modZ, 6) + "," + 
-          String(angZ, 6) + "," + 
-          String(realZ, 6) + "," + 
-          String(imagZ, 6);
-        //String checksum = calculateChecksum(message);
-        //message += "*" + checksum;
+        if (omega > endOmega) omega = endOmega;
 
-        Serial.println(message);
+        float realZ = R / (1 + pow(omega * C * R, 2));
+        float imagZ = -realZ * (omega * C * R);
 
-        // Control time (in seconds)
-        float readingPeriod = 1000 * (eisParams.step/eisParams.scanRate);
+        String outputMessage = "$EOT,";
+        outputMessage += String(omega, 6) + ",";
+        outputMessage += String(realZ, 6) + ",";
+        outputMessage += String(imagZ, 6);
+
+        Serial.println(outputMessage);
+
+        unsigned long readingPeriod = 1000UL * totalSteps / scanRate;
         delay(readingPeriod);
 
-        omega++;
-
-        if (omega > omega_end) {
-          omega = omega_end; 
-          Serial.println("$END,Caminho completo");
+        if (k == totalSteps - 1) {
+          Serial.println("$END");
           digitalWrite(ledPin, LOW);
           scanBool = false;
         }
-      }
+        if(Serial.available()){
+          String comando = Serial.readStringUntil('\n');
+          if (comando == "$BFE") {
+            Serial.println("$EBF");
+            digitalWrite(ledPin, LOW);  
+            scanBool = false;  
+          }
+        }
+    
+      } 
     }
-
   }
 }
 

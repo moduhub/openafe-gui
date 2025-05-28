@@ -64,12 +64,16 @@
       experimentType === 'EIS'
         ? eisDatasets.map(ds => ({
             ...ds,
-            data: [{ x: ds.data[0].omega, y: ds.data[0].modZ }]
+            data: [{ 
+              x: ds.data[0].omega, 
+              y: ds.data[0].modZ.map(v => 20 * Math.log10(v > 0 ? v : 1e-12))
+            }]
           }))
         : [],
       theme,
       'Frequency (Hz)',
-      '|Z| (Ohm)' // eixo Y
+      '|Z| (dB)', // eixo Y
+      true, // islogX
     )
     useResizeHandler(bodeModRef)
 
@@ -84,7 +88,8 @@
         : [],
       theme,
       'Frequency (Hz)',
-      'Phase (°)' // eixo Y
+      'Phase (°)', // eixo Y
+      true, // islogX
     )
     useResizeHandler(bodeAngRef)
 
@@ -99,7 +104,10 @@
         : [],
       theme,
       'Re(Z) (Ohm)',
-      '-Im(Z) (Ohm)' // Y invertido, comum em Nyquist
+      '-Im(Z) (Ohm)', // Y invertido, comum em Nyquist
+      false, // islogX
+      true, // is Nyquist
+      false, // Retangular ou Polar
     )
     useResizeHandler(nyquistRef)
 
