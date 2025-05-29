@@ -258,7 +258,7 @@ export const DataSetsProvider = ({ children }) => {
         if (index === prevDatasets.length - 1) {
           const newData = dataset.data ? [...dataset.data] : []
           if (!newData[0]) newData[0] = { x: [], y: [] }
-  
+
           return {
             ...dataset,
             data: [
@@ -266,13 +266,14 @@ export const DataSetsProvider = ({ children }) => {
                 ...newData[0],
                 x: [...newData[0].x, voltage],
                 y: [...newData[0].y, current],
+                
               },
             ],
           }
         }
         return dataset
       })
-  
+
       return updatedDatasets
     })
   }

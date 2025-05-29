@@ -1,151 +1,205 @@
-// src/components/ChartComponent/hooks/usePreviewAndInterpolations.js
 import { useEffect } from 'react'
 import Plotly from 'plotly.js-dist'
 
-export const usePreviewAndInterpolations = (chartRef, datasets, previewData, theme, prevLengthsRef) => {
+export const usePreviewAndInterpolations = (
+  chartRefs,
+  datasets,
+  previewData,
+  theme,
+  prevLengthsRef
+) => {
   useEffect(() => {
-    const el = chartRef?.current
-    if (!el) return
+    const refs = Array.isArray(chartRefs) ? chartRefs : [chartRefs]
+    if (!refs.length) return
 
-    const entries = Object.entries(datasets)
-      .filter(([_, ds]) => ds.data?.[0]?.x && ds.data?.[0]?.y)
+    // Map refs to their names
+    const refNames = refs.length === 1
+      ? ['cvChart']
+      : ['bodeMod', 'bodeAng', 'nyquist', 'cvChart']
 
-    const data = []
+    refs.forEach((ref, i) => {
+      const el = ref?.current
+      if (!el) return
 
-    entries.forEach(([key, ds]) => {
-      if (ds.visible) {
-        data.push({
-          x: ds.data[0].x,
-          y: ds.data[0].y,
-          mode: 'lines',
-          name: key,
-          line: {
-            dash: 'solid',
-            width: 2,
-          },
-        })
-      }
+      const currentName = refNames[i]
+      const data = []
 
-      if (Array.isArray(ds.interpolations) && ds.interpolations.length > 0) {
-        ds.interpolations
-          .filter(interp => interp.isVisible)
-          .forEach(interp => {
-            data.push({
-              x: interp.data[0].x,
-              y: interp.data[0].y,
-              mode: interp.data[0].mode,
-              name: interp.data[0].name,
-              line: interp.data[0].line,
-            })
+      // Build traces per chart type
+      Object.entries(datasets).forEach(([key, ds]) => {
+        if (!ds.visible) return
+
+        if (currentName === 'bodeMod') {
+          // Bode magnitude
+          data.push({
+            x: ds.data[0].omega,
+            y: ds.data[0].modZ.map(v => 20 * Math.log10(Math.max(v, 1e-12))),
+            mode: 'lines',
+            name: key,
+            line: { dash: 'solid', width: 2 }
           })
-      }
-      if (Array.isArray(ds.markers) && ds.markers.length > 0) {
-        ds.markers
-          .filter(marker => marker.isVisible)
-          .forEach(marker => {
-            data.push({
-              x: [marker.x],
-              y: [marker.y],
-              mode: 'markers',
-              name: marker.label || 'Marker',
-              marker: {
-                color: marker.color,
-                symbol: marker.symbol,
-                size: 12,
-              },
-              showlegend: false,
-            })
-          })
-      }
 
-      if (Array.isArray(ds.areas) && ds.areas.length > 0) {
-        ds.areas
-          .filter(area => area.isVisible)
-          .forEach((area, idx) => {
-            const x = ds.data[0].x.slice(area.start, area.end + 1)
-            const y = ds.data[0].y.slice(area.start, area.end + 1)
+          // markers
+          ds.markers?.filter(m => m.isVisible && m.ref === 'bodeMod')
+            .forEach(m => data.push({
+              x: [m.x], y: [m.y], mode: 'markers', showlegend: false,
+              marker: { color: m.color, symbol: m.symbol, size: m.size }, name: m.label
+            }))
+        }
+        else if (currentName === 'bodeAng') {
+          // Bode phase
+          data.push({
+            x: ds.data[0].omega,
+            y: ds.data[0].angZ,
+            mode: 'lines',
+            name: key,
+            line: { dash: 'solid', width: 2 }
+          })
+
+          ds.markers?.filter(m => m.isVisible && m.ref === 'bodeAng')
+            .forEach(m => data.push({
+              x: [m.x], y: [m.y], mode: 'markers', showlegend: false,
+              marker: { color: m.color, symbol: m.symbol, size: m.size }, name: m.label
+            }))
+        }
+        else if (currentName === 'nyquist') {
+          // Nyquist
+          data.push({
+            x: ds.data[0].realZ,
+            y: ds.data[0].imagZ,
+            mode: 'lines',
+            name: key,
+            line: { dash: 'solid', width: 2 }
+          })
+
+          ds.markers?.filter(m => m.isVisible && m.ref === 'nyquist')
+            .forEach(m => data.push({
+              x: [m.x], y: [m.y], mode: 'markers', showlegend: false,
+              marker: { color: m.color, symbol: m.symbol, size: m.size }, name: m.label
+            }))
+        }
+        else if (currentName === 'cvChart') {
+          // CV main
+          data.push({
+            x: ds.data[0].x,
+            y: ds.data[0].y,
+            mode: 'lines',
+            name: key,
+            line: { dash: 'solid', width: 2 }
+          })
+
+          // Interpolations
+          ds.interpolations?.filter(i => i.isVisible)
+            .forEach(i => data.push({
+              x: i.data[0].x,
+              y: i.data[0].y,
+              mode: i.data[0].mode,
+              name: i.data[0].name,
+              line: i.data[0].line
+            }))
+
+          // Markers
+          ds.markers?.filter(m => m.isVisible && m.ref === 'cvChart')
+            .forEach(m => data.push({
+              x: [m.x], y: [m.y], mode: 'markers', showlegend: false,
+              marker: { color: m.color, symbol: m.symbol, size: m.size }, name: m.label
+            }))
+
+          // Areas
+          ds.areas?.filter(a => a.isVisible)
+            .forEach((a, idx) => {
+              const x = ds.data[0].x.slice(a.start, a.end + 1)
+              const y = ds.data[0].y.slice(a.start, a.end + 1)
+              data.push({ x, y, mode: 'lines', fill: 'tozeroy', name: `Área ${idx+1}`, showlegend: false })
+            })
+
+          // Preview overlay
+          if (previewData?.x && previewData?.y) {
             data.push({
-              x,
-              y,
+              x: previewData.x,
+              y: previewData.y,
               mode: 'lines',
-              name: `Área ${idx + 1}`,
-              fill: 'tozeroy',
-              //fillcolor: "rgba(0,0,0,0)", // color area
-              //line: { color: fillColor, width: 0 }, //mark the interval line
-              showlegend: false,
+              name: 'Preview',
+              line: { color: theme.palette.secondary.main, dash: 'dot', width: 2 }
             })
-            // Mark start and end
-            /*
-            data.push({
-              x: [x[0], x[x.length - 1]],
-              y: [y[0], y[y.length - 1]],
-              mode: 'markers',
-              marker: { 
-                //color: fillColor, 
-                size: 10, 
-                symbol: 'diamond' 
-              },
-              name: 'Início/Fim Área',
-              showlegend: false,
-            })
-            */
-          })
+          }
+        }
+      })
+
+      // Build layout per chart
+      const layout = {
+        font: { size: 14, color: theme.palette.text.primary },
+        showlegend: false,
+        paper_bgcolor: 'transparent',
+        plot_bgcolor: theme.palette.background.paper,
+        margin: { l: 20, r: 10, t: 10, b: 20 },
+        autosize: true,
+        xaxis: {},
+        yaxis: {}
+      }
+
+      if (currentName === 'bodeMod' || currentName === 'bodeAng') {
+        layout.xaxis = {
+          title: { text: 'Frequency (Hz)', standoff: 15 },
+          type: 'log', mirror: true,
+          linecolor: theme.palette.text.primary,
+          gridcolor: theme.palette.divider,
+          zerolinecolor: theme.palette.divider,
+          automargin: true
+        }
+        layout.yaxis = {
+          title: { text: currentName === 'bodeMod' ? '|Z| (dB)' : 'Phase (°)', standoff: 15 },
+          mirror: true,
+          linecolor: theme.palette.text.primary,
+          gridcolor: theme.palette.divider,
+          zerolinecolor: theme.palette.divider,
+          automargin: true
+        }
+      } else if (currentName === 'nyquist') {
+        layout.xaxis = {
+          title: { text: 'Re(Z) (Ohm)', standoff: 15 }, mirror: true,
+          linecolor: theme.palette.text.primary,
+          gridcolor: theme.palette.divider,
+          zerolinecolor: theme.palette.divider,
+          automargin: true
+        }
+        layout.yaxis = {
+          title: { text: '-Im(Z) (Ohm)', standoff: 15 }, mirror: true,
+          linecolor: theme.palette.text.primary,
+          gridcolor: theme.palette.divider,
+          zerolinecolor: theme.palette.divider,
+          automargin: true
+        }
+      } else {
+        layout.xaxis = {
+          title: { text: 'Voltage (mV)', standoff: 15 },
+          mirror: true,
+          linecolor: theme.palette.text.primary,
+          gridcolor: theme.palette.divider,
+          zerolinecolor: theme.palette.divider,
+          automargin: true
+        }
+        layout.yaxis = {
+          title: { text: 'Current (µA)', standoff: 15 },
+          mirror: true,
+          linecolor: theme.palette.text.primary,
+          gridcolor: theme.palette.divider,
+          zerolinecolor: theme.palette.divider,
+          automargin: true
+        }
+      }
+
+      const config = { scrollZoom: false, displaylogo: false, displayModeBar: false, responsive: true }
+
+      // Render plot
+      Plotly.react(el, data, layout, config)
+
+      // Update prevLengths
+      if (prevLengthsRef?.current) {
+        prevLengthsRef.current = datasets.reduce((acc, ds) => {
+          acc[ds.name] = ds.data[0]?.x?.length || 0
+          return acc
+        }, {})
       }
     })
-
-    if (previewData?.x && previewData?.y) {
-      data.push({
-        x: previewData.x,
-        y: previewData.y,
-        mode: 'lines',
-        name: 'Preview',
-        line: {
-          color: theme.palette.secondary.main,
-          dash: 'dot',
-          width: 2,
-        },
-      })
-    }
-
-    const layout = {
-      font: { size: 14, color: theme.palette.text.primary },
-      showlegend: false,
-      paper_bgcolor: 'transparent',
-      plot_bgcolor: theme.palette.background.paper,
-      margin: { l: 20, r: 10, t: 10, b: 20 },
-      xaxis: {
-        title: { text: 'Voltage (mV)', standoff: 15 },
-        linecolor: theme.palette.text.primary,
-        mirror: true,
-        gridcolor: theme.palette.divider,
-        zerolinecolor: theme.palette.divider,
-        automargin: true,
-      },
-      yaxis: {
-        title: { text: 'Current (uA)', standoff: 15 },
-        linecolor: theme.palette.text.primary,
-        mirror: true,
-        gridcolor: theme.palette.divider,
-        zerolinecolor: theme.palette.divider,
-        automargin: true,
-      },
-      autosize: true,
-    }
-
-    const config = {
-      scrollZoom: false,
-      displaylogo: false,
-      displayModeBar: false,
-      responsive: true,
-    }
-
-    Plotly.react(el, data, layout, config)
-
-    if (prevLengthsRef?.current) {
-      prevLengthsRef.current = entries.reduce((acc, [key, ds]) => ({
-        ...acc,
-        [key]: ds.data[0].x.length,
-      }), {})
-    }
-  }, [chartRef, datasets, previewData, theme, prevLengthsRef])
+  }, [chartRefs, datasets, previewData, theme, prevLengthsRef])
 }

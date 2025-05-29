@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Box, Menu, MenuItem } from '@mui/material'
 
 import { 
@@ -46,6 +46,7 @@ export const Dashboard = () => {
   const [openDialog, setOpenDialog] = useState(false)
   const [contextMenu, setContextMenu] = useState(null)
   const [openMarkDialog, setOpenMarkDialog] = useState(false)
+  const chartAreaRef = useRef(null)
 
   const handleChartContextMenu = (event) => {
     event.preventDefault()
@@ -81,6 +82,11 @@ export const Dashboard = () => {
   const handleClearSelection = () => {
     setSelectedPoints([])
     setContextMenu(null)
+    setTimeout(() => {
+      if (chartAreaRef.current) {
+        chartAreaRef.current.focus()
+      }
+    }, 0)
   }
 
   const handleCloseDialog = () => {
@@ -111,6 +117,7 @@ export const Dashboard = () => {
           ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
           : undefined
       }
+      
     >
       {selectedPoints.length === 1 && (
         <MenuItem onClick={() => handleOpenDialogFromMenu("markers")}>
@@ -141,6 +148,7 @@ export const Dashboard = () => {
         setSelectedPoints={setSelectedPoints}
         selectedPoints={selectedPoints}
         onContextMenu={handleChartContextMenu}
+        chartAreaRef={chartAreaRef}
       />
 
       <TabDataset 

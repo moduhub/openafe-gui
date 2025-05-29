@@ -113,19 +113,29 @@
 
     // CV hooks
     useResizeHandler(chartRef)
-    useInitialPlot( chartRef, experimentType !== 'EIS' ? datasets : [], theme, 'Voltage (mV)', 'Current (µA)')
+    useInitialPlot(chartRef,experimentType !== 'EIS' ? datasets : [],theme,'Voltage (mV)','Current (µA)') 
     useExtendTraces(chartRef, experimentType !== 'EIS' ? datasets : [], prevLengths)
-    usePreviewAndInterpolations(chartRef, experimentType !== 'EIS' ? datasets : [], previewData, theme, prevLengths)
-
-    //Clicks
-    const clickRefs = experimentType === 'EIS'
+    
+    // Prepare refs and datasets for preview & markers
+    const previewRefs = experimentType === 'EIS'
       ? [bodeModRef, bodeAngRef, nyquistRef]
       : [chartRef]
+    const previewDatasets = experimentType === 'EIS' ? eisDatasets : datasets
+    //usePreviewAndInterpolations(previewRefs, previewDatasets, previewData, theme, prevLengths)
+
+    //Clicks
+    let clickRefs = experimentType === 'EIS'
+      ? [
+          { ref: bodeModRef, name: 'bodeMod' },
+          { ref: bodeAngRef, name: 'bodeAng' },
+          { ref: nyquistRef, name: 'nyquist' }
+        ]
+      : [{ ref: chartRef, name: 'cvChart' }]
     useClickHandler(clickRefs, setSelectedPoints, theme)
 
-    // Selection Render
+    // Selection rendering
     useSelectionRenderer(
-      clickRefs,        
+      previewRefs,
       datasets,
       selectedPoints,
       setSelectedPoints,
@@ -151,7 +161,11 @@
   // EIS
   if (experimentType === 'EIS') {
     return (
-      <Box key={`chart-${experimentType}`} {...commonProps} display="flex" flexDirection="row">
+      <Box 
+        key={`chart-${experimentType}`} 
+        {...commonProps} 
+        display="flex" flexDirection="row"
+      >
         <Box display="flex" flexDirection="column" flex={1}>
           <Box flex={1} p={1}>
             <div ref={bodeModRef} style={{ width: '100%', height: '100%' }} />
@@ -169,7 +183,11 @@
 
   // CV
   return (
-    <Box key={`chart-${experimentType}`} {...commonProps} ref={chartRef} />
+    <Box
+    key={`chart-${experimentType}`}
+    {...commonProps}
+    ref={chartRef}
+  />
   )
 
 }
