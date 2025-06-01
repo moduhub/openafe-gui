@@ -121,7 +121,7 @@
       ? [bodeModRef, bodeAngRef, nyquistRef]
       : [chartRef]
     const previewDatasets = experimentType === 'EIS' ? eisDatasets : datasets
-    //usePreviewAndInterpolations(previewRefs, previewDatasets, previewData, theme, prevLengths)
+    usePreviewAndInterpolations(previewRefs, previewDatasets, previewData, theme, prevLengths)
 
     //Clicks
     let clickRefs = experimentType === 'EIS'
@@ -133,7 +133,7 @@
       : [{ ref: chartRef, name: 'cvChart' }]
     useClickHandler(clickRefs, setSelectedPoints, theme)
 
-    // Selection rendering
+    // Selection rendering 
     useSelectionRenderer(
       previewRefs,
       datasets,

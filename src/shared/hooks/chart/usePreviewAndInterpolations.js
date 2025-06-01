@@ -38,12 +38,30 @@ export const usePreviewAndInterpolations = (
             line: { dash: 'solid', width: 2 }
           })
 
+          // Interpolations
+          ds.interpolations?.filter(i => i.isVisible && i.ref === 'bodeMod')
+            .forEach(i => data.push({
+              x: i.data[0].x,
+              y: i.data[0].y,
+              mode: i.data[0].mode,
+              name: i.data[0].name,
+              line: i.data[0].line
+            }))
+
           // markers
           ds.markers?.filter(m => m.isVisible && m.ref === 'bodeMod')
             .forEach(m => data.push({
               x: [m.x], y: [m.y], mode: 'markers', showlegend: false,
               marker: { color: m.color, symbol: m.symbol, size: m.size }, name: m.label
             }))
+
+          // Areas
+          ds.areas?.filter(a => a.isVisible && a.ref === 'bodeMod')
+            .forEach((a, idx) => {
+              const x = ds.data[0].omega.slice(a.start, a.end + 1)
+              const y = ds.data[0].modZ.slice(a.start, a.end + 1).map(v => 20 * Math.log10(Math.max(v, 1e-12)))
+              data.push({ x, y, mode: 'lines', fill: 'tozeroy', name: `Área ${idx+1}`, showlegend: false })
+            })
         }
         else if (currentName === 'bodeAng') {
           // Bode phase
@@ -55,11 +73,30 @@ export const usePreviewAndInterpolations = (
             line: { dash: 'solid', width: 2 }
           })
 
+          // Interpolations
+          ds.interpolations?.filter(i => i.isVisible && i.ref === 'bodeAng')
+            .forEach(i => data.push({
+              x: i.data[0].x,
+              y: i.data[0].y,
+              mode: i.data[0].mode,
+              name: i.data[0].name,
+              line: i.data[0].line
+            }))
+
+          // Markers
           ds.markers?.filter(m => m.isVisible && m.ref === 'bodeAng')
             .forEach(m => data.push({
               x: [m.x], y: [m.y], mode: 'markers', showlegend: false,
               marker: { color: m.color, symbol: m.symbol, size: m.size }, name: m.label
             }))
+          
+          // Areas
+          ds.areas?.filter(a => a.isVisible && a.ref === 'bodeAng')
+            .forEach((a, idx) => {
+              const x = ds.data[0].omega.slice(a.start, a.end + 1)
+              const y = ds.data[0].angZ.slice(a.start, a.end + 1)
+              data.push({ x, y, mode: 'lines', fill: 'tozeroy', name: `Área ${idx+1}`, showlegend: false })
+            })
         }
         else if (currentName === 'nyquist') {
           // Nyquist
@@ -71,11 +108,29 @@ export const usePreviewAndInterpolations = (
             line: { dash: 'solid', width: 2 }
           })
 
+          ds.interpolations?.filter(i => i.isVisible && i.ref === 'nyquist')
+            .forEach(i => data.push({
+              x: i.data[0].x,
+              y: i.data[0].y,
+              mode: i.data[0].mode,
+              name: i.data[0].name,
+              line: i.data[0].line
+            }))
+
+          // Markers
           ds.markers?.filter(m => m.isVisible && m.ref === 'nyquist')
             .forEach(m => data.push({
               x: [m.x], y: [m.y], mode: 'markers', showlegend: false,
               marker: { color: m.color, symbol: m.symbol, size: m.size }, name: m.label
             }))
+
+          // Areas
+          ds.areas?.filter(a => a.isVisible && a.ref === 'nyquist')
+            .forEach((a, idx) => {
+              const x = ds.data[0].realZ.slice(a.start, a.end + 1)
+              const y = ds.data[0].imagZ.slice(a.start, a.end + 1)
+              data.push({ x, y, mode: 'lines', fill: 'tozeroy', name: `Área ${idx+1}`, showlegend: false })
+            })
         }
         else if (currentName === 'cvChart') {
           // CV main
@@ -88,7 +143,7 @@ export const usePreviewAndInterpolations = (
           })
 
           // Interpolations
-          ds.interpolations?.filter(i => i.isVisible)
+          ds.interpolations?.filter(i => i.isVisible && (i.ref === 'cvChart' || !i.ref))
             .forEach(i => data.push({
               x: i.data[0].x,
               y: i.data[0].y,
@@ -154,7 +209,8 @@ export const usePreviewAndInterpolations = (
           zerolinecolor: theme.palette.divider,
           automargin: true
         }
-      } else if (currentName === 'nyquist') {
+      } 
+      else if (currentName === 'nyquist') {
         layout.xaxis = {
           title: { text: 'Re(Z) (Ohm)', standoff: 15 }, mirror: true,
           linecolor: theme.palette.text.primary,
@@ -167,9 +223,11 @@ export const usePreviewAndInterpolations = (
           linecolor: theme.palette.text.primary,
           gridcolor: theme.palette.divider,
           zerolinecolor: theme.palette.divider,
-          automargin: true
+          automargin: true,
+          autorange: 'reversed'
         }
-      } else {
+      } 
+      else {
         layout.xaxis = {
           title: { text: 'Voltage (mV)', standoff: 15 },
           mirror: true,

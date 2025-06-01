@@ -117,7 +117,6 @@ export const Dashboard = () => {
           ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
           : undefined
       }
-      
     >
       {selectedPoints.length === 1 && (
         <MenuItem onClick={() => handleOpenDialogFromMenu("markers")}>

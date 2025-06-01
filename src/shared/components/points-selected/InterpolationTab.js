@@ -47,6 +47,7 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
   const [range, setRange] = useState([start, end])
   const [polynomialOrder, setPolynomialOrder] = useState(1)
   const [gaussianMethod, setGaussianMethod] = useState("rbf") // "rbf" or "ls"
+  const [ref, setRef] = useState("cvChart")
 
   // Manage inert attribute for accessibility
   useEffect(() => {
@@ -70,13 +71,33 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
   const updateData = () => {
     if (!selectedPoints || selectedPoints.length < 2) return
 
-    const xValues = datasets?.[datasetSelected]?.data[0]?.x || []
-    const yValues = datasets?.[datasetSelected]?.data[0]?.y || []
     const [p1, p2] = selectedPoints
-    const idx1 = xValues.findIndex((x, i) => x === p1?.x && yValues[i] === p1?.y)
-    const idx2 = xValues.findIndex((x, i) => x === p2?.x && yValues[i] === p2?.y)
-    
-    if (idx1 === -1 || idx2 === -1) return
+    const currentRef = p1.ref || "cvChart"
+    setRef(currentRef)
+
+    let xValues = []
+    let yValues = []
+
+    const ds = datasets?.[datasetSelected]?.data[0] || {}
+
+    if (currentRef === "cvChart") {
+      xValues = ds.x || []
+      yValues = ds.y || []
+    } else if (currentRef === "bodeMod") {
+      xValues = ds.omega || []
+      yValues = (ds.modZ || []).map(v => 20 * Math.log10(Math.max(v, 1e-12)))
+    } else if (currentRef === "bodeAng") {
+      xValues = ds.omega || []
+      yValues = ds.angZ || []
+    } else if (currentRef === "nyquist") {
+      xValues = ds.realZ || []
+      yValues = ds.imagZ || []
+    }
+
+    const idx1 = p1.index
+    const idx2 = p2.index
+
+    if (typeof idx1 !== "number" || typeof idx2 !== "number" || idx1 < 0 || idx2 < 0) return
 
     setPoints([idx1, idx2])
     setRange([xValues[idx1], xValues[idx2]])
@@ -86,60 +107,110 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
     setPolynomialOrder(newValue)
   }
 
+  const generateInterpX = (xStart, xEnd, nPoints, isLog) => {
+  if (isLog) {
+    const logStart = Math.log10(xStart)
+    const logEnd = Math.log10(xEnd)
+    return Array.from({ length: nPoints }, (_, i) =>
+      Math.pow(10, logStart + (logEnd - logStart) * (i / (nPoints - 1)))
+    )
+  } else {
+    return Array.from({ length: nPoints }, (_, i) =>
+      xStart + (xEnd - xStart) * (i / (nPoints - 1))
+    )
+  }
+}
+
   const handleConfirmInterpolation = () => {
+    const ds = datasets?.[datasetSelected]?.data[0] || {}
+    let xValues = []
+    let yValues = []
+    let isLogX = false
+    let isYdB = false
+
+    if (ref === "cvChart") {
+      xValues = ds.x || []
+      yValues = ds.y || []
+    } else if (ref === "bodeMod") {
+      xValues = ds.omega || []
+      yValues = ds.modZ || []
+      isLogX = true
+      isYdB = true
+    } else if (ref === "bodeAng") {
+      xValues = ds.omega || []
+      yValues = ds.angZ || []
+      isLogX = true
+    } else if (ref === "nyquist") {
+      xValues = ds.realZ || []
+      yValues = ds.imagZ || []
+    }
+
+    // Garante ordem dos índices
+    const [startIdx, endIdx] = points[0] < points[1] ? points : [points[1], points[0]]
+    const interpX = xValues.slice(startIdx, endIdx + 1)
+    let interpY = yValues.slice(startIdx, endIdx + 1)
+
+    // Para bodeMod, use valores lineares para interpolação, mas mostre em dB
+    if (isYdB) {
+      interpY = interpY.map(v => Math.max(v, 1e-12))
+    }
+
+    // Densidade de pontos baseada no dataset
+    let nPoints = interpX.length
+    if (isLogX && ds.omega) {
+      // stepForADecade: pontos por década
+      const stepForADecade = datasets[datasetSelected]?.params?.stepForADecade || 10
+      const decades = Math.log10(interpX[interpX.length - 1]) - Math.log10(interpX[0])
+      nPoints = Math.max(10, Math.round(decades * stepForADecade))
+    }
+
+    // Gera os Xs para interpolação
+    const interpRangeX = generateInterpX(interpX[0], interpX[interpX.length - 1], nPoints, isLogX)
+
+    // Chame a função de interpolação correta
     let result
-    if (interpolationType === "polinomial" && points.length === 2) {
+    if (interpolationType === "polinomial") {
       result = calculatePolynomialInterpolation(
-        points,
-        datasets,
-        datasetSelected,
-        polynomialOrder,
-        { min: range[0], max: range[1] }
+        interpX, interpY, polynomialOrder, interpRangeX
       )
-    } 
-    else if (interpolationType === "gaussiana" && points.length === 2) {
+    } else if (interpolationType === "gaussiana") {
       result = gaussianMethod === "rbf"
-        ? calculateGaussianInterpolationRBF(
-            points,
-            datasets,
-            datasetSelected,
-            { min: range[0], max: range[1] }
-          )
-        : calculateGaussianInterpolationLS(
-            points,
-            datasets,
-            datasetSelected,
-            { min: range[0], max: range[1] }
-          )
+        ? calculateGaussianInterpolationRBF(interpX, interpY, interpRangeX)
+        : calculateGaussianInterpolationLS(interpX, interpY, interpRangeX, ref === "bodeMod")
     }
 
-    if (result) {
-      const newInterpolation = {
-        type: interpolationType,
-        typeCalculate: (interpolationType === "polinomial")? "Vandermonde" : (gaussianMethod === "rbf")?"RBF":"LS",
-        order: interpolationType === "polinomial" ? polynomialOrder : undefined,
-        sigma: interpolationType === "gaussiana" ? result.sigma : undefined,
-        mu: interpolationType === "gaussiana" ? result.mu : undefined,
-        amplitude: interpolationType === "gaussiana" ? result.amplitude : undefined,
-        coefficients: result.coefficients ?? undefined,
-        isVisible: true,
-        data: [
-          {
-            x: result.interpolatedX,
-            y: result.interpolatedY,
-            mode: "lines",
-            line: { dash: "dot" },
-            name:
-              interpolationType === "polinomial"
-                ? `Interpolação ${polynomialOrder}° grau`
-                : `Interpolação Gaussiana (${gaussianMethod === "rbf" ? "RBF" : "MMQ"}) (σ=${result.sigma})`,
-          },
-        ],
-      }
-
-      datasets[datasetSelected]?.addInterpolation(newInterpolation)
+    // Para bodeMod, converta Y interpolado para dB para exibir
+    let interpolatedY = result.interpolatedY
+    if (isYdB) {
+      interpolatedY = interpolatedY.map(v => 20 * Math.log10(Math.max(v, 1e-12)))
     }
 
+    // Salve a interpolação no dataset
+    const newInterpolation = {
+      type: interpolationType,
+      typeCalculate: (interpolationType === "polinomial") ? "Vandermonde" : (gaussianMethod === "rbf") ? "RBF" : "LS",
+      order: interpolationType === "polinomial" ? polynomialOrder : undefined,
+      sigma: interpolationType === "gaussiana" ? result.sigma : undefined,
+      mu: interpolationType === "gaussiana" ? result.mu : undefined,
+      amplitude: interpolationType === "gaussiana" ? result.amplitude : undefined,
+      coefficients: result.coefficients ?? undefined,
+      isVisible: true,
+      ref: ref,
+      data: [
+        {
+          x: interpRangeX,
+          y: interpolatedY,
+          mode: "lines",
+          line: { dash: "dot" },
+          name:
+            interpolationType === "polinomial"
+              ? `Interpolação ${polynomialOrder}° grau`
+              : `Interpolação Gaussiana (${gaussianMethod === "rbf" ? "RBF" : "MMQ"}) (σ=${result.sigma})`,
+        },
+      ],
+    }
+
+    datasets[datasetSelected]?.addInterpolation(newInterpolation)
     handleCloseDialog()
   }
 
@@ -150,6 +221,50 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
     setPolynomialOrder(1)
     onClose()
   }
+
+  const getSliderProps = (xValues, ref) => {
+    if (ref === "bodeMod" || ref === "bodeAng") {
+      // Eixo logarítmico
+      const min = Math.log10(Math.min(...xValues))
+      const max = Math.log10(Math.max(...xValues))
+      return {
+        min,
+        max,
+        step: 0.01,
+        scale: v => Math.pow(10, v),
+        valueLabelFormat: v => Number(Math.pow(10, v)).toPrecision(3),
+        marks: [
+          { value: min, label: Number(Math.pow(10, min)).toPrecision(2) },
+          { value: max, label: Number(Math.pow(10, max)).toPrecision(2) }
+        ]
+      }
+    } else {
+      // Linear
+      const min = Math.min(...xValues)
+      const max = Math.max(...xValues)
+      return {
+        min,
+        max,
+        step: step,
+        scale: v => v,
+        valueLabelFormat: v => v,
+        marks: [
+          { value: min, label: min },
+          { value: max, label: max }
+        ]
+      }
+    }
+  }
+
+  let xValues = []
+  if (ref === "cvChart") {
+    xValues = datasets?.[datasetSelected]?.data[0]?.x || []
+  } else if (ref === "bodeMod" || ref === "bodeAng") {
+    xValues = datasets?.[datasetSelected]?.data[0]?.omega || []
+  } else if (ref === "nyquist") {
+    xValues = datasets?.[datasetSelected]?.data[0]?.realZ || []
+  }
+  const sliderProps = getSliderProps(xValues, ref)
 
   return (
     <>
@@ -198,12 +313,25 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
           )}
           <Typography gutterBottom>Interval of X:</Typography>
           <Slider
-            value={range}
-            onChange={(_, newValue) => setRange(newValue)}
-            min={minStart}
-            max={maxEnd}
-            step={step}
+            value={
+              (ref === "bodeMod" || ref === "bodeAng")
+                ? range.map(v => Math.log10(v))
+                : range
+            }
+            onChange={(_, newValue) => {
+              setRange(
+                (ref === "bodeMod" || ref === "bodeAng")
+                  ? newValue.map(v => Math.pow(10, v))
+                  : newValue
+              )
+            }}
+            min={sliderProps.min}
+            max={sliderProps.max}
+            step={sliderProps.step}
+            scale={sliderProps.scale}
+            valueLabelFormat={sliderProps.valueLabelFormat}
             valueLabelDisplay="auto"
+            marks={sliderProps.marks}
           />
         </Box>
       )}
