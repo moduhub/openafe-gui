@@ -188,15 +188,15 @@ export const DataSetsProvider = ({ children }) => {
       data_ = [{
             x: [], y: [],
             mode: 'lines',
-            line: { color: theme.palette.primary.main },
-            name: toString(name_),
+            line: null,
+            name: name_,
           }]
     else if (type_ === "EIS")
       data_ = [{
             omega: [], modZ: [], angZ: [], realZ: [], imagZ: [],
             mode: 'lines',
-            line: { color: theme.palette.primary.main },
-            name: toString(name_),
+            line: null,
+            name: name_,
           }]
   
     cacheDatasetsManager()
@@ -206,6 +206,7 @@ export const DataSetsProvider = ({ children }) => {
         name: name_,
         type: type_,
         params: parameters_,
+        params_e: [],
         visible: visible_,
         setIsVisible: handleSetIsVisible,
         addInterpolation: addInterpolation,
@@ -282,7 +283,6 @@ export const DataSetsProvider = ({ children }) => {
 
     const modZ_ = Math.sqrt(realZ_ * realZ_ + imagZ_ * imagZ_)
     const angZ_ = Math.atan2(imagZ_, realZ_) // in radians
-    console.log("Ponto: "+omega_+" "+realZ_+" "+imagZ_+" "+modZ_+" "+angZ_)
 
     setDatasets((prevDatasets) => {
       const updatedDatasets = prevDatasets.map((dataset, index) => {
@@ -348,15 +348,46 @@ export const DataSetsProvider = ({ children }) => {
         dataset.name === datasetName
           ? {
               ...dataset,
-              params: {
-                ...dataset.params,
+              params_e: {
+                ...dataset.params_e,
                 [paramName]: paramValue,
               },
             }
           : dataset
       )
     )
-  }  
+  }
+
+  const editDatasetParam = (datasetName, paramName, paramValue) => {
+    setDatasets((prevDatasets) =>
+      prevDatasets.map((dataset) =>
+        dataset.name === datasetName
+          ? {
+              ...dataset,
+              params_e: {
+                ...dataset.params_e,
+                [paramName]: paramValue,
+              },
+            }
+          : dataset
+      )
+    )
+  }
+
+  const deleteDatasetParam = (datasetName, paramName) => {
+    setDatasets((prevDatasets) =>
+      prevDatasets.map((dataset) =>
+        dataset.name === datasetName
+          ? {
+              ...dataset,
+              params_e: Object.fromEntries(
+                Object.entries(dataset.params_e).filter(([key]) => key !== paramName)
+              ),
+            }
+          : dataset
+      )
+    )
+  }
 
   const setExclusiveVisibility = useCallback((typeToShow) => {
     setDatasets((prevDatasets) =>
@@ -388,10 +419,7 @@ export const DataSetsProvider = ({ children }) => {
   }, [])
 
   
-  useEffect(()=>{
-
-    console.log(arduinoData)
-      
+  useEffect(()=>{      
     // Data graph
     if (arduinoData.startsWith('$SGL')) {
       const dataParts = arduinoData.split(',')
@@ -411,29 +439,13 @@ export const DataSetsProvider = ({ children }) => {
       }
     }
     else if (arduinoData.startsWith('$EOT')) {
-      //console.log("Recebido valores:")
-      //console.log(arduinoData.split(','))
-
       const dataParts = arduinoData.split(',')
       if(dataParts.length >= 4){
-        //console.log(dataParts)
         const omega = parseFloat(dataParts[1])
         const realZ = parseFloat(dataParts[2])
         const imagZ = parseFloat(dataParts[3])
         addComplexPoint(omega, realZ, imagZ)
       }
-
-      //console.log(datasets)
-      /*
-      if(datasets[datasets.length - 1].data[0]!=null){
-        if( datasets[datasets.length - 1].data[0].omega.length === 1 ){
-          if(!isDatasetSelected)
-            handleSetIsDatasetSelected(true)
-          handleSetDatasetSelected(datasets.length - 1)
-          if (priorityMode) 
-            showOnlyDataset(datasets.length - 1)
-        }
-      }*/
     }
 
     // Data start
@@ -444,8 +456,6 @@ export const DataSetsProvider = ({ children }) => {
     
     // Data end
     else if(arduinoData.startsWith('$END') || arduinoData.startsWith('$EBF')){
-      //const motive = arduinoData.split(',')
-      //console.log("Finalizado por "+ motive[1])
       handleSetIsReading(false)
       if(isDatasetsMinimized)
         setIsDatasetsMinimized()
@@ -470,7 +480,7 @@ export const DataSetsProvider = ({ children }) => {
       handleNewDataset,
       toggleDatasetVisibility,
       showOnlyDataset,
-      addDatasetParam,
+      addDatasetParam, editDatasetParam, deleteDatasetParam,
       setExclusiveVisibility, toggleExclusiveVisibility,
     }}>
       {children}

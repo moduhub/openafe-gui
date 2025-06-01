@@ -1,13 +1,10 @@
-import { useState } from 'react'
-
 import {
   Box,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
+  Accordion, AccordionSummary, AccordionDetails,
   Button,
   useTheme,
   Typography,
+  Tabs, Tab
 } from '@mui/material'
 
 import RecordingIcon from '@mui/icons-material/FiberManualRecord'
@@ -15,25 +12,23 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import SaveAltIcon from '@mui/icons-material/SaveAlt'
+import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import StartIcon from '@mui/icons-material/Start'
 
 import ImportExportIcon from '@mui/icons-material/ImportExport';
 
-import {
-  useDatasetsContext,
-  useArduinoContext
-} from '../../contexts'
+import { useTabStorage } from '../../hooks'
 
 import {
   DeleteDialog, 
-  useDeleteDialog,
   InterpolationComponent,
   ParametersComponent,
   PointsComponent,
   AreaMarkers,
   PointMarkers,
-  ImportExportDialog
+  ImportExportDialog,
+  LineEditorDialog
 } from '..'
 
 /**
@@ -51,71 +46,33 @@ import {
  * @returns {JSX.Element}
  */
 export const TabStorage = ({ setTabIndex }) => {
-
   const theme = useTheme()
+
   const {
-    handleDeleteDataset, 
-    handleSetDatasetSelected,
-    datasets, handleSetDataset,
-    toggleDatasetVisibility,
-    showOnlyDataset,
-    datasetSelected
-  } = useDatasetsContext()
-  const {
-    isReading
-  } = useArduinoContext()
+    datasets, datasetSelected,
+    isReading,
+    datasetTab, setDatasetTab,  
+    
+    openDialog, close, handleDelete,
+    deleteDialogOpen, setDeleteDialogOpen, handleDeleteInterpolation,
+    importExportDialogOpen, setImportExportDialogOpen, importExportType,
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [deleteTarget, setDeleteTarget] = useState({ datasetIndex: null, interpolationIndex: null })
-  const { openDialog, index, open, close } = useDeleteDialog()
-  const [importExportDialogOpen, setImportExportDialogOpen] = useState(false)
-  const [importExportType, setImportExportType] = useState(0)
-  const [importExportDefaultIndex, setImportExportDefaultIndex] = useState(null)
-
-  const handleDelete = () => {
-    if (index !== null) handleDeleteDataset(index)
-    close()
-  }
-
-  const handleOpenTabFilter = (index) => {
-    handleSetDatasetSelected(index)
-    setTabIndex(1)
-    showOnlyDataset(index)
-  }
+    openLineEditor, closeLineEditor, handleChangeLine,
+    lineEditorOpen,
+    lineEditorInitial,
   
-  const openDeleteDialog = (datasetIndex, interpolationIndex) => {
-    setDeleteTarget({ datasetIndex, interpolationIndex })
-    setDeleteDialogOpen(true)
-  }
+    importExportDefaultIndex,
+    filteredDatasets,
+    
+    openDeleteDialog,
+    handleToggleInterpolationVisibility,
+    handleOpenImportExportDialog,  
 
-  const handleDeleteInterpolation = () => {
-    const { datasetIndex, interpolationIndex } = deleteTarget
-    if (datasetIndex !== null && interpolationIndex !== null) {
-      const updatedDatasets = [...datasets]
-      updatedDatasets[datasetIndex].interpolations.splice(interpolationIndex, 1)
-      handleSetDataset(updatedDatasets) 
-      setDeleteDialogOpen(false)
-    }
-  }
-
-  const handleToggleInterpolationVisibility = (datasetIndex, interpolationIndex) => {
-    const updatedDatasets = [...datasets]
-    const interpolation = updatedDatasets[datasetIndex].interpolations[interpolationIndex]
-    interpolation.isVisible = !interpolation.isVisible
-    handleSetDataset(updatedDatasets) 
-  }
-
-  const handleOpenImportExportDialog = () => {
-    setImportExportType(0) // type: import
-    setImportExportDefaultIndex(null)
-    setImportExportDialogOpen(true)
-  }
-
-  const handleOpenExportDialogWithIndex = (index) => {
-    setImportExportType(1) // type: export
-    setImportExportDefaultIndex(index)
-    setImportExportDialogOpen(true)
-  }
+    toggleDatasetVisibility,
+    handleOpenExportDialogWithIndex,
+    open,
+    handleOpenTabFilter,
+  } = useTabStorage(setTabIndex)
   
   return (
     <>
@@ -134,6 +91,12 @@ export const TabStorage = ({ setTabIndex }) => {
         onClose={() => setImportExportDialogOpen(false)}
         type={importExportType}
         defaultIndex={importExportDefaultIndex}
+      />
+      <LineEditorDialog
+        open={lineEditorOpen}
+        onClose={closeLineEditor}
+        initialLine={lineEditorInitial}
+        onSave={handleChangeLine}
       />
 
       <Box
@@ -156,7 +119,18 @@ export const TabStorage = ({ setTabIndex }) => {
           </Button>
         </Box>
 
-        {datasets.length === 0 ? (
+        {/* Tabs para selecionar tipo de dataset */}
+        <Tabs
+          value={datasetTab}
+          onChange={(_, v) => setDatasetTab(v)}
+          variant="fullWidth"
+          sx={{ mb: 1 }}
+        >
+          <Tab label="CVW" />
+          <Tab label="EIS" />
+        </Tabs>
+
+        {filteredDatasets.length === 0 ? (
           <Typography
             variant="body1"
             color="textSecondary"
@@ -169,28 +143,22 @@ export const TabStorage = ({ setTabIndex }) => {
             There are no datasets in cache at the moment.
           </Typography>
         ) : (
-          datasets.map((dataset, index) => {
+          filteredDatasets.map((dataset, index) => {
+            const originalIndex = datasets.findIndex(ds => ds === dataset)
+            const isCurrentDataset = isReading && datasetSelected === originalIndex;
 
-            const formatPoint = (val) => Number(val).toFixed(2)
-            const xArray = dataset.data[0].x
-            const yArray = dataset.data[0].y
-
-            const isCurrentDataset = isReading && datasetSelected === index;
-
-            return (  
-              <Accordion key={index}>
+            return (
+              <Accordion key={originalIndex}>
                 <AccordionSummary
                   expandIcon={<ExpandMoreIcon />}
                   sx={{
-                    color: dataset.visible ? 'inherit' : 'gray',
-                    px: 2,
-                    display: 'flex',
-                    alignItems: 'center',
+                    color: dataset.visible ? 'inherit' : 'gray', px: 2,
+                    display: 'flex', alignItems: 'center',
                   }}
                 >
                   <Box sx={{ display: 'inline-flex', alignItems: 'center', flexGrow: 1 }}>
                     <Typography variant="h6">
-                      {dataset.name || `Dataset ${index + 1}`}
+                      {dataset.name || `Dataset ${originalIndex + 1}`}
                     </Typography>
                     {isCurrentDataset && (
                       <RecordingIcon
@@ -199,7 +167,7 @@ export const TabStorage = ({ setTabIndex }) => {
                           color: 'red',
                           ml: 1,
                           verticalAlign: 'middle',
-                          lineHeight: 0,  
+                          lineHeight: 0,
                         }}
                       />
                     )}
@@ -215,69 +183,59 @@ export const TabStorage = ({ setTabIndex }) => {
                     overflow="hidden"
                   >
                     {[
-                      { 
-                        onClick: () => toggleDatasetVisibility(index), 
-                        icon: datasets[index].visible ? <VisibilityOffIcon /> : <VisibilityIcon />, 
+                      {
+                        onClick: () => toggleDatasetVisibility(originalIndex),
+                        icon: datasets[originalIndex].visible ? <VisibilityOffIcon /> : <VisibilityIcon />,
                         disabled: isReading
                       },
-                      { 
-                        onClick: () => handleOpenExportDialogWithIndex(index),
+                      {
+                        onClick: () => handleOpenExportDialogWithIndex(originalIndex),
                         icon: <SaveAltIcon />,
                         disabled: isReading
-                      },                      
-                      { 
-                        onClick: () => open(index), 
-                        icon: <DeleteIcon />,
-                        disabled: isReading 
                       },
-                      { 
-                        onClick: () => handleOpenTabFilter(index), 
+                      {
+                        onClick: () => openLineEditor(originalIndex),
+                        icon: <EditIcon />,
+                        disabled: isReading
+                      },
+                      {
+                        onClick: () => open(originalIndex),
+                        icon: <DeleteIcon />,
+                        disabled: isReading
+                      },
+                      {
+                        onClick: () => handleOpenTabFilter(originalIndex),
                         icon: <StartIcon />,
                         disabled: isReading
                       }
                     ].map((btn, i) => (
-                    <Button
-                      key={i}
-                      onClick={btn.onClick}
-                      disabled={btn.disabled}            
-                      sx={{
-                        minWidth: 'auto',
-                        justifyContent: 'space-between',
-                        width: '100%'
-                      }}
-                    >
-                      {btn.icon}
-                    </Button>
+                      <Button
+                        key={i}
+                        onClick={btn.onClick}
+                        disabled={btn.disabled}
+                        sx={{
+                          minWidth: 'auto',
+                          justifyContent: 'space-between',
+                          width: '100%'
+                        }}
+                      >
+                        {btn.icon}
+                      </Button>
                     ))}
                   </Box>
 
-                  <ParametersComponent 
-                    dataset={dataset}
-                  />
-
-                  <PointsComponent 
-                    dataset={dataset} 
-                  />
-
-                  <PointMarkers
-                    datasetIndex={index} 
-                    points={dataset.markers}
-                  />
-
-                  <AreaMarkers
-                    datasetIndex={index} 
-                    areas={dataset.areas} 
-                  />
-
+                  <ParametersComponent dataset={dataset} />
+                  <PointsComponent dataset={dataset} />
+                  <PointMarkers datasetIndex={originalIndex} points={dataset.markers} />
+                  <AreaMarkers datasetIndex={originalIndex} areas={dataset.areas} />
                   <InterpolationComponent
                     dataset={dataset}
-                    datasetIndex={index} 
+                    datasetIndex={originalIndex}
                     onToggleVisibility={handleToggleInterpolationVisibility}
-                    onDeleteInterpolation={openDeleteDialog} 
+                    onDeleteInterpolation={openDeleteDialog}
                   />
-
                 </AccordionDetails>
-              </Accordion>  
+              </Accordion>
             )
           })
         )}

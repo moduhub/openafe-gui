@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Box, Typography, Chip, Stack, Accordion, AccordionSummary, AccordionDetails, Button } from '@mui/material'
-import { Circle, Square, Star, Close, ChangeHistory } from '@mui/icons-material'
+import { Circle, Square, Star, Add, ChangeHistory } from '@mui/icons-material'
 
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
@@ -36,7 +36,7 @@ export const PointMarkers = ({ points, datasetIndex }) => {
         return <Star sx={{ color: color_, minWidth: 32 }}/>
         break
       case "cross":
-        return <Close sx={{ color: color_, minWidth: 32 }}/>
+        return <Add sx={{ color: color_, minWidth: 32 }}/>
         break
       case "triangle-up":
         return <ChangeHistory sx={{ color: color_, minWidth: 32 }}/>

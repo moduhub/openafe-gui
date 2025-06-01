@@ -82,16 +82,26 @@ export const useInitialPlot = (
       data = entries.map(([key, ds]) => ({
         r: ds.data[0].y,
         theta: ds.data[0].x,
-        mode: 'lines',
+        mode: ds.data[0].mode ?? 'lines',
         name: key,
+        line: {
+          dash: ds.data[0].line?.dash ?? 'solid',
+          color: ds.data[0].line?.color ?? undefined,
+          width: ds.data[0].line?.width ?? 2
+        },
         type: 'scatterpolar'
       }))
     } else {
       data = entries.map(([key, ds]) => ({
         x: ds.data[0].x,
         y: ds.data[0].y,
-        mode: 'lines',
+        mode: ds.data[0].mode ?? 'lines',
         name: key,
+        line: {
+          dash: ds.data[0].line?.dash ?? 'solid',
+          color: ds.data[0].line?.color ?? undefined,
+          width: ds.data[0].line?.width ?? 2
+        }
       }))
     }
 

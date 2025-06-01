@@ -204,8 +204,8 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
           line: { dash: "dot" },
           name:
             interpolationType === "polinomial"
-              ? `Interpolação ${polynomialOrder}° grau`
-              : `Interpolação Gaussiana (${gaussianMethod === "rbf" ? "RBF" : "MMQ"}) (σ=${result.sigma})`,
+              ? `Interpolation ${polynomialOrder}° grau`
+              : `Interpolation Gaussian (${gaussianMethod === "rbf" ? "RBF" : "LS"}) (σ=${result.sigma})`,
         },
       ],
     }
@@ -273,7 +273,7 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
           <InputLabel>Type of Interpolation</InputLabel>
           <Select
             value={interpolationType}
-            label="Tipo de Interpolação"
+            label="Type of Interpolation"
             onChange={handleInterpolationTypeChange}
           >
             <MenuItem value="polinomial">Polynomial</MenuItem>

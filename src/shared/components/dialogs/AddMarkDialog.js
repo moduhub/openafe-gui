@@ -12,7 +12,7 @@ import { Box,
   ListItemIcon,
   Typography,
 } from '@mui/material'
-import { Circle, Square, Star, Close, ChangeHistory } from '@mui/icons-material'
+import { Circle, Square, Star, Add, ChangeHistory } from '@mui/icons-material'
 import { useState } from 'react'
 import { MuiColorInput } from 'mui-color-input'
 
@@ -22,7 +22,7 @@ const SYMBOL_OPTIONS = [
   { value: 'circle', icon: <Circle /> },
   { value: 'square', icon: <Square /> },
   { value: 'star', icon: <Star /> },
-  { value: 'cross', icon: <Close /> },
+  { value: 'cross', icon: <Add /> },
   { value: 'triangle-up', icon: <ChangeHistory /> }
 ]
 

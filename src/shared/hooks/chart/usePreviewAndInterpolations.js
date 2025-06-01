@@ -33,9 +33,13 @@ export const usePreviewAndInterpolations = (
           data.push({
             x: ds.data[0].omega,
             y: ds.data[0].modZ.map(v => 20 * Math.log10(Math.max(v, 1e-12))),
-            mode: 'lines',
+            mode: ds.data[0].mode ?? 'lines',
             name: key,
-            line: { dash: 'solid', width: 2 }
+            line: {
+              dash: ds.data[0].line?.dash ?? 'solid',
+              width: ds.data[0].line?.width ?? 2,
+              color: ds.data[0].line?.color ?? undefined
+            }
           })
 
           // Interpolations
@@ -68,9 +72,13 @@ export const usePreviewAndInterpolations = (
           data.push({
             x: ds.data[0].omega,
             y: ds.data[0].angZ,
-            mode: 'lines',
+            mode: ds.data[0].mode ?? 'lines',
             name: key,
-            line: { dash: 'solid', width: 2 }
+            line: {
+              dash: ds.data[0].line?.dash ?? 'solid',
+              width: ds.data[0].line?.width ?? 2,
+              color: ds.data[0].line?.color ?? undefined
+            }
           })
 
           // Interpolations
@@ -103,9 +111,13 @@ export const usePreviewAndInterpolations = (
           data.push({
             x: ds.data[0].realZ,
             y: ds.data[0].imagZ,
-            mode: 'lines',
+            mode: ds.data[0].mode ?? 'lines',
             name: key,
-            line: { dash: 'solid', width: 2 }
+            line: {
+              dash: ds.data[0].line?.dash ?? 'solid',
+              width: ds.data[0].line?.width ?? 2,
+              color: ds.data[0].line?.color ?? undefined
+            }
           })
 
           ds.interpolations?.filter(i => i.isVisible && i.ref === 'nyquist')
@@ -137,9 +149,13 @@ export const usePreviewAndInterpolations = (
           data.push({
             x: ds.data[0].x,
             y: ds.data[0].y,
-            mode: 'lines',
+            mode: ds.data[0].mode ?? 'lines',
             name: key,
-            line: { dash: 'solid', width: 2 }
+            line: {
+              dash: ds.data[0].line?.dash ?? 'solid',
+              width: ds.data[0].line?.width ?? 2,
+              color: ds.data[0].line?.color ?? undefined
+            }
           })
 
           // Interpolations

@@ -4,3 +4,5 @@ export * from './chart/useExtendTraces'
 export * from './chart/usePreviewAndInterpolations'
 export * from './chart/useClickHandler'
 export * from './chart/useSelectionRenderer'
+
+export * from './storage-datasets/useTabStorage'

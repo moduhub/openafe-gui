@@ -105,7 +105,6 @@ export const ImportDataset = ({ onClose }) => {
             )
           },
           addPointMarker: (marker) => {
-            console.log("Adicionando")
             handleSetDataset((prevDatasets) =>
               prevDatasets.map((dataset) =>
                 dataset.name === ds.name
@@ -116,10 +115,10 @@ export const ImportDataset = ({ onClose }) => {
                   : dataset
               )
             )
-            console.log("marcação adicionada com sucesso")
-            console.log(marker)
           },
         }))
+
+        handleExperimentType(renamedDatasets[0].type)
 
         handleSetDataset(prev => [...prev, ...enriched])
         setError('')
