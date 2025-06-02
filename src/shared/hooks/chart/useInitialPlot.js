@@ -13,9 +13,9 @@ export const useInitialPlot = (
         showlegend: false,
         paper_bgcolor: 'transparent',
         plot_bgcolor: theme.palette.background.paper,
-        margin: { l: 20, r: 10, t: 10, b: 20 },
+        margin: { l: 45, r: 45, t: 10, b: 20 },
         polar: {
-          bgcolor: 'transparent',
+          bgcolor: 'white',
           radialaxis: {
             title: { text: yName },
             color: theme.palette.text.primary,
@@ -78,20 +78,27 @@ export const useInitialPlot = (
 
     let data
     if (isPolar) {
-      // Converte x/y para r/theta (módulo/ângulo)
-      data = entries.map(([key, ds]) => ({
-        r: ds.data[0].y,
-        theta: ds.data[0].x,
-        mode: ds.data[0].mode ?? 'lines',
-        name: key,
-        line: {
-          dash: ds.data[0].line?.dash ?? 'solid',
-          color: ds.data[0].line?.color ?? undefined,
-          width: ds.data[0].line?.width ?? 2
-        },
-        type: 'scatterpolar'
-      }))
-    } else {
+      data = entries.map(([key, ds]) => {
+        const xArr = ds.data[0].x
+        const yArr = ds.data[0].y
+        const rArr = xArr.map((x, i) => Math.sqrt(x * x + yArr[i] * yArr[i]))
+        const thetaArr = xArr.map((x, i) => Math.atan2(yArr[i], x) * 180 / Math.PI)
+        return {
+          r: rArr,
+          theta: thetaArr,
+          mode: ds.data[0].mode ?? 'lines',
+          name: key,
+          line: {
+            dash: ds.data[0].line?.dash ?? 'solid',
+            color: ds.data[0].line?.color ?? undefined,
+            width: ds.data[0].line?.width ?? 2
+          },
+          type: 'scatterpolar',
+          hovertemplate: '|Z| (Ohm): %{r}<br>Phase (°): %{theta}<extra></extra>'
+        }
+      })
+    } 
+    else {
       data = entries.map(([key, ds]) => ({
         x: ds.data[0].x,
         y: ds.data[0].y,
@@ -101,7 +108,8 @@ export const useInitialPlot = (
           dash: ds.data[0].line?.dash ?? 'solid',
           color: ds.data[0].line?.color ?? undefined,
           width: ds.data[0].line?.width ?? 2
-        }
+        },
+        hovertemplate: `${xName}: %{x}<br>${yName}: %{y}<extra></extra>`
       }))
     }
 

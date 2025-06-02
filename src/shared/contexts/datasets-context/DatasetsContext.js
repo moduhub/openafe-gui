@@ -14,7 +14,7 @@ const defaultCVParams = {
   startPotential: -800,
   endPotential: 0,
   step: 10,
-  scanRate: 1000,
+  scanRate: 500,
   cycles: 1,
 }
 
@@ -23,7 +23,7 @@ const defaultEISParams = {
   startOmega: 0, // Hz
   endOmega: 100, // Hz
   stepForADecade: 10,
-  scanRate: 1000,
+  scanRate: 5000,
 }
 
 /**
@@ -282,7 +282,7 @@ export const DataSetsProvider = ({ children }) => {
   const addComplexPoint = (omega_, realZ_, imagZ_) => {
 
     const modZ_ = Math.sqrt(realZ_ * realZ_ + imagZ_ * imagZ_)
-    const angZ_ = Math.atan2(imagZ_, realZ_) // in radians
+    const angZ_ = Math.atan2(imagZ_, realZ_) * (180 / Math.PI) // in degree
 
     setDatasets((prevDatasets) => {
       const updatedDatasets = prevDatasets.map((dataset, index) => {
@@ -451,8 +451,10 @@ export const DataSetsProvider = ({ children }) => {
     // Data start
     if(arduinoData.startsWith('$CVS'))
       setNewDataSet(currentName, currentParams, "CVW")
-    else if(arduinoData.startsWith('$ESS'))
+    else if(arduinoData.startsWith('$ESS')){
+      console.log("Nova medida")
       setNewDataSet(currentName, currentParams, "EIS")
+    }
     
     // Data end
     else if(arduinoData.startsWith('$END') || arduinoData.startsWith('$EBF')){

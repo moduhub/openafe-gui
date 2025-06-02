@@ -18,7 +18,8 @@ export const ImportDataset = ({ onClose }) => {
   const { 
     datasets, 
     handleSetDataset,
-    handleExperimentType, experimentType
+    handleExperimentType, experimentType,
+    setExclusiveVisibility
   } = useDatasetsContext()
   const [error, setError] = useState('')
 
@@ -119,10 +120,13 @@ export const ImportDataset = ({ onClose }) => {
         }))
 
         handleExperimentType(renamedDatasets[0].type)
-
         handleSetDataset(prev => [...prev, ...enriched])
+        if (typeof setExclusiveVisibility === 'function') {
+          setExclusiveVisibility(renamedDatasets[0].type)
+        }
         setError('')
         onClose()
+        console.log(datasets)
       } catch {
         setError('Error processing the JSON file. Check the format.')
       }

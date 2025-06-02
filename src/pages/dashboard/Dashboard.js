@@ -50,6 +50,10 @@ export const Dashboard = () => {
 
   const handleChartContextMenu = (event) => {
     event.preventDefault()
+    
+    const allValid = selectedPoints.every(p => typeof p.index === 'number' && p.index >= 0)
+    if (!allValid) return
+
     if (selectedPoints.length === 1 || selectedPoints.length === 2) {
       setContextMenu({
         mouseX: event.clientX - 2,

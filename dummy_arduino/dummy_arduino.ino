@@ -190,15 +190,6 @@ void loop() {
       inputEIS(commandReceived);
       scanBool = true;
 
-      
-      String message = "Recebido: ";
-      message += " -Se:" + String(eisParams.settlingTime);
-      message += " -StartOmega:" + String(eisParams.startOmega);
-      message += " -EndOmega:" + String(eisParams.endOmega);
-      message += " -StepDecade:" + String(eisParams.step);
-      message += " -ScanRate:" + String(eisParams.scanRate);
-      Serial.println(message);
-
       float startOmega = eisParams.startOmega;
       if (startOmega <= 0.0) {
         startOmega = pow(10.0, -1) / float(eisParams.step);
@@ -206,12 +197,6 @@ void loop() {
       float endOmega = eisParams.endOmega;
       int stepsPerDecade = eisParams.step;
       float scanRate = eisParams.scanRate;
-
-      message = "Recebido: ";
-      message += " -SendOmegae:" + String(endOmega);
-      message += " -stepsPerDecade:" + String(stepsPerDecade);
-      message += " -scanRate:" + String(scanRate);
-      Serial.println(message);
 
       float R = 1000.0; // 1k Ohm
       float C = 1e-3;   // 1mF

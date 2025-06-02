@@ -108,11 +108,9 @@ export const AreaTab = ({ open, onClose, selectedPoints }) => {
       start: start,
       end: end,
       isVisible: true,
-      ref: ref // Salva o gráfico de origem
+      ref: ref 
     }
     datasets[datasetSelected]?.addAreaMarker(newAreaMarker)
-    
-    console.log(datasets)
   
     handleCloseDialog()
   }
