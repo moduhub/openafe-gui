@@ -8,14 +8,16 @@ import {
   Typography,
   Box,
   Slider,
+  Tooltip,
 } from "@mui/material"
 
 import { useDatasetsContext } from "../../contexts"
 
-import { 
+import {
   calculatePolynomialInterpolation,
   calculateGaussianInterpolationRBF,
-  calculateGaussianInterpolationLS
+  calculateGaussianInterpolationLS,
+  calculateLogSplineInterpolation,
 } from "../../math-functions/"
 
 /**
@@ -38,18 +40,17 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
   const start = params.startPotential ?? 0
   const end = params.endPotential ?? 0
   const step = params.step ?? 1
-  const delta = end - start
-  const minStart = start - 0.5 * delta
-  const maxEnd = end + 0.5 * delta
 
   const [interpolationType, setInterpolationType] = useState("")
   const [points, setPoints] = useState([])
-  const [range, setRange] = useState([start, end])
+  const [range, setRange] = useState([start, end]) // sempre em escala linear real
   const [polynomialOrder, setPolynomialOrder] = useState(1)
-  const [gaussianMethod, setGaussianMethod] = useState("rbf") // "rbf" or "ls"
+  const [gaussianMethod, setGaussianMethod] = useState("rbf")
   const [ref, setRef] = useState("cvChart")
 
-  // Manage inert attribute for accessibility
+  const type = datasets?.[datasetSelected]?.type
+  const isLogsplineDisabled = type === "CV" || (type === "EIS" && ref === "nyquist")
+
   useEffect(() => {
     const root = document.querySelector("#root")
     if (open) {
@@ -108,18 +109,18 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
   }
 
   const generateInterpX = (xStart, xEnd, nPoints, isLog) => {
-  if (isLog) {
-    const logStart = Math.log10(xStart)
-    const logEnd = Math.log10(xEnd)
-    return Array.from({ length: nPoints }, (_, i) =>
-      Math.pow(10, logStart + (logEnd - logStart) * (i / (nPoints - 1)))
-    )
-  } else {
-    return Array.from({ length: nPoints }, (_, i) =>
-      xStart + (xEnd - xStart) * (i / (nPoints - 1))
-    )
+    if (isLog) {
+      const logStart = Math.log10(xStart)
+      const logEnd = Math.log10(xEnd)
+      return Array.from({ length: nPoints }, (_, i) =>
+        Math.pow(10, logStart + (logEnd - logStart) * (i / (nPoints - 1)))
+      )
+    } else {
+      return Array.from({ length: nPoints }, (_, i) =>
+        xStart + (xEnd - xStart) * (i / (nPoints - 1))
+      )
+    }
   }
-}
 
   const handleConfirmInterpolation = () => {
     const ds = datasets?.[datasetSelected]?.data[0] || {}
@@ -145,50 +146,50 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
       yValues = ds.imagZ || []
     }
 
-    // Garante ordem dos índices
-    const [startIdx, endIdx] = points[0] < points[1] ? points : [points[1], points[0]]
-    const interpX = xValues.slice(startIdx, endIdx + 1)
-    let interpY = yValues.slice(startIdx, endIdx + 1)
+    const filtered = xValues
+      .map((x, i) => ({ x, y: yValues[i] }))
+      .filter(({ x }) => x >= range[0] && x <= range[1])
 
-    // Para bodeMod, use valores lineares para interpolação, mas mostre em dB
+    const interpX = filtered.map(p => p.x)
+    let interpY = filtered.map(p => p.y)
+
     if (isYdB) {
       interpY = interpY.map(v => Math.max(v, 1e-12))
     }
 
-    // Densidade de pontos baseada no dataset
     let nPoints = interpX.length
     if (isLogX && ds.omega) {
-      // stepForADecade: pontos por década
       const stepForADecade = datasets[datasetSelected]?.params?.stepForADecade || 10
       const decades = Math.log10(interpX[interpX.length - 1]) - Math.log10(interpX[0])
       nPoints = Math.max(10, Math.round(decades * stepForADecade))
     }
 
-    // Gera os Xs para interpolação
     const interpRangeX = generateInterpX(interpX[0], interpX[interpX.length - 1], nPoints, isLogX)
 
-    // Chame a função de interpolação correta
     let result
     if (interpolationType === "polinomial") {
-      result = calculatePolynomialInterpolation(
-        interpX, interpY, polynomialOrder, interpRangeX
-      )
+      result = calculatePolynomialInterpolation(interpX, interpY, polynomialOrder, interpRangeX)
     } else if (interpolationType === "gaussiana") {
       result = gaussianMethod === "rbf"
         ? calculateGaussianInterpolationRBF(interpX, interpY, interpRangeX)
         : calculateGaussianInterpolationLS(interpX, interpY, interpRangeX, ref === "bodeMod")
+    } else if (interpolationType === "logspline") {
+      result = calculateLogSplineInterpolation(interpX, interpY, interpRangeX)
     }
 
-    // Para bodeMod, converta Y interpolado para dB para exibir
     let interpolatedY = result.interpolatedY
     if (isYdB) {
       interpolatedY = interpolatedY.map(v => 20 * Math.log10(Math.max(v, 1e-12)))
     }
 
-    // Salve a interpolação no dataset
     const newInterpolation = {
       type: interpolationType,
-      typeCalculate: (interpolationType === "polinomial") ? "Vandermonde" : (gaussianMethod === "rbf") ? "RBF" : "LS",
+      typeCalculate:
+        interpolationType === "polinomial"
+          ? "Vandermonde"
+          : interpolationType === "logspline"
+            ? "Spline"
+            : (gaussianMethod === "rbf") ? "RBF" : "LS",
       order: interpolationType === "polinomial" ? polynomialOrder : undefined,
       sigma: interpolationType === "gaussiana" ? result.sigma : undefined,
       mu: interpolationType === "gaussiana" ? result.mu : undefined,
@@ -205,7 +206,9 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
           name:
             interpolationType === "polinomial"
               ? `Interpolation ${polynomialOrder}° grau`
-              : `Interpolation Gaussian (${gaussianMethod === "rbf" ? "RBF" : "LS"}) (σ=${result.sigma})`,
+              : interpolationType === "logspline"
+                ? `Interpolation Log Spline`
+                : `Interpolation Gaussian (${gaussianMethod === "rbf" ? "RBF" : "LS"}) (σ=${result.sigma})`,
         },
       ],
     }
@@ -222,40 +225,6 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
     onClose()
   }
 
-  const getSliderProps = (xValues, ref) => {
-    if (ref === "bodeMod" || ref === "bodeAng") {
-      // Eixo logarítmico
-      const min = Math.log10(Math.min(...xValues))
-      const max = Math.log10(Math.max(...xValues))
-      return {
-        min,
-        max,
-        step: 0.01,
-        scale: v => Math.pow(10, v),
-        valueLabelFormat: v => Number(Math.pow(10, v)).toPrecision(3),
-        marks: [
-          { value: min, label: Number(Math.pow(10, min)).toPrecision(2) },
-          { value: max, label: Number(Math.pow(10, max)).toPrecision(2) }
-        ]
-      }
-    } else {
-      // Linear
-      const min = Math.min(...xValues)
-      const max = Math.max(...xValues)
-      return {
-        min,
-        max,
-        step: step,
-        scale: v => v,
-        valueLabelFormat: v => v,
-        marks: [
-          { value: min, label: min },
-          { value: max, label: max }
-        ]
-      }
-    }
-  }
-
   let xValues = []
   if (ref === "cvChart") {
     xValues = datasets?.[datasetSelected]?.data[0]?.x || []
@@ -264,7 +233,15 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
   } else if (ref === "nyquist") {
     xValues = datasets?.[datasetSelected]?.data[0]?.realZ || []
   }
-  const sliderProps = getSliderProps(xValues, ref)
+
+  const isLogX = ref === "bodeMod" || ref === "bodeAng"
+  const logMin = Math.log10(Math.min(...xValues))
+  const logMax = Math.log10(Math.max(...xValues))
+
+  const sliderValue = isLogX ? range.map(v => Math.log10(v)) : range
+  const onSliderChange = (_, newValue) => {
+    setRange(isLogX ? newValue.map(v => Math.pow(10, v)) : newValue)
+  }
 
   return (
     <>
@@ -277,12 +254,25 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
             onChange={handleInterpolationTypeChange}
           >
             <MenuItem value="polinomial">Polynomial</MenuItem>
-            <MenuItem value="gaussiana">Gaussian</MenuItem>
+            {(ref === "bodeMod" || ref === "bodeAng") ? (
+              <Tooltip title="Gaussian interpolation is not available for logarithmic plots.">
+                <MenuItem value="gaussiana" disabled>Gaussian</MenuItem>
+              </Tooltip>
+            ) : (
+              <MenuItem value="gaussiana">Gaussian</MenuItem>
+            )}
+            {type === "CVW" || (type === "EIS" && ref === "nyquist") ? (
+              <Tooltip title="Logarithmic Spline interpolation is not available.">
+                <MenuItem value="logspline" disabled>Logarithmic Spline</MenuItem>
+              </Tooltip>
+            ) : (
+              <MenuItem value="logspline">Logarithmic Spline</MenuItem>
+            )}
           </Select>
         </FormControl>
       </Box>
 
-      {(interpolationType === "polinomial" || interpolationType === "gaussiana") && (
+      {(interpolationType === "polinomial" || interpolationType === "gaussiana" || interpolationType === "logspline") && (
         <Box sx={{ mt: 2 }}>
           {interpolationType === "polinomial" && (
             <>
@@ -311,31 +301,31 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
               </Select>
             </FormControl>
           )}
+
           <Typography gutterBottom>Interval of X:</Typography>
           <Slider
-            value={
-              (ref === "bodeMod" || ref === "bodeAng")
-                ? range.map(v => Math.log10(v))
-                : range
-            }
-            onChange={(_, newValue) => {
-              setRange(
-                (ref === "bodeMod" || ref === "bodeAng")
-                  ? newValue.map(v => Math.pow(10, v))
-                  : newValue
-              )
-            }}
-            min={sliderProps.min}
-            max={sliderProps.max}
-            step={sliderProps.step}
-            scale={sliderProps.scale}
-            valueLabelFormat={sliderProps.valueLabelFormat}
+            value={sliderValue}
+            onChange={onSliderChange}
+            min={isLogX ? logMin : Math.min(...xValues)}
+            max={isLogX ? logMax : Math.max(...xValues)}
+            step={isLogX ? 0.01 : step}
+            scale={isLogX ? (v => Math.pow(10, v)) : (v => v)}
+            valueLabelFormat={isLogX ? (v => Number(Math.pow(10, v)).toPrecision(3)) : (v => v)}
             valueLabelDisplay="auto"
-            marks={sliderProps.marks}
+            marks={[
+              {
+                value: isLogX ? logMin : Math.min(...xValues),
+                label: isLogX ? Number(Math.pow(10, logMin)).toPrecision(2) : Math.min(...xValues),
+              },
+              {
+                value: isLogX ? logMax : Math.max(...xValues),
+                label: isLogX ? Number(Math.pow(10, logMax)).toPrecision(2) : Math.max(...xValues),
+              },
+            ]}
           />
         </Box>
       )}
-      
+
       <Button
         onClick={handleConfirmInterpolation}
         color="primary"

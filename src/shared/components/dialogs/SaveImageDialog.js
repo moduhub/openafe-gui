@@ -100,7 +100,7 @@ export const SaveImageDialog = ({ open, onClose, onSave, availableCharts = [] })
           sx={{ mt: 2 }}
         />
         <Grid container spacing={2} sx={{ mt: 2 }}>
-          <Grid item xs={4}>
+          <Grid>
             <TextField
               label="Width of each graph (px)"
               type="number"
@@ -110,7 +110,7 @@ export const SaveImageDialog = ({ open, onClose, onSave, availableCharts = [] })
               disabled={useScreenResolution}
             />
           </Grid>
-          <Grid item xs={4}>
+          <Grid>
             <TextField
               label="Height of each graph (px)"
               type="number"
@@ -120,7 +120,7 @@ export const SaveImageDialog = ({ open, onClose, onSave, availableCharts = [] })
               disabled={useScreenResolution}
             />
           </Grid>
-          <Grid item xs={4}>
+          <Grid>
             <TextField
               label="DPI"
               type="number"

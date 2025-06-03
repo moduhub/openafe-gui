@@ -126,7 +126,6 @@ export const ImportDataset = ({ onClose }) => {
         }
         setError('')
         onClose()
-        console.log(datasets)
       } catch {
         setError('Error processing the JSON file. Check the format.')
       }

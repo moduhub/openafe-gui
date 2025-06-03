@@ -45,8 +45,6 @@ export const useClickHandler = (
 
             if (index === -1) return
 
-            console.log(pt)
-
             const pointData = {
               dataset: datasets.findIndex(ds => ds.name === datasetIndex.name), // índice real no array global
               type: datasetIndex.type,
@@ -76,8 +74,6 @@ export const useClickHandler = (
 
             handleSetDatasetSelected(pointData.dataset)
             handleSetIsDatasetSelected(true)
-
-            console.log(newPoints)
 
             return newPoints
           })

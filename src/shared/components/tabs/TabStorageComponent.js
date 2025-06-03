@@ -4,7 +4,6 @@ import {
   Button,
   useTheme,
   Typography,
-  Tabs, Tab
 } from '@mui/material'
 
 import RecordingIcon from '@mui/icons-material/FiberManualRecord'
@@ -15,88 +14,76 @@ import SaveAltIcon from '@mui/icons-material/SaveAlt'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import StartIcon from '@mui/icons-material/Start'
-
-import ImportExportIcon from '@mui/icons-material/ImportExport';
+import SettingsIcon from '@mui/icons-material/Settings'
+import ImportExportIcon from '@mui/icons-material/ImportExport'
 
 import { useTabStorage } from '../../hooks'
 
 import {
-  DeleteDialog, 
+  DeleteDialog,
   InterpolationComponent,
   ParametersComponent,
   PointsComponent,
   AreaMarkers,
   PointMarkers,
   ImportExportDialog,
-  LineEditorDialog
+  LineEditorDialog,
+  DatasetSelectorDialog,
 } from '..'
 
-/**
- * TabStorage component displays a list of datasets with controls for managing them
- * 
- * Features:
- * - Import and export datasets
- * - Delete datasets or their interpolations
- * - Toggle visibility of datasets and interpolations
- * - Navigate to filter tab for a selected dataset
- * - Shows current reading dataset indicator
- * 
- * @param {function} setTabIndex - Function to change the active tab index
- * 
- * @returns {JSX.Element}
- */
 export const TabStorage = ({ setTabIndex }) => {
   const theme = useTheme()
 
   const {
     datasets, datasetSelected,
     isReading,
-    datasetTab, setDatasetTab,  
-    
+
     openDialog, close, handleDelete,
     deleteDialogOpen, setDeleteDialogOpen, handleDeleteInterpolation,
     importExportDialogOpen, setImportExportDialogOpen, importExportType,
+    datasetSelectorOpen, handleOpenDatasetSelector, handleCloseDatasetSelector,
+
+    datasetTypes, handleDatasetSelected,
+    filterType, setFilterType,
+    showOnlyVisible, setShowOnlyVisible,
+    showOnlyHidden, setShowOnlyHidden,
+    hasPointMarkers, setHasPointMarkers,
+    hasAreaMarkers, setHasAreaMarkers,
+    hasInterpolations, setHasInterpolations,
 
     openLineEditor, closeLineEditor, handleChangeLine,
     lineEditorOpen,
     lineEditorInitial,
-  
+
     importExportDefaultIndex,
     filteredDatasets,
-    
+
     openDeleteDialog,
     handleToggleInterpolationVisibility,
-    handleOpenImportExportDialog,  
+    handleOpenImportExportDialog,
 
     toggleDatasetVisibility,
     handleOpenExportDialogWithIndex,
     open,
     handleOpenTabFilter,
   } = useTabStorage(setTabIndex)
-  
+
   return (
     <>
-      <DeleteDialog
-        open={openDialog}
-        onClose={close}
-        onDelete={handleDelete}
-      />
-      <DeleteDialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-        onDelete={handleDeleteInterpolation}
-      />
-      <ImportExportDialog
-        open={importExportDialogOpen}
-        onClose={() => setImportExportDialogOpen(false)}
-        type={importExportType}
-        defaultIndex={importExportDefaultIndex}
-      />
-      <LineEditorDialog
-        open={lineEditorOpen}
-        onClose={closeLineEditor}
-        initialLine={lineEditorInitial}
-        onSave={handleChangeLine}
+      <DeleteDialog open={openDialog} onClose={close} onDelete={handleDelete} />
+      <DeleteDialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} onDelete={handleDeleteInterpolation} />
+      <ImportExportDialog open={importExportDialogOpen} onClose={() => setImportExportDialogOpen(false)} type={importExportType} defaultIndex={importExportDefaultIndex} />
+      <LineEditorDialog open={lineEditorOpen} onClose={closeLineEditor} initialLine={lineEditorInitial} onSave={handleChangeLine} />
+      <DatasetSelectorDialog
+        open={datasetSelectorOpen} onClose={handleCloseDatasetSelector}
+        onSelect={handleDatasetSelected}
+        datasetTypes={datasetTypes}
+        filterType={filterType} setFilterType={setFilterType}
+        showOnlyVisible={showOnlyVisible} setShowOnlyVisible={setShowOnlyVisible}
+        showOnlyHidden={showOnlyHidden} setShowOnlyHidden={setShowOnlyHidden}
+        hasPointMarkers={hasPointMarkers} setHasPointMarkers={setHasPointMarkers}
+        hasAreaMarkers={hasAreaMarkers} setHasAreaMarkers={setHasAreaMarkers}
+        hasInterpolations={hasInterpolations} setHasInterpolations={setHasInterpolations}
       />
 
       <Box
@@ -107,7 +94,8 @@ export const TabStorage = ({ setTabIndex }) => {
           flexDirection: 'column',
         }}
       >
-        <Box sx={{ mb: 2, mt: 2 }}>
+
+        <Box sx={{ mb: 1, mt:2 }}>
           <Button
             onClick={() => handleOpenImportExportDialog()}
             variant="contained"
@@ -119,33 +107,30 @@ export const TabStorage = ({ setTabIndex }) => {
           </Button>
         </Box>
 
-        {/* Tabs para selecionar tipo de dataset */}
-        <Tabs
-          value={datasetTab}
-          onChange={(_, v) => setDatasetTab(v)}
-          variant="fullWidth"
-          sx={{ mb: 1 }}
-        >
-          <Tab label="CVW" />
-          <Tab label="EIS" />
-        </Tabs>
+        <Box sx={{ mb: 2}}>
+          <Button
+            onClick={handleOpenDatasetSelector}
+            variant="outlined"
+            startIcon={<SettingsIcon />}
+            fullWidth
+          >
+            Sort by
+          </Button>
+        </Box>
 
         {filteredDatasets.length === 0 ? (
           <Typography
             variant="body1"
             color="textSecondary"
             align="center"
-            sx={{
-              padding: theme.spacing(2),
-              marginTop: theme.spacing(2),
-            }}
+            sx={{ padding: theme.spacing(2), marginTop: theme.spacing(2) }}
           >
             There are no datasets in cache at the moment.
           </Typography>
         ) : (
           filteredDatasets.map((dataset, index) => {
             const originalIndex = datasets.findIndex(ds => ds === dataset)
-            const isCurrentDataset = isReading && datasetSelected === originalIndex;
+            const isCurrentDataset = isReading && datasetSelected === originalIndex
 
             return (
               <Accordion key={originalIndex}>
@@ -182,42 +167,32 @@ export const TabStorage = ({ setTabIndex }) => {
                     justifyContent="center"
                     overflow="hidden"
                   >
-                    {[
-                      {
-                        onClick: () => toggleDatasetVisibility(originalIndex),
-                        icon: datasets[originalIndex].visible ? <VisibilityOffIcon /> : <VisibilityIcon />,
-                        disabled: isReading
-                      },
-                      {
-                        onClick: () => handleOpenExportDialogWithIndex(originalIndex),
-                        icon: <SaveAltIcon />,
-                        disabled: isReading
-                      },
-                      {
-                        onClick: () => openLineEditor(originalIndex),
-                        icon: <EditIcon />,
-                        disabled: isReading
-                      },
-                      {
-                        onClick: () => open(originalIndex),
-                        icon: <DeleteIcon />,
-                        disabled: isReading
-                      },
-                      {
-                        onClick: () => handleOpenTabFilter(originalIndex),
-                        icon: <StartIcon />,
-                        disabled: isReading
-                      }
-                    ].map((btn, i) => (
+                    {[{
+                      onClick: () => toggleDatasetVisibility(originalIndex),
+                      icon: datasets[originalIndex].visible ? <VisibilityOffIcon /> : <VisibilityIcon />,
+                      disabled: isReading
+                    }, {
+                      onClick: () => handleOpenExportDialogWithIndex(originalIndex),
+                      icon: <SaveAltIcon />,
+                      disabled: isReading
+                    }, {
+                      onClick: () => openLineEditor(originalIndex),
+                      icon: <EditIcon />,
+                      disabled: isReading
+                    }, {
+                      onClick: () => open(originalIndex),
+                      icon: <DeleteIcon />,
+                      disabled: isReading
+                    }, {
+                      onClick: () => handleOpenTabFilter(originalIndex),
+                      icon: <StartIcon />,
+                      disabled: isReading
+                    }].map((btn, i) => (
                       <Button
                         key={i}
                         onClick={btn.onClick}
                         disabled={btn.disabled}
-                        sx={{
-                          minWidth: 'auto',
-                          justifyContent: 'space-between',
-                          width: '100%'
-                        }}
+                        sx={{ minWidth: 'auto', justifyContent: 'space-between', width: '100%' }}
                       >
                         {btn.icon}
                       </Button>

@@ -297,7 +297,7 @@ export const usePreviewAndInterpolations = (
           showlegend: false,
           paper_bgcolor: 'transparent',
           plot_bgcolor: theme.palette.background.paper,
-          margin: { l: 45, r: 45, t: 10, b: 20 },
+          margin: { l: 45, r: 45, t: 30, b: 30 },
           polar: {
             bgcolor: 'white',
             radialaxis: {

@@ -16,32 +16,32 @@ export const useTabStorage = (setTabIndex) => {
 
   const { isReading } = useArduinoContext()
 
+  const { openDialog, index, open, close } = useDeleteDialog()
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState({ datasetIndex: null, interpolationIndex: null })
-
-  const { openDialog, index, open, close } = useDeleteDialog()
 
   const [importExportDialogOpen, setImportExportDialogOpen] = useState(false)
   const [importExportType, setImportExportType] = useState(0)
   const [importExportDefaultIndex, setImportExportDefaultIndex] = useState(null)
 
-  const [datasetTab, setDatasetTab] = useState(0)
-  const datasetTypes = ['CVW', 'EIS']
-
   const [lineEditorOpen, setLineEditorOpen] = useState(false)
   const [lineEditorIndex, setLineEditorIndex] = useState(null)
-
   const [lineEditorInitial, setLineEditorInitial] = useState({})
+
+  const [datasetSelectorOpen, setDatasetSelectorOpen] = useState(false)
+
+  const datasetTypes = ['CVW', 'EIS']
+  const [filterType, setFilterType] = useState('ALL')
+  const [showOnlyVisible, setShowOnlyVisible] = useState(false)
+  const [showOnlyHidden, setShowOnlyHidden] = useState(false)
+  const [hasPointMarkers, setHasPointMarkers] = useState(false)
+  const [hasAreaMarkers, setHasAreaMarkers] = useState(false)
+  const [hasInterpolations, setHasInterpolations] = useState(false)
 
   const handleDelete = () => {
     if (index !== null) handleDeleteDataset(index)
     close()
-  }
-
-  const handleOpenTabFilter = (index) => {
-    handleSetDatasetSelected(index)
-    setTabIndex(1)
-    showOnlyDataset(index)
   }
 
   const openDeleteDialog = (datasetIndex, interpolationIndex) => {
@@ -52,18 +52,18 @@ export const useTabStorage = (setTabIndex) => {
   const handleDeleteInterpolation = () => {
     const { datasetIndex, interpolationIndex } = deleteTarget
     if (datasetIndex !== null && interpolationIndex !== null) {
-      const updatedDatasets = [...datasets]
-      updatedDatasets[datasetIndex].interpolations.splice(interpolationIndex, 1)
-      handleSetDataset(updatedDatasets)
+      const updated = [...datasets]
+      updated[datasetIndex].interpolations.splice(interpolationIndex, 1)
+      handleSetDataset(updated)
       setDeleteDialogOpen(false)
     }
   }
 
   const handleToggleInterpolationVisibility = (datasetIndex, interpolationIndex) => {
-    const updatedDatasets = [...datasets]
-    const interpolation = updatedDatasets[datasetIndex].interpolations[interpolationIndex]
+    const updated = [...datasets]
+    const interpolation = updated[datasetIndex].interpolations[interpolationIndex]
     interpolation.isVisible = !interpolation.isVisible
-    handleSetDataset(updatedDatasets)
+    handleSetDataset(updated)
   }
 
   const handleOpenImportExportDialog = () => {
@@ -92,41 +92,80 @@ export const useTabStorage = (setTabIndex) => {
 
   const handleChangeLine = (lineConfig) => {
     if (lineEditorIndex === null) return
-    const updatedDatasets = [...datasets]
-    if (!updatedDatasets[lineEditorIndex].data[0].line)
-      updatedDatasets[lineEditorIndex].data[0].line = {}
-    updatedDatasets[lineEditorIndex].data[0].line.color = lineConfig.color
-    updatedDatasets[lineEditorIndex].data[0].line.dash = lineConfig.dash
-    updatedDatasets[lineEditorIndex].data[0].line.width = lineConfig.width
-    updatedDatasets[lineEditorIndex].data[0].mode = 'lines'
-    handleSetDataset(updatedDatasets)
+    const updated = [...datasets]
+    if (!updated[lineEditorIndex].data[0].line)
+      updated[lineEditorIndex].data[0].line = {}
+    updated[lineEditorIndex].data[0].line.color = lineConfig.color
+    updated[lineEditorIndex].data[0].line.dash = lineConfig.dash
+    updated[lineEditorIndex].data[0].line.width = lineConfig.width
+    updated[lineEditorIndex].data[0].mode = 'lines'
+    handleSetDataset(updated)
     closeLineEditor()
   }
 
-  const filteredDatasets = datasets.filter(ds => ds.type === datasetTypes[datasetTab])
+  const handleOpenDatasetSelector = () => {
+    setDatasetSelectorOpen(true)
+  }
+
+  const handleCloseDatasetSelector = () => {
+    setDatasetSelectorOpen(false)
+  }
+
+  const handleDatasetSelected = (type) => {
+    setFilterType(type)
+  }
+
+  const handleOpenTabFilter = (index) => {
+    handleSetDatasetSelected(index)
+    setTabIndex(1)
+    showOnlyDataset(index)
+  }
+
+  const filteredDatasets = datasets.filter(ds => {
+    const matchType = filterType === 'ALL' || ds.type === filterType
+    const matchVisibility = (!showOnlyVisible || ds.visible) && (!showOnlyHidden || !ds.visible)
+    const matchMarkers = !hasPointMarkers || (ds.markers && ds.markers.length > 0)
+    const matchAreas = !hasAreaMarkers || (ds.areas && ds.areas.length > 0)
+    const matchInterpolations = !hasInterpolations || (ds.interpolations && ds.interpolations.length > 0)
+
+    return matchType && matchVisibility && matchMarkers && matchAreas && matchInterpolations
+  })
 
   return {
-    datasets, datasetSelected,
-    isReading,
-    datasetTab, setDatasetTab,  
-    
+    datasets, datasetSelected, isReading,
+
+    // Dataset Actions
+    toggleDatasetVisibility,
+    handleOpenTabFilter,
+    handleOpenExportDialogWithIndex,
+    handleOpenImportExportDialog,
+
+    // Dialogs
     openDialog, close, handleDelete,
     deleteDialogOpen, setDeleteDialogOpen, handleDeleteInterpolation,
-    importExportDialogOpen, setImportExportDialogOpen, importExportType,
+    openDeleteDialog,
+    importExportDialogOpen, setImportExportDialogOpen, importExportType, importExportDefaultIndex,
+
+    // Sorts
+    datasetSelectorOpen, handleOpenDatasetSelector, handleCloseDatasetSelector,
+    datasetTypes, handleDatasetSelected,
+    filterType, setFilterType,
+    showOnlyVisible, setShowOnlyVisible,
+    showOnlyHidden, setShowOnlyHidden,
+    hasPointMarkers, setHasPointMarkers,
+    hasAreaMarkers, setHasAreaMarkers,
+    hasInterpolations, setHasInterpolations,
+
+    // Line Editor
     openLineEditor, closeLineEditor, handleChangeLine,
-  
-    importExportDefaultIndex,
+    lineEditorOpen, lineEditorInitial,
+
+    // Sorted datasets
     filteredDatasets,
     
-    openDeleteDialog,
-    handleToggleInterpolationVisibility,
-    handleOpenImportExportDialog,  
-    lineEditorOpen,
-    lineEditorInitial,
-
-    toggleDatasetVisibility,
-    handleOpenExportDialogWithIndex,
+    // Access to reusable dialog
     open,
-    handleOpenTabFilter,
+
+    handleToggleInterpolationVisibility,
   }
 }
