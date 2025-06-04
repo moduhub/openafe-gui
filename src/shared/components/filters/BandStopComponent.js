@@ -1,167 +1,164 @@
 import { useEffect, useState, useMemo } from "react"
-import {
-    Box,
-    Stack,
-    Typography,
-    TextField,
-    InputAdornment,
-    Slider
-} from '@mui/material'
-
+import { Box, Stack, Typography, Slider, TextField, InputAdornment } from '@mui/material'
 import { useDatasetsContext } from '../../contexts'
 
 /**
- * A component that applies a band-stop (notch) filter to the currently visible dataset
- * and previews the filtered signal. Users can configure the lower and upper cutoff frequencies,
- * and the component applies a simple IIR-based notch filter using a combination of low-pass
- * and high-pass filters
+ * Componente que aplica filtro rejeita-faixa (notch) de ordem n
+ * tanto no domínio do tempo (CVW) quanto no domínio da frequência (EIS).
+ * Baseado em combinação de filtros passa-baixa e passa-alta RC em série.
  *
- * @param {(filtered: { x: number[], y: number[] }) => void} setPreviewFilter - 
- *        Callback to provide the filtered signal for preview.
- *
- * @returns {JSX.Element}
+ * @param {(filtered: { x: number[], y: number[] }) => void} setPreviewFilter
+ * @param {string} dataType - "cvw", "bodeMod", "bodeAng" ou "nyquist"
  */
-export const BandStop = ({ setPreviewFilter }) => {
-    const { datasets } = useDatasetsContext()
-    const [lowCutoffFrequency, setLowCutoffFrequency] = useState(10)
-    const [highCutoffFrequency, setHighCutoffFrequency] = useState(50)
-    const [order, setOrder] = useState(1) 
+export const BandStop = ({ setPreviewFilter, dataType = "cvw" }) => {
+  const { datasets } = useDatasetsContext()
+  const [lowCut, setLowCut] = useState(10)
+  const [highCut, setHighCut] = useState(50)
+  const [order, setOrder] = useState(1)
 
-    const calculateBandStop = (x, y, lowCutoffFreq, highCutoffFreq, fs, order = 1) => {
-        let lowPassed = [...y]
-        let highPassed = [...y]
+  const visible = useMemo(() => {
+    const ds = datasets.find(d => d.visible)?.data?.[0]
+    if (!ds) return { x: [], y: [] }
+    switch (dataType) {
+      case "cvw":
+        return { x: ds.x || [], y: ds.y || [] }
+      case "bodeMod":
+        return { x: ds.omega || [], y: (ds.modZ || []).map(v => 20 * Math.log10(Math.max(v,1e-12))) }
+      case "bodeAng":
+        return { x: ds.omega || [], y: ds.angZ || [] }
+      case "nyquist":
+        return { x: ds.omega || [], y: (ds.realZ||[]).map((r,i)=>({ re: r, im: ds.imagZ?.[i]||0 })) }
+      default:
+        return { x: [], y: [] }
+    }
+  }, [datasets, dataType])
 
-        for (let n = 0; n < order; n++) {
-            const RC_low = 1 / (2 * Math.PI * lowCutoffFreq)
-            const dt = 1 / fs
-            const alpha_low = dt / (RC_low + dt)
-            let filtered = []
-            filtered[0] = lowPassed[0]
-            for (let i = 1; i < lowPassed.length; i++) {
-                filtered[i] = filtered[i-1] + alpha_low * (lowPassed[i] - filtered[i-1])
-            }
-            lowPassed = filtered
-        }
+  function rcFilter(data, xAxis, cutoff, isHigh = false) {
+    if (!data.length) return []
+    let out = [data[0]]
+    for (let i = 1; i < data.length; i++) {
+      const dt = xAxis[i] - xAxis[i-1]
+      const RC = 1/(2*Math.PI*cutoff)
+      const alpha = isHigh ? RC/(RC+dt) : dt/(RC+dt)
+      if (isHigh) {
+        out[i] = alpha*(out[i-1] + data[i] - data[i-1])
+      } else {
+        out[i] = out[i-1] + alpha*(data[i] - out[i-1])
+      }
+    }
+    return out
+  }
 
-        for (let n = 0; n < order; n++) {
-            const RC_high = 1 / (2 * Math.PI * highCutoffFreq)
-            const dt = 1 / fs
-            const alpha_high = RC_high / (RC_high + dt)
-            let filtered = []
-            filtered[0] = highPassed[0]
-            for (let i = 1; i < highPassed.length; i++) {
-                filtered[i] = alpha_high * (filtered[i-1] + highPassed[i] - highPassed[i-1])
-            }
-            highPassed = filtered
-        }
+  function estimateFs(x) {
+    if (x.length<2) return 1
+    const diffs = x.slice(1).map((v,i)=>Math.abs(v-x[i]))
+    const mean = diffs.reduce((a,b)=>a+b,0)/diffs.length
+    return mean?1/mean:1
+  }
 
-        const result = {
-            x: [...x],
-            y: lowPassed.map((low, i) => (low + highPassed[i]))
-        }
-        return result
+  useEffect(() => {
+    if (!visible.x.length || !visible.y.length) {
+      setPreviewFilter({ x: [], y: [] });
+      return
+    }
+    let fs = 1
+    if (dataType === 'cvw') {
+      const ds = datasets.find(d=>d.visible)
+      const { scanRate, step } = ds?.params || {}
+      if (scanRate && step) fs = scanRate/step
+    } else {
+      fs = estimateFs(visible.x)
     }
 
-    const visibleDataset = useMemo(
-        () => datasets.find(d => d.visible),
-        [datasets]
-    )
+    let y = []
+    let xOut = [...visible.x]
+    if (dataType === 'nyquist') {
+      // separar real/imaginário
+      const re = visible.y.map(p=>p.re)
+      const im = visible.y.map(p=>p.im)
+      let reFilt = [...re]
+      let imFilt = [...im]
+      const axis = dataType==='cvw' ? visible.x.map((_,i)=>i/fs) : visible.x
+      for (let n=0;n<order;n++) {
+        reFilt = rcFilter(rcFilter(reFilt, axis, lowCut), axis, highCut, true)
+        imFilt = rcFilter(rcFilter(imFilt, axis, lowCut), axis, highCut, true)
+      }
+      y = imFilt
+      xOut = reFilt
+    } else {
+      const data = [...visible.y]
+      const axis = dataType==='cvw' ? visible.x.map((_,i)=>i/fs) : visible.x
+      y = [...data]
+      for (let n=0;n<order;n++) {
+        // primeiro low-pass, depois high-pass para rejeitar banda
+        y = rcFilter(y, axis, lowCut)
+        y = rcFilter(y, axis, highCut, true)
+      }
+    }
 
-    useEffect(() => {
-        if (!visibleDataset?.data?.[0]?.x?.length || !visibleDataset?.data?.[0]?.y?.length) {
-            setPreviewFilter({ x: [], y: [] })
-            return
-        }
+    setPreviewFilter({ x: xOut, y })
+  }, [lowCut, highCut, order, visible, datasets, dataType, setPreviewFilter])
 
-        const { scanRate, step } = visibleDataset.params || {}
-        if (!scanRate || !step) return
+  const isEIS = dataType !== 'cvw'
 
-        const fs = scanRate / step
+  return (
+    <Box>
+      <Box sx={{ mt:1,p:2, borderRadius:1, backgroundColor:'white' }}>
+        <Stack spacing={2}>
+          <Typography variant="h6">BandStop Filter</Typography>
 
-        const filteredSignal = calculateBandStop(
-            visibleDataset.data[0].x,
-            visibleDataset.data[0].y,
-            lowCutoffFrequency,
-            highCutoffFrequency,
-            fs,
-            order 
-        )
+          <Box>
+            <Typography variant="body2">Low Cutoff (Hz):</Typography>
+            <Slider
+              value={lowCut}
+              onChange={(_,v)=>setLowCut(v)}
+              min={isEIS?0.1:1}
+              max={isEIS?Math.max(...visible.x):100}
+              step={isEIS?0.1:1}
+              valueLabelDisplay="auto"
+            />
+            <TextField
+              label="Low Cutoff"
+              type="number"
+              value={lowCut}
+              onChange={e=>setLowCut(Number(e.target.value))}
+              InputProps={{ endAdornment:<InputAdornment>Hz</InputAdornment> }}
+              size="small" fullWidth
+            />
+          </Box>
 
-        setPreviewFilter(filteredSignal)
+          <Box>
+            <Typography variant="body2">High Cutoff (Hz):</Typography>
+            <Slider
+              value={highCut}
+              onChange={(_,v)=>setHighCut(v)}
+              min={lowCut+ (isEIS?0.1:1)}
+              max={isEIS?Math.max(...visible.x):100}
+              step={isEIS?0.1:1}
+              valueLabelDisplay="auto"
+            />
+            <TextField
+              label="High Cutoff"
+              type="number"
+              value={highCut}
+              onChange={e=>setHighCut(Number(e.target.value))}
+              InputProps={{ endAdornment:<InputAdornment>Hz</InputAdornment> }}
+              size="small" fullWidth
+            />
+          </Box>
 
-    }, [lowCutoffFrequency, highCutoffFrequency, order, visibleDataset, setPreviewFilter])
-
-    return (
-        <Box>
-            <Box sx={{ mt: 1, p: 2, borderRadius: 1, backgroundColor: 'white', height: '100%' }}>
-                <Stack spacing={2}>
-                    <Typography variant="h6" sx={{ fontSize: '1.125rem' }}>
-                        BandStop Filter
-                    </Typography>
-
-                    <Box>
-                        <Typography variant="body2" gutterBottom>
-                            Lower Cut (Hz):
-                        </Typography>
-                        <TextField
-                            label="Lower Cut Frequency"
-                            type="number"
-                            value={lowCutoffFrequency}
-                            onChange={(e) => {
-                                const value = Math.max(1, Math.min(Number(e.target.value), highCutoffFrequency))
-                                setLowCutoffFrequency(value)
-                            }}
-                            InputProps={{
-                                endAdornment: <InputAdornment position="end">Hz</InputAdornment>,
-                                inputProps: { min: 1 }
-                            }}
-                            size="small"
-                            fullWidth
-                        />
-                    </Box>
-
-                    <Box>
-                        <Typography variant="body2" gutterBottom>
-                            Higher cut (Hz):
-                        </Typography>
-                        <TextField
-                            label="Higher Cutoff Frequency"
-                            type="number"
-                            value={highCutoffFrequency}
-                            onChange={(e) => {
-                                const value = Math.max(lowCutoffFrequency, Math.min(Number(e.target.value), 100))
-                                setHighCutoffFrequency(value)
-                            }}
-                            InputProps={{
-                                endAdornment: <InputAdornment position="end">Hz</InputAdornment>,
-                                inputProps: { min: 1 }
-                            }}
-                            size="small"
-                            fullWidth
-                        />
-                    </Box>
-
-                    <Box>
-                        <Typography variant="body2">
-                            Filter order:
-                        </Typography>
-                        <Slider
-                            type="range"
-                            min={1}
-                            max={7}
-                            step={1}
-                            marks={[
-                                { value: 1, label: '1' },
-                                { value: 4, label: '4' },
-                                { value: 7, label: '7' },
-                            ]}
-                            value={order}
-                            onChange={e => setOrder(Number(e.target.value))}
-                            style={{ width: '100%' }}
-                        />
-                    </Box>
-                </Stack>
-            </Box>
-        </Box>
-    )
+          <Box>
+            <Typography variant="body2">Order (n):</Typography>
+            <Slider
+              value={order}
+              onChange={(_,v)=>setOrder(v)}
+              min={1} max={10} step={1}
+              marks={[{value:1,label:'1'},{value:5,label:'5'},{value:10,label:'10'}]}
+              valueLabelDisplay="auto"
+            />
+          </Box>
+        </Stack>
+      </Box>
+    </Box>
+  )
 }

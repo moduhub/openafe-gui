@@ -116,10 +116,14 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
         Math.pow(10, logStart + (logEnd - logStart) * (i / (nPoints - 1)))
       )
     } else {
-      return Array.from({ length: nPoints }, (_, i) =>
-        xStart + (xEnd - xStart) * (i / (nPoints - 1))
-      )
-    }
+      const points = []
+      let current = xStart
+      while (current <= xEnd + step / 2) { 
+        points.push(Number(current.toFixed(12)))
+        current += step
+      }
+      return points
+      }
   }
 
   const handleConfirmInterpolation = () => {
@@ -128,30 +132,39 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
     let yValues = []
     let isLogX = false
     let isYdB = false
+    let filtered = []
+    let interpX = []
+    let interpY = []
 
     if (ref === "cvChart") {
       xValues = ds.x || []
       yValues = ds.y || []
-    } else if (ref === "bodeMod") {
-      xValues = ds.omega || []
-      yValues = ds.modZ || []
-      isLogX = true
-      isYdB = true
-    } else if (ref === "bodeAng") {
-      xValues = ds.omega || []
-      yValues = ds.angZ || []
-      isLogX = true
-    } else if (ref === "nyquist") {
-      xValues = ds.realZ || []
-      yValues = ds.imagZ || []
+
+      const [startIdx, endIdx] = points[0] < points[1] ? points : [points[1], points[0]]
+      interpX = xValues.slice(startIdx, endIdx + 1)
+      interpY = yValues.slice(startIdx, endIdx + 1)
     }
-
-    const filtered = xValues
-      .map((x, i) => ({ x, y: yValues[i] }))
-      .filter(({ x }) => x >= range[0] && x <= range[1])
-
-    const interpX = filtered.map(p => p.x)
-    let interpY = filtered.map(p => p.y)
+    else{
+      if (ref === "bodeMod") {
+        xValues = ds.omega || []
+        yValues = ds.modZ || []
+        isLogX = true
+        isYdB = true
+      } 
+      else if (ref === "bodeAng") {
+        xValues = ds.omega || []
+        yValues = ds.angZ || []
+        isLogX = true
+      } 
+      else if (ref === "nyquist") {
+        xValues = ds.realZ || []
+        yValues = ds.imagZ || []
+      }
+      interpX = filtered.map(p => p.x)
+      interpY = filtered.map(p => p.y)
+      filtered = xValues.map((x, i) => ({ x, y: yValues[i] }))
+        .filter(({ x }) => x >= range[0] && x <= range[1])
+    }    
 
     if (isYdB) {
       interpY = interpY.map(v => Math.max(v, 1e-12))
@@ -176,7 +189,6 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
     } else if (interpolationType === "logspline") {
       result = calculateLogSplineInterpolation(interpX, interpY, interpRangeX)
     }
-
     let interpolatedY = result.interpolatedY
     if (isYdB) {
       interpolatedY = interpolatedY.map(v => 20 * Math.log10(Math.max(v, 1e-12)))

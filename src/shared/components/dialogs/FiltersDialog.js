@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   Dialog,
   Box,
@@ -60,11 +60,14 @@ export const FiltersDialog = ({ open, onClose }) => {
     const datasetFiltered = datasets[datasetSelected]
     if (!datasetFiltered) return
 
+    
     handleNewDataset(
       `${filtersConfig[activeTab].label} de ${datasetFiltered.name}`,
       datasetFiltered.params,
-      previewFilter
+      previewFilter,
+      datasetFiltered.type
     )
+
     setPreviewFilter({ x: [], y: [] })
     onClose()
   }

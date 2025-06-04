@@ -179,8 +179,6 @@ export const DataSetsProvider = ({ children }) => {
             : dataset
         )
       )
-      console.log("marcação adicionada com sucesso")
-      console.log(marker)
     }
     
     let data_ = []
@@ -200,6 +198,7 @@ export const DataSetsProvider = ({ children }) => {
           }]
   
     cacheDatasetsManager()
+
     setDatasets((prevDatasets) => [
       ...prevDatasets,
       {
@@ -221,7 +220,7 @@ export const DataSetsProvider = ({ children }) => {
 
   }
 
-  const handleNewDataset = (name_, parameters_, points_) => {
+  const handleNewDataset = (name_, parameters_, points_, type_) => {
     const visible_ = true
     const handleSetIsVisible = () => {
       setDatasets((prevDatasets) =>
@@ -233,22 +232,79 @@ export const DataSetsProvider = ({ children }) => {
       )
     }
 
+    const addInterpolation = (interpolation) => {
+      setDatasets((prevDatasets) =>
+        prevDatasets.map((dataset) =>
+          dataset.name === name_
+            ? {
+                ...dataset,
+                interpolations: [...dataset.interpolations, interpolation],
+              }
+            : dataset
+        )
+      )
+    }
+
+    const addAreaMarker = (area) => {
+      setDatasets((prevDatasets) =>
+        prevDatasets.map((dataset) =>
+          dataset.name === name_
+            ? {
+                ...dataset,
+                areas: [...dataset.areas, area],
+              }
+            : dataset
+        )
+      )
+    }
+
+    const addPointMarker = (marker) =>{
+      setDatasets((prevDatasets) =>
+        prevDatasets.map((dataset) =>
+          dataset.name === name_
+            ? {
+                ...dataset,
+                markers: [...dataset.markers, marker],
+              }
+            : dataset
+        )
+      )
+    }
+
     cacheDatasetsManager()
+
+    let data_ = []
+    if(type_ === "CVW")
+      data_ = [{
+            x: points_.x, y: points_.y,
+            mode: 'lines',
+            line: null,
+            name: name_,
+          }]
+    else if (type_ === "EIS")
+      data_ = [{
+            omega: points_.omega, modZ: points_.modZ, angZ: points_.angZ, realZ: points_.realZ, imagZ: points_.imagZ,
+            mode: 'lines',
+            line: null,
+            name: name_,
+          }]
+    
     setDatasets((prevDatasets) => [
       ...prevDatasets,
       {
         name: name_,
+        type: type_,
         params: parameters_,
+        params_e: [],
         visible: visible_,
         setIsVisible: handleSetIsVisible,
-        data: [
-          {
-            x: points_.x,
-            y: points_.y,
-            mode: 'lines',
-            line: { color: theme.palette.primary.main },
-          },
-        ],
+        addInterpolation: addInterpolation,
+        addAreaMarker: addAreaMarker,
+        addPointMarker: addPointMarker,
+        interpolations: [],
+        areas: [],
+        markers: [],
+        data: data_,
       },
     ])
   }
@@ -451,10 +507,8 @@ export const DataSetsProvider = ({ children }) => {
     // Data start
     if(arduinoData.startsWith('$CVS'))
       setNewDataSet(currentName, currentParams, "CVW")
-    else if(arduinoData.startsWith('$ESS')){
-      console.log("Nova medida")
+    else if(arduinoData.startsWith('$ESS'))
       setNewDataSet(currentName, currentParams, "EIS")
-    }
     
     // Data end
     else if(arduinoData.startsWith('$END') || arduinoData.startsWith('$EBF')){

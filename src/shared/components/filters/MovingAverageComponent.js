@@ -14,31 +14,24 @@ import { useDatasetsContext } from '../../contexts'
  *
  * @param {(filtered: { x: number[], y: number[] }) => void} setPreviewFilter -
  *        Callback to update the filtered signal preview.
+ * @param {string} dataType - "cvw", "bodeMod", "bodeAng", "nyquist"
  *
  * @returns {JSX.Element}
  */
-export const MovingAverage = ({ setPreviewFilter }) => {
+export const MovingAverage = ({ setPreviewFilter, dataType = "cvw" }) => {
   const { datasets } = useDatasetsContext()
   const [windowSize, setWindowSize] = useState(3)
 
-  const calculateMovingAverage = (x, y, window) => {
-    const result = { x: [], y: [] }
-    const half = Math.floor(window / 2)
-    for (let i = 0; i < y.length; i++) {
-      const start = Math.max(0, i - half)
-      const end = Math.min(y.length, i + half + 1)
-      const slice = y.slice(start, end)
-      const avg = slice.reduce((sum, v) => sum + v, 0) / slice.length
-      result.x.push(x[i])
-      result.y.push(avg)
-    }
-    return result
-  }
-
-  const visible = useMemo(
-    () => datasets.find(d => d.visible)?.data?.[0] || { x: [], y: [] },
-    [datasets]
-  )
+  // Seleciona os dados corretos conforme o tipo de gráfico
+  const visible = useMemo(() => {
+    const ds = datasets.find(d => d.visible)?.data?.[0]
+    if (!ds) return { x: [], y: [] }
+    if (dataType === "cvw") return { x: ds.x || [], y: ds.y || [] }
+    if (dataType === "bodeMod") return { x: ds.omega || [], y: (ds.modZ || []).map(v => 20 * Math.log10(Math.max(v, 1e-12))) }
+    if (dataType === "bodeAng") return { x: ds.omega || [], y: ds.angZ || [] }
+    if (dataType === "nyquist") return { x: ds.realZ || [], y: ds.imagZ || [] }
+    return { x: [], y: [] }
+  }, [datasets, dataType])
 
   const maxWindow = useMemo(
     () => Math.min(21, visible.x.length || 21),
@@ -57,8 +50,18 @@ export const MovingAverage = ({ setPreviewFilter }) => {
       return
     }
 
-    const filtered = calculateMovingAverage(visible.x, visible.y, adjusted)
-    setPreviewFilter(filtered)
+    // Média móvel padrão
+    const result = { x: [], y: [] }
+    const half = Math.floor(adjusted / 2)
+    for (let i = 0; i < visible.y.length; i++) {
+      const start = Math.max(0, i - half)
+      const end = Math.min(visible.y.length, i + half + 1)
+      const slice = visible.y.slice(start, end)
+      const avg = slice.reduce((sum, v) => sum + v, 0) / slice.length
+      result.x.push(visible.x[i])
+      result.y.push(avg)
+    }
+    setPreviewFilter(result)
   }, [windowSize, visible, maxWindow, setPreviewFilter])
 
   const handleSlider = (_e, val) => {

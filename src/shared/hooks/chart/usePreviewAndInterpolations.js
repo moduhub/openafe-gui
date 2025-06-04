@@ -67,6 +67,17 @@ export const usePreviewAndInterpolations = (
               const y = ds.data[0].modZ.slice(a.start, a.end + 1).map(v => 20 * Math.log10(Math.max(v, 1e-12)))
               data.push({ x, y, mode: 'lines', fill: 'tozeroy', name: `Área ${idx+1}`, showlegend: false })
             })
+
+          // Preview overlay
+          if (previewData?.bodeMod?.x && previewData?.bodeMod?.y) {
+            data.push({
+              x: previewData.bodeMod.x,
+              y: previewData.bodeMod.y,
+              mode: 'lines',
+              name: 'Preview',
+              line: { color: theme.palette.secondary.main, dash: 'dot', width: 2 }
+            })
+          }
         }
         else if (currentName === 'bodeAng') {
           // Bode phase
@@ -106,6 +117,17 @@ export const usePreviewAndInterpolations = (
               const y = ds.data[0].angZ.slice(a.start, a.end + 1)
               data.push({ x, y, mode: 'lines', fill: 'tozeroy', name: `Área ${idx+1}`, showlegend: false })
             })
+          
+          // Preview overlay
+          if (previewData?.bodeAng?.x && previewData?.bodeAng?.y) {
+            data.push({
+              x: previewData.bodeAng.x,
+              y: previewData.bodeAng.y,
+              mode: 'lines',
+              name: 'Preview',
+              line: { color: theme.palette.secondary.main, dash: 'dot', width: 2 }
+            })
+          }
         }
         else if (currentName === 'nyquist') {
           // Nyquist
@@ -214,6 +236,17 @@ export const usePreviewAndInterpolations = (
             })
 
             // Preview overlay
+            if (previewData?.nyquist?.x && previewData?.nyquist?.y) {
+              data.push({
+                x: previewData.nyquist.x,
+                y: previewData.nyquist.y,
+                mode: 'lines',
+                name: 'Preview',
+                line: { color: theme.palette.secondary.main, dash: 'dot', width: 2 }
+              })
+            }
+
+            // Preview overlay
             if (previewData?.x && previewData?.y && previewData.x.length && previewData.y.length) {
               if (isPolar) {
                 const r = previewData.x.map((x, i) => Math.sqrt(x * x + previewData.y[i] * previewData.y[i]))
@@ -252,7 +285,7 @@ export const usePreviewAndInterpolations = (
           })
 
           // Interpolations
-          ds.interpolations?.filter(i => i.isVisible && (i.ref === 'cvChart' || !i.ref))
+          ds.interpolations?.filter(i => i.isVisible)
             .forEach(i => data.push({
               x: i.data[0].x,
               y: i.data[0].y,
@@ -316,7 +349,8 @@ export const usePreviewAndInterpolations = (
           },
           autosize: true,
         }
-      } else {
+      } 
+      else {
         layout = {
           font: { size: 14, color: theme.palette.text.primary },
           showlegend: false,
