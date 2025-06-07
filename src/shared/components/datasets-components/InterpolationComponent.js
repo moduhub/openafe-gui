@@ -51,7 +51,8 @@ export const InterpolationComponent = ({
         const { 
           name, type, typeCalculate, 
           data, order, coefficients, 
-          sigma, mu, amplitude 
+          sigma, mu, amplitude,
+          logKnots
         } = interpolation
         const title = name || `${type} ${i + 1}`
         const xArray = data?.[0]?.x || []
@@ -163,6 +164,72 @@ export const InterpolationComponent = ({
                       </Box>
                     </Stack>
                   </Box>
+                </>
+              )}
+
+              {type ==='logspline' &&(
+                <>
+                <Accordion sx={{ boxShadow: 'none' }}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Typography variant="subtitle2">Log Knots</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    {logKnots && logKnots.length > 0 ? (
+                      <Stack direction="column" spacing={1}>
+                        {logKnots.map((c, idx) => (
+                          <Box key={idx} display="flex" alignItems="center" gap={1}>
+                            <Typography variant="body2" sx={{ minWidth: 30 }}>{`a${idx}:`}</Typography>
+                            <Chip label={c.toFixed(4)} size="small" />
+                          </Box>
+                        ))}
+                      </Stack>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        No value available
+                      </Typography>
+                    )}
+                  </AccordionDetails>
+                </Accordion>
+
+                <Divider />
+
+                <Accordion sx={{ boxShadow: 'none' }}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Typography variant="subtitle2">Coefficients</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    {coefficients && typeof coefficients === 'object' && Object.keys(coefficients).length > 0 ? (
+                      <Stack direction="column" spacing={1}>
+                        {Object.entries(coefficients).map(([key, values], idx) => (
+                          <Accordion key={idx} sx={{ boxShadow: 'none', pl: 1 }}>
+                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                              <Typography variant="body2">
+                                {key}
+                              </Typography>
+                            </AccordionSummary>
+                            <AccordionDetails>
+                              {Array.isArray(values) && values.length > 0 ? (
+                                <Stack direction="row" flexWrap="wrap" gap={1}>
+                                  {values.map((v, i) => (
+                                    <Chip key={i} label={v.toFixed(2)} size="small" />
+                                  ))}
+                                </Stack>
+                              ) : (
+                                <Typography variant="body2" color="text.secondary">
+                                  No data
+                                </Typography>
+                              )}
+                            </AccordionDetails>
+                          </Accordion>
+                        ))}
+                      </Stack>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        No coefficients available
+                      </Typography>
+                    )}
+                  </AccordionDetails>
+                </Accordion>
                 </>
               )}           
 

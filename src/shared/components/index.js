@@ -23,6 +23,8 @@ export * from './dialogs/FiltersDialog'
 export * from './dialogs/SaveImageDialog'
 export * from './dialogs/LineEditorDialog'
 export * from './dialogs/DatasetSelectorDialog'
+export * from './dialogs/AreaEditorDialog'
+export * from './dialogs/MarkerEditorDialog'
 
 export * from './external-data/ExportDatasetComponent'
 export * from './external-data/ImportDatasetComponent'

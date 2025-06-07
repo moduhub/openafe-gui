@@ -106,11 +106,13 @@ export const Dashboard = () => {
       onClose={handleCloseDialog}
       selectedPoints={selectedPoints}
     />
-    <AddMarkDialog
-      open={openMarkDialog}
-      onClose={handleCloseDialog}
-      point={selectedPoints[0]}
-    />
+    {openMarkDialog && selectedPoints.length > 0 && (
+      <AddMarkDialog
+        open={openMarkDialog}
+        onClose={handleCloseDialog}
+        point={selectedPoints[0]}
+      />
+    )}
 
     <Menu
       open={contextMenu !== null}
@@ -122,12 +124,12 @@ export const Dashboard = () => {
           : undefined
       }
     >
-      {selectedPoints.length === 1 && (
+      {selectedPoints?.length === 1 && (
         <MenuItem onClick={() => handleOpenDialogFromMenu("markers")}>
           Add Markup
         </MenuItem>
       )}
-      {selectedPoints.length === 2 && (
+      {selectedPoints?.length === 2 && (
         <Box>
           <MenuItem onClick={() => handleOpenDialogFromMenu("interpolation-area")}>
             New Interpolation / Calculate Area

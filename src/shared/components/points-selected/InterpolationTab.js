@@ -19,6 +19,7 @@ import {
   calculateGaussianInterpolationLS,
   calculateLogSplineInterpolation,
 } from "../../math-functions/"
+import newStyled from "@emotion/styled"
 
 /**
  * Interpolation Tab Component
@@ -43,7 +44,7 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
 
   const [interpolationType, setInterpolationType] = useState("")
   const [points, setPoints] = useState([])
-  const [range, setRange] = useState([start, end]) // sempre em escala linear real
+  const [range, setRange] = useState([start, end])
   const [polynomialOrder, setPolynomialOrder] = useState(1)
   const [gaussianMethod, setGaussianMethod] = useState("rbf")
   const [ref, setRef] = useState("cvChart")
@@ -109,6 +110,7 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
   }
 
   const generateInterpX = (xStart, xEnd, nPoints, isLog) => {
+
     if (isLog) {
       const logStart = Math.log10(xStart)
       const logEnd = Math.log10(xEnd)
@@ -132,17 +134,23 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
     let yValues = []
     let isLogX = false
     let isYdB = false
-    let filtered = []
+    let interpRangeX = []
     let interpX = []
     let interpY = []
 
+/*
     if (ref === "cvChart") {
       xValues = ds.x || []
       yValues = ds.y || []
 
       const [startIdx, endIdx] = points[0] < points[1] ? points : [points[1], points[0]]
+      const [startValue, endValue] = ds.x[startIdx] < ds.x[endIdx] ? [ds.x[startIdx],ds.x[endIdx]] : [ds.x[endIdx],ds.x[startIdx]]
+      for (let x = startValue; x <= endValue; x += 1) interpRangeX.push(x)     
+
       interpX = xValues.slice(startIdx, endIdx + 1)
       interpY = yValues.slice(startIdx, endIdx + 1)
+      isLogX = false
+      isYdB = false
     }
     else{
       if (ref === "bodeMod") {
@@ -155,29 +163,110 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
         xValues = ds.omega || []
         yValues = ds.angZ || []
         isLogX = true
+        isYdB = false
       } 
       else if (ref === "nyquist") {
         xValues = ds.realZ || []
         yValues = ds.imagZ || []
+        isLogX = false
+        isYdB = false
       }
+    
+      const [start, end] = range[0] < range[1] ? [range[0], range[1]] : [range[1], range[0]]
+
+      const filtered = xValues.map((x, i) => ({ x, y: yValues[i] }))
+        .filter(({ x }) => x >= start && x <= end)
+
       interpX = filtered.map(p => p.x)
       interpY = filtered.map(p => p.y)
-      filtered = xValues.map((x, i) => ({ x, y: yValues[i] }))
-        .filter(({ x }) => x >= range[0] && x <= range[1])
-    }    
 
-    if (isYdB) {
-      interpY = interpY.map(v => Math.max(v, 1e-12))
+      if (isYdB) 
+        interpY = interpY.map(v => Math.max(v, 1e-12))
+
+      let nPoints = interpX.length
+      if (isLogX && ds.omega) {
+        const stepForADecade = datasets[datasetSelected]?.params?.stepForADecade || 10
+        const decades = Math.log10(interpX[interpX.length - 1]) - Math.log10(interpX[0])
+        nPoints = Math.max(10, Math.round(decades * stepForADecade))
+      }
+
+      interpRangeX = generateInterpX(interpX[0], interpX[interpX.length - 1], nPoints, isLogX)
+    }   
+*/ 
+
+    //Linear
+    if (["cvChart", "nyquist"].includes(ref)) {
+      const [startIdx, endIdx] = points[0] < points[1] ? points : [points[1], points[0]]
+      
+      let xValues = []
+      let yValues = []
+      let startValue = 0
+      let endValue = 0
+
+      switch (ref) {
+        case "cvChart":
+          xValues = ds.x || []
+          yValues = ds.y || [];
+          [startValue, endValue] = ds.x[startIdx] < ds.x[endIdx]
+            ? [ds.x[startIdx], ds.x[endIdx]]
+            : [ds.x[endIdx], ds.x[startIdx]]
+          break
+
+        case "nyquist":
+          xValues = ds.realZ || []
+          yValues = ds.imagZ || [];
+          [startValue, endValue] = ds.realZ[startIdx] < ds.realZ[endIdx]
+            ? [ds.realZ[startIdx], ds.realZ[endIdx]]
+            : [ds.realZ[endIdx], ds.realZ[startIdx]]
+          break
+      }
+
+      for (let x = startValue; x <= endValue; x += 1) interpRangeX.push(x)
+
+      interpX = xValues.slice(startIdx, endIdx + 1)
+      interpY = yValues.slice(startIdx, endIdx + 1)
+      isLogX = false
+      isYdB = false
     }
+    // Nonlinear
+    else{
+      switch (ref) {
+        case "bodeMod":
+          xValues = ds.omega || []
+          yValues = ds.modZ || []
+          isLogX = true
+          isYdB = true
+          break
 
-    let nPoints = interpX.length
-    if (isLogX && ds.omega) {
-      const stepForADecade = datasets[datasetSelected]?.params?.stepForADecade || 10
-      const decades = Math.log10(interpX[interpX.length - 1]) - Math.log10(interpX[0])
-      nPoints = Math.max(10, Math.round(decades * stepForADecade))
+        case "bodeAng":
+          xValues = ds.omega || []
+          yValues = ds.angZ || []
+          isLogX = true
+          isYdB = false
+          break
+      }
+    
+      const [start, end] = range[0] < range[1] 
+        ? [range[0], range[1]] 
+        : [range[1], range[0]]
+
+      const filtered = xValues.map((x, i) => ({ x, y: yValues[i] }))
+        .filter(({ x }) => x >= start && x <= end)
+
+      interpX = filtered.map(p => p.x)
+      interpY = filtered.map(p => p.y)
+
+      if (isYdB) interpY = interpY.map(v => Math.max(v, 1e-12))
+
+      let nPoints = interpX.length
+      if (isLogX && ds.omega) {
+        const stepForADecade = datasets[datasetSelected]?.params?.stepForADecade || 10
+        const decades = Math.log10(interpX[interpX.length - 1]) - Math.log10(interpX[0])
+        nPoints = Math.max(10, Math.round(decades * stepForADecade))
+      }
+
+      interpRangeX = generateInterpX(interpX[0], interpX[interpX.length - 1], nPoints, isLogX)
     }
-
-    const interpRangeX = generateInterpX(interpX[0], interpX[interpX.length - 1], nPoints, isLogX)
 
     let result
     if (interpolationType === "polinomial") {
@@ -202,11 +291,12 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
           : interpolationType === "logspline"
             ? "Spline"
             : (gaussianMethod === "rbf") ? "RBF" : "LS",
-      order: interpolationType === "polinomial" ? polynomialOrder : undefined,
-      sigma: interpolationType === "gaussiana" ? result.sigma : undefined,
-      mu: interpolationType === "gaussiana" ? result.mu : undefined,
-      amplitude: interpolationType === "gaussiana" ? result.amplitude : undefined,
+      order: polynomialOrder?? undefined,
+      sigma: result.sigma?? undefined,
+      mu: result.mu?? undefined,
+      amplitude: result.amplitude?? undefined,
       coefficients: result.coefficients ?? undefined,
+      logKnots: result.logKnots?? undefined,
       isVisible: true,
       ref: ref,
       data: [
@@ -251,9 +341,9 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
   const logMax = Math.log10(Math.max(...xValues))
 
   const sliderValue = isLogX ? range.map(v => Math.log10(v)) : range
-  const onSliderChange = (_, newValue) => {
+
+  const onSliderChange = (_, newValue) => 
     setRange(isLogX ? newValue.map(v => Math.pow(10, v)) : newValue)
-  }
 
   return (
     <>
@@ -268,14 +358,18 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
             <MenuItem value="polinomial">Polynomial</MenuItem>
             {(ref === "bodeMod" || ref === "bodeAng") ? (
               <Tooltip title="Gaussian interpolation is not available for logarithmic plots.">
-                <MenuItem value="gaussiana" disabled>Gaussian</MenuItem>
+                <span>
+                  <MenuItem value="gaussiana" disabled>Gaussian</MenuItem>
+                </span>
               </Tooltip>
             ) : (
               <MenuItem value="gaussiana">Gaussian</MenuItem>
             )}
             {type === "CVW" || (type === "EIS" && ref === "nyquist") ? (
               <Tooltip title="Logarithmic Spline interpolation is not available.">
-                <MenuItem value="logspline" disabled>Logarithmic Spline</MenuItem>
+                <span>
+                  <MenuItem value="logspline" disabled>Logarithmic Spline</MenuItem>
+                </span>
               </Tooltip>
             ) : (
               <MenuItem value="logspline">Logarithmic Spline</MenuItem>

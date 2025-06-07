@@ -52,11 +52,11 @@ export const calculateLogSplineInterpolation = (xSlice, ySlice, interpRangeX) =>
     interpolatedX: interpRangeX,
     interpolatedY,
     logKnots: logX,
-    a: a.slice(0, n - 1),
-    b,
-    c: c.slice(0, n - 1),
-    d,
-    xMin: Math.min(...xSlice),
-    xMax: Math.max(...xSlice)
+    coefficients: {
+      a: a.slice(0, n - 1),
+      b,
+      c: c.slice(0, n - 1),
+      d,
+    }
   }
 }

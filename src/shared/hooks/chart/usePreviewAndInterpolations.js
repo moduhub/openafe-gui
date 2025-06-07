@@ -68,7 +68,10 @@ export const usePreviewAndInterpolations = (
             .forEach((a, idx) => {
               const x = ds.data[0].omega.slice(a.start, a.end + 1)
               const y = ds.data[0].modZ.slice(a.start, a.end + 1).map(v => 20 * Math.log10(Math.max(v, 1e-12)))
-              data.push({ x, y, mode: 'lines', fill: 'tozeroy', name: `Área ${idx+1}`, showlegend: false })
+              data.push({ 
+                x, y, mode: 'lines', fill: 'tozeroy',  line: { color: a.color || null },
+                name: a.label || `Área ${idx+1}`, showlegend: false 
+              })
             })
 
           // Preview overlay
@@ -114,7 +117,10 @@ export const usePreviewAndInterpolations = (
             .forEach((a, idx) => {
               const x = ds.data[0].omega.slice(a.start, a.end + 1)
               const y = ds.data[0].angZ.slice(a.start, a.end + 1)
-              data.push({ x, y, mode: 'lines', fill: 'tozeroy', name: `Área ${idx+1}`, showlegend: false })
+              data.push({ 
+                x, y, mode: 'lines', fill: 'tozeroy',  line: { color: a.color || null },
+                name: a.label || `Área ${idx+1}`, showlegend: false 
+              })
             })
           
           // Preview overlay
@@ -211,18 +217,16 @@ export const usePreviewAndInterpolations = (
                 const r = realZ.map((x, i) => Math.sqrt(x * x + imagZ[i] * imagZ[i]))
                 const theta = realZ.map((x, i) => Math.atan2(imagZ[i], x) * 180 / Math.PI)
                 data.push({
-                  r,
-                  theta,
-                  mode: 'lines',
-                  fill: 'tozeroy',
-                  name: `Área ${idx+1}`,
-                  showlegend: false,
-                  type: 'scatterpolar'
+                  r, theta, mode: 'lines', fill: 'tozeroy', line: { color: a.color || null },
+                  name: a.label || `Área ${idx+1}`, showlegend: false, type: 'scatterpolar'
                 })
               } else {
                 const x = ds.data[0].realZ.slice(a.start, a.end + 1)
                 const y = ds.data[0].imagZ.slice(a.start, a.end + 1)
-                data.push({ x, y, mode: 'lines', fill: 'tozeroy', name: `Área ${idx+1}`, showlegend: false })
+                data.push({ 
+                  x, y, mode: 'lines', fill: 'tozeroy',  line: { color: a.color || null },
+                  name: a.label || `Área ${idx+1}`, showlegend: false 
+                })
               }
             })
 
@@ -288,12 +292,16 @@ export const usePreviewAndInterpolations = (
               marker: { color: m.color, symbol: m.symbol, size: m.size }, name: m.label
             }))
 
+          
           // Areas
           ds.areas?.filter(a => a.isVisible)
             .forEach((a, idx) => {
               const x = ds.data[0].x.slice(a.start, a.end + 1)
               const y = ds.data[0].y.slice(a.start, a.end + 1)
-              data.push({ x, y, mode: 'lines', fill: 'tozeroy', name: `Área ${idx+1}`, showlegend: false })
+              data.push({ 
+                x, y, mode: 'lines', fill: 'tozeroy',  line: { color: a.color || null },
+                name: a.label || `Área ${idx+1}`, showlegend: false 
+              })
             })
 
           // Preview overlay

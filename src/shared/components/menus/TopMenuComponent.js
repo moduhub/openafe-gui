@@ -1,22 +1,12 @@
 import { useState } from 'react'
 import { 
-  Button, 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  useTheme, 
-  Box, 
-  Select, 
-  MenuItem, 
-  Tooltip,
-  Divider
+  Button, AppBar, Toolbar, Typography, useTheme, 
+  Box, Select, MenuItem, Tooltip, Divider
 } from '@mui/material'
 
 import { 
-  useDrawerContext, 
-  useArduinoContext,
-  useDashboardContext,
-  useDatasetsContext
+  useDrawerContext, useArduinoContext,
+  useDashboardContext, useDatasetsContext
 } from '../../contexts'
 import { DisconnectPort, ReceivePorts, ConnectPort } from '../../../arduino'
 import { useNavigate } from 'react-router-dom'
@@ -47,7 +37,7 @@ import { exportJPEG } from '../external-data/export-formats/exportJPEG'
  */
 export const TopMenu = ({ children }) => {
 
-  const { experimentType } = useDatasetsContext()
+  const { experimentType, datasets } = useDatasetsContext()
 
   const [openSaveImage, setOpenSaveImage] = useState(false)
 
@@ -61,7 +51,7 @@ export const TopMenu = ({ children }) => {
     portConnected,
     isConnected,
     isConnecting, 
-    isReading
+    isReading,
   } = useArduinoContext()
 
   const navigate = useNavigate()
@@ -158,19 +148,32 @@ export const TopMenu = ({ children }) => {
             <SdStorageIcon />
           </Button>
 
-          <Button
-            variant="contained"
-            style={{
-              marginRight: theme.spacing(1),
-              borderRadius: 0,
-              minWidth: "48px",
-              backgroundColor: (isReading) ? theme.palette.grey[400] : theme.palette.primary.main
-            }}
-            onClick={() => setOpenSaveImage(true)}
-            disabled={isReading}
+          <Tooltip
+            title={ isReading
+                ? "It is not possible to save while the data is being read"
+                : !(datasets?.length > 0)
+                  ? "No dataset available to save image"
+                  : "Save graph image"
+            }
           >
-            <PhotoCameraIcon />
-          </Button>
+            <span>
+              <Button
+                variant="contained"
+                style={{
+                  marginRight: theme.spacing(1),
+                  borderRadius: 0,
+                  minWidth: "48px",
+                  backgroundColor: (isReading || !(datasets?.length > 0))
+                    ? theme.palette.grey[400]
+                    : theme.palette.primary.main
+                }}
+                onClick={() => setOpenSaveImage(true)}
+                disabled={isReading || !(datasets?.length > 0)}
+              >
+                <PhotoCameraIcon />
+              </Button>
+            </span>
+          </Tooltip>
     
           <Button 
             variant="contained" 
