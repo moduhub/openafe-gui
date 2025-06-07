@@ -42,6 +42,7 @@ export const TabStorage = ({ setTabIndex }) => {
     deleteDialogOpen, setDeleteDialogOpen, handleDeleteInterpolation,
     importExportDialogOpen, setImportExportDialogOpen, importExportType,
     datasetSelectorOpen, handleOpenDatasetSelector, handleCloseDatasetSelector,
+    interpolationLineEditorOpen, interpolationLineEditorInitial, openInterpolationLineEditor,
 
     datasetTypes, handleDatasetSelected,
     filterType, setFilterType,
@@ -54,6 +55,7 @@ export const TabStorage = ({ setTabIndex }) => {
     openLineEditor, closeLineEditor, handleChangeLine,
     lineEditorOpen,
     lineEditorInitial,
+    closeInterpolationLineEditor, handleChangeInterpolationLine,
 
     importExportDefaultIndex,
     filteredDatasets,
@@ -74,6 +76,7 @@ export const TabStorage = ({ setTabIndex }) => {
       <DeleteDialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} onDelete={handleDeleteInterpolation} />
       <ImportExportDialog open={importExportDialogOpen} onClose={() => setImportExportDialogOpen(false)} type={importExportType} defaultIndex={importExportDefaultIndex} />
       <LineEditorDialog open={lineEditorOpen} onClose={closeLineEditor} initialLine={lineEditorInitial} onSave={handleChangeLine} />
+      <LineEditorDialog open={interpolationLineEditorOpen} onClose={closeInterpolationLineEditor} initialLine={interpolationLineEditorInitial} onSave={handleChangeInterpolationLine} />
       <DatasetSelectorDialog
         open={datasetSelectorOpen} onClose={handleCloseDatasetSelector}
         onSelect={handleDatasetSelected}
@@ -208,6 +211,7 @@ export const TabStorage = ({ setTabIndex }) => {
                     datasetIndex={originalIndex}
                     onToggleVisibility={handleToggleInterpolationVisibility}
                     onDeleteInterpolation={openDeleteDialog}
+                    onEditInterpolationLine={openInterpolationLineEditor}
                   />
                 </AccordionDetails>
               </Accordion>

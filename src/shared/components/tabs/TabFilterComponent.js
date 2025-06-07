@@ -1,16 +1,9 @@
 import { useState, useEffect } from "react"
 import {
-  Box,
-  Button,
-  useTheme,
-  Typography,
-  Select,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
+  Box, Button, useTheme, Typography, Select,
+  MenuItem, ListItemIcon, ListItemText,
 } from '@mui/material'
 
-import AspectRatioIcon from '@mui/icons-material/AspectRatio'
 import FilterListIcon from '@mui/icons-material/FilterList'
 
 import { FiltersDialog } from '..'
@@ -55,7 +48,10 @@ export const TabFilter = ({
   const [type, setType] = useState('CVW')
 
   useEffect(() => {
-    setType(datasets[datasetSelected].type)
+    if(datasetSelected >= 0 && datasetSelected < datasets.length)
+      setType(datasets[datasetSelected].type)
+    else
+      setType(undefined)
   }, [datasetSelected])
 
   useEffect(() => {
@@ -184,6 +180,8 @@ export const TabFilter = ({
           mb: '16px'
         }}
       >
+        
+
         {datasets.length === 0 ? (
           <Typography
             variant="body1"
@@ -195,6 +193,17 @@ export const TabFilter = ({
           </Typography>
         ) : (
           <>
+            <Box sx={{width:'100%', mt:2, mb:1}}>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<FilterListIcon />}
+                onClick={() => setOpenFilters(true)}
+              >
+                Open filter dialog
+              </Button>
+            </Box>
+
             {type === 'CVW' && (
               renderFilterBlock("CVW", selectedFilterCVW, setSelectedFilterCVW, previewCVW, setPreviewCVW, "filtro-cvw-label", "cvw")
             )}
@@ -209,6 +218,7 @@ export const TabFilter = ({
 
           </>
         )}
+
       </Box>
 
       <Button
@@ -226,10 +236,11 @@ export const TabFilter = ({
             !previewNyquist.x.length ||
             previewBodeMod.x.length !== previewBodeAng.x.length ||
             previewBodeMod.x.length !== previewNyquist.x.length
-          ))
+          )) ||
+          !(datasetSelected >= 0 && datasetSelected < datasets.length)
         }
       >
-        {type === 'CVW' ? 'Salvar filtro CVW' : 'Salvar filtro EIS'}
+        {type === 'CVW' ? 'Save filter CVW' : 'Save filter EIS'}
       </Button>
     </>
   )

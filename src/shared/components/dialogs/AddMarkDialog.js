@@ -143,7 +143,7 @@ export const AddMarkDialog = ({ open, onClose, point }) => {
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancelar</Button>
-        <Button onClick={handleSave} disabled={!label}>Salvar</Button>
+        <Button onClick={handleSave} variant="contained" disabled={!label}>Salvar</Button>
       </DialogActions>
     </Dialog>
   )

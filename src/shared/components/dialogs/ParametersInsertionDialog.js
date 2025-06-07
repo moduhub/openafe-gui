@@ -187,12 +187,11 @@ export const ParametersInsertionDialog = ({
         </DialogContent>
 
         <DialogActions>
-          <Button onClick={handleCancel} color="secondary">
+          <Button onClick={handleCancel}>
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
-            color="primary"
             variant="contained"
             disabled={!paramName || !paramValue}
           >

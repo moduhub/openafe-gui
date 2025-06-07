@@ -39,6 +39,11 @@ export const useTabStorage = (setTabIndex) => {
   const [hasAreaMarkers, setHasAreaMarkers] = useState(false)
   const [hasInterpolations, setHasInterpolations] = useState(false)
 
+  const [interpolationLineEditorOpen, setInterpolationLineEditorOpen] = useState(false)
+  const [interpolationLineEditorTarget, setInterpolationLineEditorTarget] = useState({ datasetIndex: null, interpolationIndex: null })
+  const [interpolationLineEditorInitial, setInterpolationLineEditorInitial] = useState({})
+
+
   const handleDelete = () => {
     if (index !== null) handleDeleteDataset(index)
     close()
@@ -121,6 +126,34 @@ export const useTabStorage = (setTabIndex) => {
     showOnlyDataset(index)
   }
 
+  const openInterpolationLineEditor = (datasetIndex, interpolationIndex) => {
+    setInterpolationLineEditorTarget({ datasetIndex, interpolationIndex })
+    setInterpolationLineEditorInitial(
+      datasets[datasetIndex]?.interpolations?.[interpolationIndex]?.data?.[0]?.line || {}
+    )
+    setInterpolationLineEditorOpen(true)
+  }
+
+  const closeInterpolationLineEditor = () => {
+    setInterpolationLineEditorOpen(false)
+    setInterpolationLineEditorTarget({ datasetIndex: null, interpolationIndex: null })
+    setInterpolationLineEditorInitial({})
+  }
+
+  const handleChangeInterpolationLine = (lineConfig) => {
+    const { datasetIndex, interpolationIndex } = interpolationLineEditorTarget
+    if (datasetIndex === null || interpolationIndex === null) return
+    const updated = [...datasets]
+    const interpolation = updated[datasetIndex].interpolations[interpolationIndex]
+    if (!interpolation.data[0].line)
+      interpolation.data[0].line = {}
+    interpolation.data[0].line.color = lineConfig.color
+    interpolation.data[0].line.dash = lineConfig.dash
+    interpolation.data[0].line.width = lineConfig.width
+    handleSetDataset(updated)
+    closeInterpolationLineEditor()
+  }
+
   const filteredDatasets = datasets.filter(ds => {
     const matchType = filterType === 'ALL' || ds.type === filterType
     const matchVisibility = (!showOnlyVisible || ds.visible) && (!showOnlyHidden || !ds.visible)
@@ -145,6 +178,7 @@ export const useTabStorage = (setTabIndex) => {
     deleteDialogOpen, setDeleteDialogOpen, handleDeleteInterpolation,
     openDeleteDialog,
     importExportDialogOpen, setImportExportDialogOpen, importExportType, importExportDefaultIndex,
+    interpolationLineEditorOpen, interpolationLineEditorInitial, openInterpolationLineEditor,
 
     // Sorts
     datasetSelectorOpen, handleOpenDatasetSelector, handleCloseDatasetSelector,
@@ -159,6 +193,7 @@ export const useTabStorage = (setTabIndex) => {
     // Line Editor
     openLineEditor, closeLineEditor, handleChangeLine,
     lineEditorOpen, lineEditorInitial,
+    closeInterpolationLineEditor, handleChangeInterpolationLine,
 
     // Sorted datasets
     filteredDatasets,

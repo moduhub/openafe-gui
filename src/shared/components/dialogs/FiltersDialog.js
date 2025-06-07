@@ -1,30 +1,212 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
-  Dialog,
-  Box,
-  Typography,
-  Tabs,
-  Tab,
-  Tooltip,
-  Paper,
-  Select,
-  MenuItem,
-  Button,
-  IconButton
+  Dialog, Box, Typography, Select, MenuItem,Tabs, Tab, Tooltip, Paper, Button, IconButton
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
-
 import { 
-  ChartComponent,
-  MovingAverage,
-  LowPass, 
-  HighPass,
-  BandPass,
-  BandStop
+  ChartComponent, MovingAverage, LowPass, HighPass, BandPass, BandStop
 } from '../../components'
-
 import { useDatasetsContext } from '../../contexts'
 
+
+export const FiltersDialog = ({ open, onClose }) => {
+  const {
+    datasets, handleNewDataset,
+    datasetSelected, handleSetDatasetSelected,
+    showOnlyDataset,
+  } = useDatasetsContext()
+
+  const [type, setType] = useState('CVW')
+  useEffect(() => {
+    setType(datasets[datasetSelected]?.type || 'CVW')
+  }, [datasetSelected, datasets])
+
+  // Estados de filtros e previews (igual ao TabFilterComponent)
+  const [selectedFilterCVW, setSelectedFilterCVW] = useState('')
+  const [selectedFilterBodeMod, setSelectedFilterBodeMod] = useState('')
+  const [selectedFilterBodeAng, setSelectedFilterBodeAng] = useState('')
+  const [selectedFilterNyquist, setSelectedFilterNyquist] = useState('')
+
+  const [previewCVW, setPreviewCVW] = useState({ x: [], y: [] })
+  const [previewBodeMod, setPreviewBodeMod] = useState({ x: [], y: [] })
+  const [previewBodeAng, setPreviewBodeAng] = useState({ x: [], y: [] })
+  const [previewNyquist, setPreviewNyquist] = useState({ x: [], y: [] })
+
+  const chartAreaRef = useRef(null)
+
+  // Atualiza previewData conforme o tipo
+  const [previewData, setPreviewData] = useState({ x: [], y: [] })
+  useEffect(() => {
+    if (type === 'CVW') setPreviewData(previewCVW)
+    else if (type === 'EIS') setPreviewData({
+      bodeMod: previewBodeMod,
+      bodeAng: previewBodeAng,
+      nyquist: previewNyquist,
+    })
+  }, [type, previewCVW, previewBodeMod, previewBodeAng, previewNyquist])
+
+  const filtersConfig = [
+    { label: "MA", tooltip: "Moving Average", component: MovingAverage },
+    { label: "LP", tooltip: "Low Pass", component: LowPass },
+    { label: "HP", tooltip: "High Pass", component: HighPass },
+    { label: "BP", tooltip: "Band Pass", component: BandPass },
+    { label: "BS", tooltip: "Band Stop", component: BandStop },
+  ]
+
+  const renderFilterBlock = (
+    title, selectedFilter, setSelectedFilter,
+    preview, setPreview, labelId, dataType
+  ) => (
+    <Box sx={{ mt: 2 }}>
+      <Typography variant="subtitle1">{title}</Typography>
+      <Select
+        size="small"
+        fullWidth
+        value={selectedFilter}
+        onChange={e => setSelectedFilter(e.target.value)}
+        renderValue={value => {
+          if (!value) return <>Selecione um filtro</>
+          const { tooltip } = filtersConfig.find(f => f.label === value) || {}
+          return tooltip || ''
+        }}
+        labelId={labelId}
+        displayEmpty
+      >
+        <MenuItem value="" disabled>
+          Selecione um filtro
+        </MenuItem>
+        {filtersConfig.map((filter) => (
+          <MenuItem key={filter.label} value={filter.label}>
+            {filter.label} - {filter.tooltip}
+          </MenuItem>
+        ))}
+      </Select>
+      <Box>
+        {(() => {
+          const filter = filtersConfig.find(f => f.label === selectedFilter)
+          if (!filter) return null
+          const FilterComponent = filter.component
+          return <FilterComponent setPreviewFilter={setPreview} dataType={dataType} />
+        })()}
+      </Box>
+    </Box>
+  )
+
+  // Salvar filtro (igual TabFilterComponent)
+  const handleSaveFilter = () => {
+    const datasetFiltered = datasets[datasetSelected]
+    if (!datasetFiltered) return
+
+    if (type === 'CVW') {
+      handleNewDataset(
+        `${selectedFilterCVW} de ${datasetFiltered.name}`,
+        datasetFiltered.params,
+        previewCVW,
+        datasetFiltered.type
+      )
+      setPreviewCVW({ x: [], y: [] })
+    } else if (type === 'EIS') {
+      const n = previewBodeMod.x.length
+      if (
+        n < 2 ||
+        previewBodeAng.x.length !== n ||
+        previewNyquist.x.length !== n
+      ) {
+        alert('Todos os filtros EIS devem estar aplicados e com o mesmo tamanho!')
+        return
+      }
+      const omega = [...previewBodeMod.x]
+      const modZ = [...previewBodeMod.y].map(v => Math.pow(10, v / 20))
+      const angZ = [...previewBodeAng.y]
+      const realZ = [...previewNyquist.x]
+      const imagZ = [...previewNyquist.y]
+      handleNewDataset(
+        `${selectedFilterBodeMod}/${selectedFilterBodeAng}/${selectedFilterNyquist} de ${datasetFiltered.name}`,
+        datasetFiltered.params,
+        { omega, modZ, angZ, realZ, imagZ },
+        datasetFiltered.type
+      )
+      setPreviewBodeMod({ x: [], y: [] })
+      setPreviewBodeAng({ x: [], y: [] })
+      setPreviewNyquist({ x: [], y: [] })
+    }
+    onClose()
+  }
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
+      <Box sx={{ p: 2, display: 'flex', flexDirection: 'row', height: 600 }}>
+
+        <Box sx={{ flex: 1, minWidth: 400, pl: 2, display: 'flex', flexDirection: 'column' }}>
+          <Typography variant="caption" sx={{ mb: 1, textAlign: 'center' }}>
+            Visualização do filtro
+          </Typography>
+          <Box sx={{ flex: 1, position: 'relative' }}>
+            <ChartComponent
+              type_={{ height: '100%', width: '100%' }}
+              previewData={previewData}
+              setSelectedPoints={() => {}}
+              selectedPoints={[]}
+              chartAreaRef={chartAreaRef}
+            />
+          </Box>
+        </Box>
+
+        <Box sx={{ 
+          width: 300, height: '100%',
+          display: 'flex', flexDirection: 'column',
+        }}>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6" sx={{ flex: 1 }}>Filtros</Typography>
+            <IconButton onClick={onClose}><CloseIcon /></IconButton>
+          </Box>
+
+          <Box sx={{
+            overflowY: 'auto'
+          }}
+          >
+            {type === 'CVW' && (
+              renderFilterBlock("CVW", selectedFilterCVW, setSelectedFilterCVW, previewCVW, setPreviewCVW, "filtro-cvw-label", "cvw")
+            )}
+            {type === 'EIS' && (
+              <>
+                {renderFilterBlock("Bode |Z|", selectedFilterBodeMod, setSelectedFilterBodeMod, previewBodeMod, setPreviewBodeMod, "filtro-bodemod-label", "bodeMod")}
+                {renderFilterBlock("Bode Fase", selectedFilterBodeAng, setSelectedFilterBodeAng, previewBodeAng, setPreviewBodeAng, "filtro-bodeang-label", "bodeAng")}
+                {renderFilterBlock("Nyquist", selectedFilterNyquist, setSelectedFilterNyquist, previewNyquist, setPreviewNyquist, "filtro-nyquist-label", "nyquist")}
+              </>
+            )}
+          </Box>
+
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ mt: 'auto' }}
+            onClick={handleSaveFilter}
+            disabled={
+              (type === 'CVW' && !selectedFilterCVW) ||
+              (type === 'EIS' && (
+                !selectedFilterBodeMod ||
+                !selectedFilterBodeAng ||
+                !selectedFilterNyquist ||
+                !previewBodeMod.x.length ||
+                !previewBodeAng.x.length ||
+                !previewNyquist.x.length ||
+                previewBodeMod.x.length !== previewBodeAng.x.length ||
+                previewBodeMod.x.length !== previewNyquist.x.length
+              ))
+            }
+          >
+            Save filter
+          </Button>
+        </Box>
+        
+      </Box>
+    </Dialog>
+  )
+}
+
+/*
 export const FiltersDialog = ({ open, onClose }) => {
   const [activeTab, setActiveTab] = useState(0)
   const [previewFilter, setPreviewFilter] = useState({ x: [], y: [] })
@@ -131,24 +313,11 @@ export const FiltersDialog = ({ open, onClose }) => {
             ))}
           </Tabs>
           <Box
-            width="25%"
             display="flex"
             justifyContent="space-between"
             alignItems="center"
-            ml={2}
+            ml={1}
           >
-            <Select
-              value={datasetSelected}
-              onChange={handleUpdateVisibility}
-              size="small"
-              sx={{ width: '80%' }}
-            >
-              {datasets.map((dataset, index) => (
-                <MenuItem key={index} value={index}>
-                  {dataset.name}
-                </MenuItem>
-              ))}
-            </Select>
             <IconButton
               onClick={onClose}
             >
@@ -160,7 +329,6 @@ export const FiltersDialog = ({ open, onClose }) => {
           height="100%" 
           sx={{ display: 'flex', flex: 1, gap: 2 }}
         >
-          {/* Left Side - Controls */}
           <Box sx={{
             width: '280px',
             display: 'flex',
@@ -179,7 +347,6 @@ export const FiltersDialog = ({ open, onClose }) => {
               </Button>
             </Box>
           </Box>
-          {/* Right Side - Preview Chart */}
           <Box sx={{
             width: '600px',
             padding: 1,
@@ -212,3 +379,4 @@ export const FiltersDialog = ({ open, onClose }) => {
     </Dialog>
   )
 }
+*/

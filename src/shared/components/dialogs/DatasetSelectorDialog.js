@@ -127,7 +127,7 @@ export const DatasetSelectorDialog = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" onClick={handleConfirm}>Apply sorting</Button>
+        <Button onClick={handleConfirm} variant="contained">Apply sorting</Button>
       </DialogActions>
     </Dialog>
   )

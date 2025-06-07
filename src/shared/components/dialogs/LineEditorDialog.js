@@ -6,12 +6,12 @@ import { MuiColorInput } from 'mui-color-input'
 import { useState, useEffect } from 'react'
 
 const LINE_STYLES = [
-  { value: 'solid', label: 'Contínua' },
-  { value: 'dot', label: 'Pontilhada' },
-  { value: 'dash', label: 'Tracejada' },
-  { value: 'longdash', label: 'Traço longo' },
-  { value: 'dashdot', label: 'Ponto e traço' },
-  { value: 'longdashdot', label: 'Traço longo e ponto' }
+  { value: 'solid', label: 'Solid' },
+  { value: 'dot', label: 'Dot' },
+  { value: 'dash', label: 'Dash' },
+  { value: 'longdash', label: 'Long dash' },
+  { value: 'dashdot', label: 'Dash dot' },
+  { value: 'longdashdot', label: 'Long dash dot' }
 ]
 
 export const LineEditorDialog = ({ open, onClose, initialLine, onSave }) => {
@@ -20,12 +20,12 @@ export const LineEditorDialog = ({ open, onClose, initialLine, onSave }) => {
   const [width, setWidth] = useState(2)
 
   useEffect(() => {
-    if (initialLine) {
-      setColor(initialLine.color || '#000000')
-      setStyle(initialLine.dash || 'solid')
-      setWidth(initialLine.width ?? 2)
+    if (open) {
+      setColor(initialLine?.color || '#000000')
+      setStyle(initialLine?.dash || 'solid')
+      setWidth(initialLine?.width ?? 2)
     }
-  }, [initialLine])
+  }, [open, initialLine])
 
   const handleSave = () => {
     onSave({
@@ -42,7 +42,7 @@ export const LineEditorDialog = ({ open, onClose, initialLine, onSave }) => {
       <DialogContent>
         <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
           <FormControl fullWidth>
-            <InputLabel id="line-style-label">Estilo</InputLabel>
+            <InputLabel id="line-style-label">Style</InputLabel>
             <Select
               labelId="line-style-label"
               value={style}
@@ -70,8 +70,8 @@ export const LineEditorDialog = ({ open, onClose, initialLine, onSave }) => {
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancelar</Button>
-        <Button onClick={handleSave}>Salvar</Button>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={handleSave} variant="contained">Save</Button>
       </DialogActions>
     </Dialog>
   )

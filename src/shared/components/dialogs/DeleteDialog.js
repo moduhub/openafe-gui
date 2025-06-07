@@ -38,16 +38,16 @@ export const DeleteDialog = ({ open, onClose, onDelete }) => {
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>Confirmar exclusão</DialogTitle>
+      <DialogTitle>Confirm deletion</DialogTitle>
       <DialogContent>
-        <p>Você tem certeza de que deseja excluir este item?</p>
+        Are you sure you want to delete this item?
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="secondary">
-          Cancelar
+        <Button onClick={onClose}>
+          Cancel
         </Button>
-        <Button onClick={handleConfirmDelete} color="primary" variant="contained">
-          Excluir
+        <Button onClick={handleConfirmDelete} variant="contained">
+          Delete
         </Button>
       </DialogActions>
     </Dialog>

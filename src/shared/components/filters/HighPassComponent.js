@@ -111,21 +111,14 @@ export const HighPass = ({ setPreviewFilter, dataType = "cvw" }) => {
             HighPass Filter
           </Typography>
 
-          <Box>
-            <Typography variant="body2" gutterBottom>
-              Cutoff Frequency (Hz):
-            </Typography>
+          <Box width='98%'>
+            <Typography variant="body2">Cutoff Frequency (Hz):</Typography>
             <Slider
               value={cutoffFrequency}
               onChange={handleSliderChange}
               min={isEIS ? 0.1 : 1}
               max={isEIS ? 10000 : 100}
               step={isEIS ? 0.1 : 1}
-              marks={[
-                { value: isEIS ? 0.1 : 1, label: isEIS ? '0.1Hz' : '1Hz' },
-                { value: isEIS ? 50 : 50, label: '50Hz' },
-                { value: isEIS ? 10000 : 100, label: isEIS ? '10kHz' : '100Hz' },
-              ]}
               valueLabelDisplay="auto"
             />
           </Box>

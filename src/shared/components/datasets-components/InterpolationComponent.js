@@ -14,6 +14,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import DeleteIcon from '@mui/icons-material/Delete'
+import EditIcon from '@mui/icons-material/Edit'
 
 import { PointsComponent } from '..'
 
@@ -27,12 +28,14 @@ import { PointsComponent } from '..'
  * @param {number} datasetIndex                                   - Index of the dataset in the parent collection
  * @param {function(number, number): void} onToggleVisibility     - Callback invoked with (datasetIndex, interpolationIndex) to toggle visibility
  * @param {function(number, number): void} onDeleteInterpolation  - Callback invoked with (datasetIndex, interpolationIndex) to delete interpolation
+ * @param {function} onEditInterpolationLine                      -
  */
 export const InterpolationComponent = ({ 
   dataset, 
   datasetIndex, 
   onToggleVisibility, 
   onDeleteInterpolation,
+  onEditInterpolationLine,
 }) => {
   const theme = useTheme()
 
@@ -74,6 +77,11 @@ export const InterpolationComponent = ({
                   }
                 >
                 </Button>
+                <Button
+                  onClick={() => onEditInterpolationLine(datasetIndex, i)}
+                  size="small"
+                  startIcon={<EditIcon />}
+                ></Button>
                 <Button
                   onClick={() => onDeleteInterpolation(datasetIndex, i)}
                   size="small"

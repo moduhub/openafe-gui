@@ -131,13 +131,12 @@ export const SaveImageDialog = ({ open, onClose, onSave, availableCharts = [] })
           </Grid>
         </Grid>
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2, justifyContent: 'space-between' }}>
-        <Button variant="outlined" color="secondary" onClick={onClose}>
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button onClick={onClose}>
           Cancel
         </Button>
         <Button
           variant="contained"
-          color="primary"
           onClick={handleSave}
           disabled={availableCharts.length > 0 && selectedCharts.length === 0}
         >

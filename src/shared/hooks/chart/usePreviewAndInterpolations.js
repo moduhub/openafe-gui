@@ -9,6 +9,13 @@ export const usePreviewAndInterpolations = (
   prevLengthsRef,
   isPolar
 ) => {
+
+  const getLine = (line, theme) => ({
+    dash: line?.dash ?? 'solid',
+    width: line?.width ?? 2,
+    color: line?.color ?? undefined
+  })
+
   useEffect(() => {
     const refs = Array.isArray(chartRefs) ? chartRefs : [chartRefs]
     if (!refs.length) return
@@ -36,11 +43,7 @@ export const usePreviewAndInterpolations = (
             y: ds.data[0].modZ.map(v => 20 * Math.log10(Math.max(v, 1e-12))),
             mode: ds.data[0].mode ?? 'lines',
             name: key,
-            line: {
-              dash: ds.data[0].line?.dash ?? 'solid',
-              width: ds.data[0].line?.width ?? 2,
-              color: ds.data[0].line?.color ?? undefined
-            }
+            line: getLine(ds.data[0].line, theme)
           })
 
           // Interpolations
@@ -50,7 +53,7 @@ export const usePreviewAndInterpolations = (
               y: i.data[0].y,
               mode: i.data[0].mode,
               name: i.data[0].name,
-              line: i.data[0].line
+              line: getLine(i.data[0].line, theme)
             }))
 
           // markers
@@ -86,11 +89,7 @@ export const usePreviewAndInterpolations = (
             y: ds.data[0].angZ,
             mode: ds.data[0].mode ?? 'lines',
             name: key,
-            line: {
-              dash: ds.data[0].line?.dash ?? 'solid',
-              width: ds.data[0].line?.width ?? 2,
-              color: ds.data[0].line?.color ?? undefined
-            }
+            line: getLine(ds.data[0].line, theme)
           })
 
           // Interpolations
@@ -100,7 +99,7 @@ export const usePreviewAndInterpolations = (
               y: i.data[0].y,
               mode: i.data[0].mode,
               name: i.data[0].name,
-              line: i.data[0].line
+              line: getLine(i.data[0].line, theme)
             }))
 
           // Markers
@@ -142,11 +141,7 @@ export const usePreviewAndInterpolations = (
               theta,
               mode: ds.data[0].mode ?? 'lines',
               name: key,
-              line: {
-                dash: ds.data[0].line?.dash ?? 'solid',
-                width: ds.data[0].line?.width ?? 2,
-                color: ds.data[0].line?.color ?? undefined
-              },
+              line: getLine(ds.data[0].line, theme),
               type: 'scatterpolar'
             })
           } else {
@@ -156,11 +151,7 @@ export const usePreviewAndInterpolations = (
               y: ds.data[0].imagZ,
               mode: ds.data[0].mode ?? 'lines',
               name: key,
-              line: {
-                dash: ds.data[0].line?.dash ?? 'solid',
-                width: ds.data[0].line?.width ?? 2,
-                color: ds.data[0].line?.color ?? undefined
-              }
+              line: getLine(ds.data[0].line, theme)
             })
           }
 
@@ -178,7 +169,7 @@ export const usePreviewAndInterpolations = (
                   theta,
                   mode: i.data[0].mode,
                   name: i.data[0].name,
-                  line: i.data[0].line,
+                  line: getLine(i.data[0].line, theme),
                   type: 'scatterpolar'
                 })
               } else {
@@ -187,7 +178,7 @@ export const usePreviewAndInterpolations = (
                   y: i.data[0].y,
                   mode: i.data[0].mode,
                   name: i.data[0].name,
-                  line: i.data[0].line
+                  line: getLine(i.data[0].line, theme)
                 })
               }
             })
@@ -277,11 +268,7 @@ export const usePreviewAndInterpolations = (
             y: ds.data[0].y,
             mode: ds.data[0].mode ?? 'lines',
             name: key,
-            line: {
-              dash: ds.data[0].line?.dash ?? 'solid',
-              width: ds.data[0].line?.width ?? 2,
-              color: ds.data[0].line?.color ?? undefined
-            }
+            line: getLine(ds.data[0].line, theme)
           })
 
           // Interpolations
@@ -291,7 +278,7 @@ export const usePreviewAndInterpolations = (
               y: i.data[0].y,
               mode: i.data[0].mode,
               name: i.data[0].name,
-              line: i.data[0].line
+              line: getLine(i.data[0].line, theme)
             }))
 
           // Markers
