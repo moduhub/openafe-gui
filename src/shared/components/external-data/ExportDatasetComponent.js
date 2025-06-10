@@ -36,6 +36,8 @@ export const ExportDataset = ({ onClose, defaultIndex }) => {
   const [selectedKeys, setSelectedKeys] = useState([])
   const [format, setFormat] = useState('json')
   const [includeInterpPoints, setIncludeInterpPoints] = useState(true)
+  const [includePointMarkers, setIncludePointMarkers] = useState(true)
+  const [includeAreaMarkers, setIncludeAreaMarkers] = useState(true)
 
   useEffect(() => {
     if (defaultIndex != null) {
@@ -72,7 +74,7 @@ export const ExportDataset = ({ onClose, defaultIndex }) => {
       }
 
       if (format === 'csv') {
-        exportCSV(ds, baseName, includeInterpPoints)
+        exportCSV(ds, baseName, includeInterpPoints, includePointMarkers, includeAreaMarkers)
         continue
       }
 
@@ -144,9 +146,39 @@ export const ExportDataset = ({ onClose, defaultIndex }) => {
               color="primary"
             />
           }
-          label="Incluir pontos das interpolações"
+          label= {(format==='csv')
+            ?"Save interpolations"
+            :"Include points of the interpolations"}
           sx={{ mt: 2 }}
         />
+      )}
+      {(format === "csv") && (
+        <>
+        <br/>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={includePointMarkers}
+              onChange={(e) => setIncludePointMarkers(e.target.checked)}
+              color="primary"
+            />
+          }
+          label="Save point markers"
+          sx={{ mt: 2 }}
+        /> 
+        <br/>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={includeAreaMarkers}
+              onChange={(e) => setIncludeAreaMarkers(e.target.checked)}
+              color="primary"
+            />
+          }
+          label="Save area markers"
+          sx={{ mt: 2 }}
+        />
+        </>
       )}
 
       <Button
@@ -154,7 +186,7 @@ export const ExportDataset = ({ onClose, defaultIndex }) => {
         color="primary"
         variant="contained"
         fullWidth
-        disabled={selectedKeys.length === 0} // <-- Adicionado aqui
+        disabled={selectedKeys.length === 0} 
       >
         Save
       </Button>

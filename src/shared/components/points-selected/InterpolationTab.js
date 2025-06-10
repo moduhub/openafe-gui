@@ -138,63 +138,6 @@ export const InterpolationTab = ({ open, onClose, selectedPoints }) => {
     let interpX = []
     let interpY = []
 
-/*
-    if (ref === "cvChart") {
-      xValues = ds.x || []
-      yValues = ds.y || []
-
-      const [startIdx, endIdx] = points[0] < points[1] ? points : [points[1], points[0]]
-      const [startValue, endValue] = ds.x[startIdx] < ds.x[endIdx] ? [ds.x[startIdx],ds.x[endIdx]] : [ds.x[endIdx],ds.x[startIdx]]
-      for (let x = startValue; x <= endValue; x += 1) interpRangeX.push(x)     
-
-      interpX = xValues.slice(startIdx, endIdx + 1)
-      interpY = yValues.slice(startIdx, endIdx + 1)
-      isLogX = false
-      isYdB = false
-    }
-    else{
-      if (ref === "bodeMod") {
-        xValues = ds.omega || []
-        yValues = ds.modZ || []
-        isLogX = true
-        isYdB = true
-      } 
-      else if (ref === "bodeAng") {
-        xValues = ds.omega || []
-        yValues = ds.angZ || []
-        isLogX = true
-        isYdB = false
-      } 
-      else if (ref === "nyquist") {
-        xValues = ds.realZ || []
-        yValues = ds.imagZ || []
-        isLogX = false
-        isYdB = false
-      }
-    
-      const [start, end] = range[0] < range[1] ? [range[0], range[1]] : [range[1], range[0]]
-
-      const filtered = xValues.map((x, i) => ({ x, y: yValues[i] }))
-        .filter(({ x }) => x >= start && x <= end)
-
-      interpX = filtered.map(p => p.x)
-      interpY = filtered.map(p => p.y)
-
-      if (isYdB) 
-        interpY = interpY.map(v => Math.max(v, 1e-12))
-
-      let nPoints = interpX.length
-      if (isLogX && ds.omega) {
-        const stepForADecade = datasets[datasetSelected]?.params?.stepForADecade || 10
-        const decades = Math.log10(interpX[interpX.length - 1]) - Math.log10(interpX[0])
-        nPoints = Math.max(10, Math.round(decades * stepForADecade))
-      }
-
-      interpRangeX = generateInterpX(interpX[0], interpX[interpX.length - 1], nPoints, isLogX)
-    }   
-*/ 
-
-    //Linear
     if (["cvChart", "nyquist"].includes(ref)) {
       const [startIdx, endIdx] = points[0] < points[1] ? points : [points[1], points[0]]
       
