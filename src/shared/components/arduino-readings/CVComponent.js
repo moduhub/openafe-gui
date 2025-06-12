@@ -12,7 +12,9 @@ import {
 export const CVComponent = () => {
   const {
     isConnected,
-    isReading, handleSetIsReading
+    isReading, handleSetIsReading,
+    isDummy,
+    portConnected
   } = useArduinoContext()
   const {
     currentParams, handleCurrentParams,
@@ -89,7 +91,7 @@ export const CVComponent = () => {
     handleCurrentName(newName)
 
     if (!isReading) {
-      StartReading(handleSetIsReading, currentParams, experimentType)
+      StartReading(isDummy, handleSetIsReading, currentParams, experimentType, 200, portConnected)
       if (!isMinimized)
         setIsMinimized()
       if (!isMinimizedDataset)

@@ -32,6 +32,7 @@ export const useArduinoContext = () => {
  * @returns {JSX.Element} 
  */
 export const ArduinoProvider = ({ children }) => {
+  const [isDummy, setIsDummy] = useState(false)
   const [arduinoData, setArduinoData] = useState('')
   const [portSelected, setPortSelected] = useState('')
   const [portConnected, setPortConnected] = useState('')
@@ -106,7 +107,19 @@ export const ArduinoProvider = ({ children }) => {
 
   // Data Connect
   useEffect(() => {
+    // Dummy
     if (arduinoData.startsWith('$CNT')){
+      handleSetPortConnected(portSelected)
+      handleSetIsConnecting(false)
+      handleSetIsConnect(true)
+      setSnackbar({ open: false, message: '', severity: 'info' }) 
+      setSnackbar({ open: true, message: 'Conectado com sucesso na porta '+portSelected+'!', severity: 'success' })
+      if(isArduinoMinimized)
+        setIsArduinoMinimized()
+    }
+
+    // Comm
+    if (arduinoData.startsWith('$MSG,RDY')){
       handleSetPortConnected(portSelected)
       handleSetIsConnecting(false)
       handleSetIsConnect(true)
@@ -125,7 +138,8 @@ export const ArduinoProvider = ({ children }) => {
       portConnected, handleSetPortConnected,
       isConnected, handleSetIsConnect,
       isConnecting, handleSetIsConnecting,
-      isReading, handleSetIsReading
+      isReading, handleSetIsReading,
+      isDummy, setIsDummy
     }}>
       {children}
 

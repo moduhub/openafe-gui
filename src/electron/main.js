@@ -17,16 +17,17 @@ let isDev = false
 async function setupSerialPort(selectedPort) {
   try {
     if (port) port.close()
-    port = new SerialPort({ path: selectedPort, baudRate: 9600 })
+    port = new SerialPort({ path: selectedPort, baudRate: 115200 })
     const parser = port.pipe(new ReadlineParser({ delimiter: '\n' }))
     parser.on('data', (data) => { if (mainWindow) mainWindow.webContents.send('arduino-data', data)})
     port.on('open', () => { 
       console.log('Porta serial aberta com sucesso!')
       if (mainWindow) mainWindow.webContents.send('serial-port-opened', 'Porta serial aberta com sucesso!')
+      /*
       port.write('$RST\n', (err) => {
         if (err) console.error('Erro ao enviar comando de reinicializacao para o Arduino:', err)
         else console.log('Comando de reinicializacao enviado para o Arduino')
-      })
+      })*/
     })
     port.on('error', (err) => { 
       if (mainWindow) mainWindow.webContents.send('serial-port-opened', 'not-connected:'+err)
@@ -121,7 +122,6 @@ ipcMain.handle('get-available-ports', async () => {
 ipcMain.on('connect-to-port', (event, selectedPort) => {
   try{
     setupSerialPort(selectedPort)
-    
   }catch(erro){
     console.log("Não foi possíve conectar: "+erro)
   }

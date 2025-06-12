@@ -85,7 +85,7 @@ void freeFunctions(Functions& funcs);
 void setup() {
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, LOW);
-  Serial.begin(9600);
+  Serial.begin(115200);
   randomSeed(analogRead(0));
   Serial.println("$CNT"); //Connected
 }

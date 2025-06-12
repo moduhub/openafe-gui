@@ -7,14 +7,16 @@ import {
   useDashboardContext
 } from '..'
 
+import { calculateChecksum } from '../../math-functions'
+
 const DatasetsContext = createContext({})
 
 const defaultCVParams = {
   settlingTime: 1000,
   startPotential: -800,
   endPotential: 0,
-  step: 10,
-  scanRate: 500,
+  step: 100,
+  scanRate: 200,
   cycles: 1,
 }
 
@@ -52,7 +54,8 @@ export const DataSetsProvider = ({ children }) => {
 
   const { 
     arduinoData,
-    handleSetIsReading ,
+    handleSetIsReading,
+    isDummy
   } = useArduinoContext()
   const {
     priorityMode,
@@ -475,46 +478,84 @@ export const DataSetsProvider = ({ children }) => {
   }, [])
 
   
-  useEffect(()=>{      
-    // Data graph
-    if (arduinoData.startsWith('$SGL')) {
-      const dataParts = arduinoData.split(',')
-      if (dataParts.length >= 3) {
-        const voltage = parseFloat(dataParts[1])
-        const current = parseFloat(dataParts[2].split('*')[0])
+  useEffect(()=>{     
+    // Data graph 
+    if(!isDummy){
+      if (arduinoData.startsWith('$SGL')) {
+        const dataParts = arduinoData.split(',')
+        const voltage =  dataParts[1]
+        const current = (dataParts[2].split('*'))[0]
         addDataPoint(voltage, current)
-      }
-      if(datasets[datasets.length - 1].data[0]!=null){
-        if( datasets[datasets.length - 1].data[0].x.length === 1 ){
-          if(!isDatasetSelected)
-            handleSetIsDatasetSelected(true)
-          handleSetDatasetSelected(datasets.length - 1)
-          if (priorityMode) 
-            showOnlyDataset(datasets.length - 1)
+        if(datasets[datasets.length - 1].data[0]!=null){
+          if( datasets[datasets.length - 1].data[0].x.length === 1 ){
+            if(!isDatasetSelected)
+              handleSetIsDatasetSelected(true)
+            handleSetDatasetSelected(datasets.length - 1)
+            if (priorityMode) 
+              showOnlyDataset(datasets.length - 1)
+          }
         }
       }
-    }
-    else if (arduinoData.startsWith('$EOT')) {
-      const dataParts = arduinoData.split(',')
-      if(dataParts.length >= 4){
-        const omega = parseFloat(dataParts[1])
-        const realZ = parseFloat(dataParts[2])
-        const imagZ = parseFloat(dataParts[3])
-        addComplexPoint(omega, realZ, imagZ)
+
+      // Data start
+      if (arduinoData.startsWith('$MSG,RCD*20')) {
+        const CP = currentParams
+        const commandBody = `CVW,${CP.settlingTime},${CP.startPotential},${CP.endPotential},${CP.scanRate},${CP.step},${CP.cycles}`
+        const checksum = calculateChecksum(commandBody)
+        const out = `$${commandBody}*${checksum}`
+        window.electron.sendCommand(out)
+        handleSetIsReading(true)
+        setNewDataSet(currentName, currentParams, "CVW")
+      }
+      
+      // Data end
+      if(arduinoData.startsWith('$MSG,END')){
+        handleSetIsReading(false)
+        if(isDatasetsMinimized)
+          setIsDatasetsMinimized()
       }
     }
-
-    // Data start
-    if(arduinoData.startsWith('$CVS'))
-      setNewDataSet(currentName, currentParams, "CVW")
-    else if(arduinoData.startsWith('$ESS'))
-      setNewDataSet(currentName, currentParams, "EIS")
     
-    // Data end
-    else if(arduinoData.startsWith('$END') || arduinoData.startsWith('$EBF')){
-      handleSetIsReading(false)
-      if(isDatasetsMinimized)
-        setIsDatasetsMinimized()
+    // Data graph Dummy
+    else {
+      if (arduinoData.startsWith('$SGL')) {
+        const dataParts = arduinoData.split(',')
+        if (dataParts.length >= 3) {
+          const voltage = parseFloat(dataParts[1])
+          const current = parseFloat(dataParts[2].split('*')[0])
+          addDataPoint(voltage, current)
+        }
+        if(datasets[datasets.length - 1].data[0]!=null){
+          if( datasets[datasets.length - 1].data[0].x.length === 1 ){
+            if(!isDatasetSelected)
+              handleSetIsDatasetSelected(true)
+            handleSetDatasetSelected(datasets.length - 1)
+            if (priorityMode) 
+              showOnlyDataset(datasets.length - 1)
+          }
+        }
+      }
+      else if (arduinoData.startsWith('$EOT')) {
+        const dataParts = arduinoData.split(',')
+        if(dataParts.length >= 4){
+          const omega = parseFloat(dataParts[1])
+          const realZ = parseFloat(dataParts[2])
+          const imagZ = parseFloat(dataParts[3])
+          addComplexPoint(omega, realZ, imagZ)
+        }
+      }
+      // Data start
+      if(arduinoData.startsWith('$CVS'))
+        setNewDataSet(currentName, currentParams, "CVW")
+      else if(arduinoData.startsWith('$ESS'))
+        setNewDataSet(currentName, currentParams, "EIS")
+      
+      // Data end
+      else if(arduinoData.startsWith('$END') || arduinoData.startsWith('$EBF')){
+        handleSetIsReading(false)
+        if(isDatasetsMinimized)
+          setIsDatasetsMinimized()
+      }
     }
   },[arduinoData])
 
