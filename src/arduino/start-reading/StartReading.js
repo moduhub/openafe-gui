@@ -20,32 +20,39 @@ export const StartReading = (
 ) => {
 
   if(!isDummy){
-    const commandBody = `CMD,CUR,${currentRange_microamps}`
+    const commandBody = `$CMD,CUR,${currentRange_microamps}*`
     const checksum = calculateChecksum(commandBody)
-    window.electron.sendCommand(`$${commandBody}*${checksum}`)
+    window.electron.sendCommand(`${commandBody}${checksum}`)
   }
   else {
     handleSetIsReading(true)
-    if (experimentType === 'CVW') {
-      window.electron.sendCommand(
-        '$CVW,' +
-        currentParams.settlingTime + ',' +
-        currentParams.startPotential + ',' +
-        currentParams.endPotential + ',' +
-        currentParams.step + ',' +
-        currentParams.scanRate + ',' +
-        (currentParams.cycles ?? 0) + '*54'
-      )
-    } 
-    else if (experimentType === 'EIS') {
-      window.electron.sendCommand(
-        '$EIS,' +
-        currentParams.settlingTime + ',' +
-        currentParams.startOmega + ',' +
-        currentParams.endOmega + ',' +
-        currentParams.stepForADecade + ',' +
-        currentParams.scanRate + ','
-      )
+    switch (experimentType) {
+      case 'CVW':
+        window.electron.sendCommand(
+          '$CVW,' +
+          currentParams.settlingTime + ',' +
+          currentParams.startPotential + ',' +
+          currentParams.endPotential + ',' +
+          currentParams.step + ',' +
+          currentParams.scanRate + ',' +
+          (currentParams.cycles ?? 0) + '*54'
+        )
+        break
+      case 'DPV':
+        // NOT IMPLEMENTED
+        break
+      case 'EIS':
+        window.electron.sendCommand(
+          '$EIS,' +
+          currentParams.settlingTime + ',' +
+          currentParams.startOmega + ',' +
+          currentParams.endOmega + ',' +
+          currentParams.stepForADecade + ',' +
+          currentParams.scanRate + ','
+        )
+        break
+      default:
+        break
     }
   }
   

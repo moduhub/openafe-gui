@@ -15,8 +15,19 @@ const defaultCVParams = {
   settlingTime: 1000,
   startPotential: -800,
   endPotential: 0,
-  step: 100,
   scanRate: 200,
+  step: 100,
+  cycles: 1,
+}
+
+const defaultDPVParams = {
+  settlingTime: 1000,
+  startPotential: -800,
+  endPotential: 0,
+  pulseAmplitude: 200,
+  pulseLength: 10,
+  scanRate: 200,
+  step: 100,
   cycles: 1,
 }
 
@@ -68,7 +79,7 @@ export const DataSetsProvider = ({ children }) => {
   } = useDashboardContext()
 
   const [currentName, setCurrentName] = useState(defaultName)
-  const [experimentType, setExperimentType] = useState('CVW') // ou 'EIS'
+  const [experimentType, setExperimentType] = useState('CVW') // ou 'EIS', 'DPV'
   const [currentParams, setCurrentParams] = useState(defaultCVParams)
   const [datasets, setDatasets]= useState([])
   const [isDatasetSelected, setIsDatasetSelected] = useState(false)
@@ -372,7 +383,20 @@ export const DataSetsProvider = ({ children }) => {
 
   const handleExperimentType = useCallback((type) => {
     setExperimentType(type)
-    setCurrentParams(type === 'CVW' ? defaultCVParams : defaultEISParams)
+    switch (type) {
+      case 'CVW':
+        setCurrentParams(defaultCVParams)
+        break
+      case 'DPV':
+        setCurrentParams(defaultDPVParams)
+        break
+      case 'EIS':
+        setCurrentParams(defaultEISParams)
+        break
+      default:
+        setCurrentParams(defaultCVParams)
+        break
+    }
   }, [])
 
   const toggleDatasetVisibility = useCallback((pos) => {
@@ -478,7 +502,7 @@ export const DataSetsProvider = ({ children }) => {
   }, [])
 
   
-  useEffect(()=>{     
+  useEffect(()=>{   
     // Data graph 
     if(!isDummy){
       if (arduinoData.startsWith('$SGL')) {
@@ -498,12 +522,11 @@ export const DataSetsProvider = ({ children }) => {
       }
 
       // Data start
-      if (arduinoData.startsWith('$MSG,RCD*20')) {
-        const CP = currentParams
-        const commandBody = `CVW,${CP.settlingTime},${CP.startPotential},${CP.endPotential},${CP.scanRate},${CP.step},${CP.cycles}`
+      if (arduinoData.startsWith('$MSG,RCD')) {
+        const CP = Object.values(currentParams) 
+        const commandBody = `$${experimentType},${CP.join(",")}*`
         const checksum = calculateChecksum(commandBody)
-        const out = `$${commandBody}*${checksum}`
-        window.electron.sendCommand(out)
+        window.electron.sendCommand(`${commandBody}${checksum}`)
         handleSetIsReading(true)
         setNewDataSet(currentName, currentParams, "CVW")
       }
