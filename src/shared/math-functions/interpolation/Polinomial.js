@@ -1,12 +1,21 @@
 /**
- * Calculates Polinomial Interpolation (Vandermonde + Normal Equation),
+ * @brief Calculates Polinomial Interpolation (Vandermonde + Normal Equation),
  *
- * @param {number[]} xSlice                - Array of x values (interval recortado)
- * @param {number[]} ySlice                - Array of y values (interval recortado)
- * @param {number} degree                  - Degree of the interpolating polynomial
- * @param {number[]} interpRangeX          - Array of x values to generate interpolation (linear ou log)
+ * @param {number[]} xSlice - Array of x values (interval recortado)
+ * @param {number[]} ySlice - Array of y values (interval recortado)
+ * @param {number} degree - Degree of the interpolating polynomial
+ * @param {number[]} interpRangeX - Array of x values to generate interpolation (linear ou log)
  * 
  * @returns {{coefficients: Array, interpolatedX: number[], interpolatedY: number[]}}
+ * 
+ * Behavior:
+ * - xSlice and interpRangeX are in linear scale, ySlice is in linear scale.
+ * 
+ * @throws Will throw an error if the input arrays are empty or have insufficient points.
+ * @throws Will throw an error if the input data is insufficient for the specified polynomial degree.
+ * 
+ * @note The function performs a polynomial interpolation using the Vandermonde matrix and the normal equation.
+ *       The output includes the polynomial coefficients and interpolated values.
  */
 export const calculatePolynomialInterpolation = (
   xSlice,

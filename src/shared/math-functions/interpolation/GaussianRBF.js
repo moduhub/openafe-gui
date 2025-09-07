@@ -1,18 +1,26 @@
 /**
- * Calculates Gaussian interpolation (RBF with Gaussian nucleus),
+ * @brief Calculates Gaussian interpolation (RBF with Gaussian nucleus),
  *
- * @param {number[]} xSlice                - Array of x values (interval recortado)
- * @param {number[]} ySlice                - Array of y values (interval recortado)
- * @param {number[]} interpRangeX          - Array of x values to generate interpolation (linear ou log)
+ * @param {number[]} xSlice - Array of x values (interval recortado)
+ * @param {number[]} ySlice - Array of y values (interval recortado)
+ * @param {number[]} interpRangeX - Array of x values to generate interpolation (linear ou log)
  * 
  * @returns {{mu: number, sigma: number, amplitude: number, interpolatedX: number[], interpolatedY: number[]}}
+ * 
+ * Behavior:
+ * - xSlice and interpRangeX are in linear scale, ySlice is in linear scale.
+ * 
+ * @throws Will throw an error if the input arrays are empty.
+ * 
+ * @note The function performs a Gaussian interpolation using Radial Basis Function (RBF) with a Gaussian kernel.
+ *       The output includes the Gaussian parameters and interpolated values.
  */
 export const calculateGaussianInterpolationRBF = (
   xSlice,
   ySlice,
   interpRangeX
 ) => {
-  if (!xSlice.length) throw new Error('Intervalo vazio para Gaussiana')
+  if (!xSlice.length) throw new Error('Empty interval for Gaussian')
 
   // Original signal of the peak and absolute values
   const absY = ySlice.map(y => Math.abs(y))
@@ -55,7 +63,7 @@ export const calculateGaussianInterpolationRBF = (
 
   // Detect and apply horizontal mirroring, if μ is to the left of the center
   const sliceMid = (xSlice[0] + xSlice[xSlice.length - 1]) / 2
-  // (Opcional: normalmente não é necessário para interpolação, mas mantido para compatibilidade)
+  // (Optional: It is normally not necessary for interpolation, but kept for compatibility.)
 
   return {
     mu,

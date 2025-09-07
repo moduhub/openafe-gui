@@ -1,24 +1,34 @@
 /**
- * Fits a Gaussian using Least Squares (linearizing in log)
+ * @brief Fits a Gaussian using Least Squares (linearizing in log)
  *
- * @param {number[]} xSlice                - Array of x values (interval recortado)
- * @param {number[]} ySlice                - Array of y values (interval recortado)
- * @param {number[]} interpRangeX          - Array of x values to generate interpolation (linear ou log)
- * @param {boolean} isBodeMod              - Whether the data is in Bode modulus format (dB)
+ * @param {number[]} xSlice - Array of x values (interval recortado)
+ * @param {number[]} ySlice - Array of y values (interval recortado)
+ * @param {number[]} interpRangeX - Array of x values to generate interpolation (linear ou log)
+ * @param {boolean} isBodeMod - Whether the data is in Bode modulus format (dB)
  *
  * @returns {{mu:number, sigma:number, amplitude:number, interpolatedX:number[], interpolatedY:number[]}}
+ * 
+ * Behavior:
+ * - If isBodeMod is true, xSlice and interpRangeX are in Hz (log scale), ySlice is in dB.
+ * - If isBodeMod is false, xSlice and interpRangeX are in linear scale, ySlice is in linear scale.
+ *
+ * @throws Will throw an error if the input arrays are empty or have insufficient points.
+ * @throws Will throw an error if the input data is insufficient or if the fit is invalid.
+ *
+ * @note The function performs a Gaussian fit by linearizing the problem using logarithms.
+ *       It handles both standard and Bode modulus (dB) data formats.
+ *       The output includes the Gaussian parameters and interpolated values.
  */
 export const calculateGaussianInterpolationLS = (
   xSlice, ySlice, 
   interpRangeX,
   isBodeMod = false
 ) => {
-  if (!xSlice.length) throw new Error('Intervalo vazio para ajuste gaussiano')
-  if (xSlice.length < 3) throw new Error('Pontos insuficientes para ajuste gaussiano')
+  if (!xSlice.length) throw new Error('Empty interval for Gaussian adjustment')
+  if (xSlice.length < 3) throw new Error('Insufficient points for Gaussian adjustment')
 
   const n = xSlice.length
 
-  // === 1. Pré-processamento de ySlice (log-linearização e sinal) ===
   let absY
   if (isBodeMod) {
     absY = ySlice.map(yDb => Math.max(Math.pow(10, yDb / 20), 1e-12))
@@ -32,7 +42,7 @@ export const calculateGaussianInterpolationLS = (
   // u = ln(absY)
   const us = absY.map(y => Math.log(y))
 
-  // === 2. Pré-processamento de xSlice ===
+  // === 2. Pre-processing of xSlice ===
   let xs = isBodeMod
     ? xSlice.map(x => Math.log10(x))
     : xSlice.slice()
@@ -46,7 +56,7 @@ export const calculateGaussianInterpolationLS = (
     normX = xs.map(x => (x - meanX) / scaleX)
   }
 
-  // === 3. Cálculo das somas ===
+  // === 3. Calculation of sums ===
   let S0 = 0, Sx = 0, Sx2 = 0, Sx3 = 0, Sx4 = 0
   let Su = 0, Sxu = 0, Sx2u = 0
 
@@ -71,7 +81,7 @@ export const calculateGaussianInterpolationLS = (
   ]
   const Y = [Sx2u, Sxu, Su]
 
-  // === 4. Resolução do sistema linear ===
+  // === 4. Resolution of the linear system ===
   const solveLinear3 = (A, B) => {
     const m = A.map(row => row.slice())
     const y = B.slice()
@@ -103,22 +113,22 @@ export const calculateGaussianInterpolationLS = (
 
   const [a, b, c] = solveLinear3(M, Y)
 
-  // === 5. Verificação de curvatura ===
+  // === 5. Curvature check ===
   if (a >= 0) {
     throw new Error('Curvatura positiva: ajuste gaussiano inválido para esses dados')
   }
 
-  // === 6. Extração dos parâmetros ===
+  // === 6. Extraction of parameters ===
   const sigma = Math.sqrt(-1 / (2 * a))
   const muNorm = b * sigma * sigma
 
-  // Reescalona para domínio original se for BodeMod
+  // Rescale to the original domain if it is BodeMod
   const mu = isBodeMod ? (muNorm * scaleX + meanX) : muNorm
   const muHz = isBodeMod ? Math.pow(10, mu) : mu
 
   const A = Math.exp(c + (muNorm * muNorm) / (2 * sigma * sigma))
 
-  // === 7. Interpolação ===
+  // === 7. Interpolation ===
   const interpolatedX = interpRangeX
   const interpolatedY = interpRangeX.map(x => {
     const xVal = isBodeMod ? Math.log10(x) : x
