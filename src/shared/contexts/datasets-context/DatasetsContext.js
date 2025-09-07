@@ -88,7 +88,7 @@ export const DataSetsProvider = ({ children }) => {
   } = useDashboardContext()
 
   const [currentName, setCurrentName] = useState(defaultName)
-  const [experimentType, setExperimentType] = useState('CVW') // ou 'EIS', 'DPV'
+  const [experimentType, setExperimentType] = useState('CVW') // ou 'EIS', 'DPV', SWV
   const [currentParams, setCurrentParams] = useState(defaultCVParams)
   const [datasets, setDatasets]= useState([])
   const [isDatasetSelected, setIsDatasetSelected] = useState(false)
@@ -397,6 +397,9 @@ export const DataSetsProvider = ({ children }) => {
         setCurrentParams(defaultCVParams)
         break
       case 'DPV':
+        setCurrentParams(defaultDPVParams)
+        break
+       case 'SWV':
         setCurrentParams(defaultDPVParams)
         break
       case 'EIS':
