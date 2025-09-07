@@ -1,6 +1,9 @@
 import { createTheme } from '@mui/material/styles';
 import { purple, yellow } from '@mui/material/colors';
 
+/**
+ * @brief Dark theme for the application using Material-UI.
+ */
 export const DarkTheme = createTheme({
   palette: {
     primary: {

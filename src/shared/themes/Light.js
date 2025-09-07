@@ -1,6 +1,9 @@
 import { createTheme } from "@mui/material";
 import { purple, yellow } from "@mui/material/colors"
 
+/**
+ * @brief Light theme for the application using Material-UI.
+ */
 export const LightTheme = createTheme({
   palette:{
     primary:{
