@@ -8,22 +8,24 @@ import {
 const DashboardContext = createContext()
 
 /**
- * Returns the current value of the Dashboard context
+ * @brief Returns the current value of the Dashboard context
  * 
  * @returns {object} The Dashboard context value
+ * 
+ * Behavior:
+ * - Provides access to dashboard layout state and toggle functions
  */
 export const useDashboardContext = () => {
   return useContext(DashboardContext)
 }
 
 /**
- * Provides the Dashboard context to its children
- * 
- * Manages UI layout state, such as whether the Arduino and Datasets tabs are minimized
+ * @brief Provides the Dashboard context to its children
  * 
  * @param {React.ReactNode} children - The components that will receive the context
  * 
- * @returns {JSX.Element} 
+ * Behavior:
+ * - Manages UI layout state, such as whether the Arduino and Datasets tabs are minimized
  */
 export const DashboardProvider = ({ children }) => {
   const [tabArduinoIsMinimized, setTabArduinoIsMinimized] = useState(false)

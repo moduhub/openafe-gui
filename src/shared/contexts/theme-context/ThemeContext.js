@@ -7,7 +7,7 @@ import { DarkTheme, LightTheme } from '../../themes'
 export const ThemeContext = createContext()
 
 /**
- * Custom hook to access the App Theme context
+ * @brief Custom hook to access the App Theme context
  *
  * @returns {object} The theme context value
  */
@@ -16,14 +16,16 @@ export const useAppThemeContext = () => {
 }
 
 /**
- * Provides application theme context to all nested components
+ * @brief Provides application theme context to all nested components
  * 
  * Manages theme switching between light and dark modes, and wraps the app
  * with the selected theme using MUI's ThemeProvider
  *
  * @param {React.ReactNode} props.children
  * 
- * @returns {JSX.Element} 
+ * Behavior:
+ * - Initializes theme state (light/dark)
+ * - Provides a toggle function to switch themes 
  */
 export const AppThemeProvider = ({ children }) => {
   

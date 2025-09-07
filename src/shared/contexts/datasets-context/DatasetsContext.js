@@ -49,16 +49,19 @@ const defaultEISParams = {
 }
 
 /**
- * Custom hook to access the Datasets context
+ * @brief Custom hook to access the Datasets context
  *
  * @returns {object} The datasets context value
+ * 
+ * Behavior:
+ * - Provides access to dataset management functions and state
  */
 export const useDatasetsContext = () => {
   return useContext(DatasetsContext)
 }
 
 /**
- * Provides the Datasets context to its children
+ * @brief Provides the Datasets context to its children
  * 
  * Manages the creation, deletion, visibility, and parameter settings
  * of datasets based on Arduino data and application settings
@@ -66,7 +69,10 @@ export const useDatasetsContext = () => {
  * 
  * @param {React.ReactNode} children - React children components.
  * 
- * @returns {JSX.Element} 
+ * Behavior:
+ * - Initializes state for datasets and related parameters
+ * - Provides functions to manipulate datasets (add, delete, toggle visibility)
+ * - Listens to Arduino data updates to manage datasets in real-time
  */
 export const DataSetsProvider = ({ children }) => {
 

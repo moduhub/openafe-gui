@@ -10,26 +10,27 @@ import { useDashboardContext } from '..'
 const ArduinoContext = createContext({})
 
 /**
- * Returns the current value of the Arduino context.
+ * @brief Returns the current value of the Arduino context.
  * 
  * @returns {object} - The Arduino context value
+ * 
+ * Behavior:
+ * - Provides access to Arduino connection state, selected ports, and incoming data
  */
 export const useArduinoContext = () => {
   return useContext(ArduinoContext)
 }
 
 /**
- * ArduinoProvider manages the state and context for Arduino serial communication
- * 
- * Responsibilities:
- * - Manages connection state, selected ports, and incoming Arduino data
- * - Listens for Electron IPC events related to Arduino communication
- * - Exposes context values and setters for consuming components
- * - Displays status messages via a Snackbar
+ * @brief ArduinoProvider manages the state and context for Arduino serial communication
  * 
  * @param {ReactNode} children - React children components to be wrapped by this context provider
  * 
- * @returns {JSX.Element} 
+ * Behavior:
+ * - Initializes state for connection status, selected ports, and incoming data
+ * - Sets up IPC event listeners on mount and cleans them up on unmount
+ * - Updates connection state based on incoming data messages
+ * - Displays Snackbar notifications for connection status and errors
  */
 export const ArduinoProvider = ({ children }) => {
   const [isDummy, setIsDummy] = useState(false)

@@ -4,7 +4,7 @@ import { Box } from '@mui/system'
 const DrawerContext = createContext({})
 
 /**
- * Custom hook to access the Drawer context
+ * @brief Custom hook to access the Drawer context
  *
  * @returns {object} 
  */
@@ -13,14 +13,16 @@ export const useDrawerContext = () => {
 }
 
 /**
- * Provides the Drawer context to its children
+ * @brief Provides the Drawer context to its children
  * 
  * Manages drawer open/close state and dynamic drawer options
  * Useful for layout and navigation logic within the application
  *
  * @param {React.ReactNode} children
  * 
- * @returns {JSX.Element} 
+ * Behavior:
+ * - Initializes state for drawer options and open/close status
+ * - Provides functions to toggle drawer state and update options
  */
 export const DrawerProvider = ({ children }) => {
   const [drawerOptions, setDrawerOptions] = useState([])

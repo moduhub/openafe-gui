@@ -3,7 +3,7 @@ import { createContext, useCallback, useContext, useState } from 'react'
 const SettingsContext = createContext({})
 
 /**
- * Custom hook to access the Settings context
+ * @brief Custom hook to access the Settings context
  *
  * @returns {object} The theme context value
  */
@@ -12,14 +12,16 @@ export const useSettingsContext = () => {
 }
 
 /**
- * Provides global application settings to all nested components
+ * @brief Provides global application settings to all nested components
  * 
  * Manages configurable options like dataset behavior, UI preferences, 
  * and system-wide flags (e.g., priority mode, unit system)
  * 
  * @param {React.ReactNode} children 
  * 
- * @returns {JSX.Element} 
+ * Behavior:
+ * - Initializes state for various application settings
+ * - Provides setter functions to update each setting
  */
 export const SettingsProvider = ({ children }) => {
   const [priorityMode, setPriorityMode] = useState(true)
