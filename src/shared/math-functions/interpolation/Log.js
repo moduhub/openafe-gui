@@ -2,15 +2,24 @@
  * Logarithmic Spline Interpolation (Cubic Spline in log(x))
  * It works for any graph, as long as x > 0.
  *
- * @param {number[]} xSlice             - Array x 
- * @param {number[]} ySlice             - Array y
- * @param {number[]} interpRangeX       - Array x to interpolate
+ * @param {number[]} xSlice - Array x 
+ * @param {number[]} ySlice - Array y
+ * @param {number[]} interpRangeX - Array x to interpolate
+ * 
  * @returns {{interpolatedX: number[], interpolatedY: number[]}}
+ * 
+ * Behavior:
+ * - xSlice and interpRangeX are in linear scale, ySlice is in linear scale.
+ * 
+ * @throws Will throw an error if the input arrays are empty or contain non-positive x values.
+ * 
+ * @note The function performs a cubic spline interpolation in the logarithmic domain of x.
+ *       The output includes the interpolated x and y values, as well as the logarithmic knots and spline coefficients.
  */
 export const calculateLogSplineInterpolation = (xSlice, ySlice, interpRangeX) => {
-  if (!xSlice.length || !ySlice.length) throw new Error('Intervalo vazio para Spline Logarítmico')
+  if (!xSlice.length || !ySlice.length) throw new Error('Empty interval for Logarithmic Spline')
   if (xSlice.some(x => x <= 0) || interpRangeX.some(x => x <= 0)) {
-    throw new Error('Spline logarítmico requer x > 0')
+    throw new Error('Logarithmic spline requires x > 0')
   }
   const logX = xSlice.map(Math.log10)
   const interpLogX = interpRangeX.map(Math.log10)
