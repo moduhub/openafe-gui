@@ -7,7 +7,46 @@ import {
   useDashboardContext
 } from '..'
 
+import { calculateChecksum } from '../../math-functions'
+
 const DatasetsContext = createContext({})
+
+const defaultCVParams = {
+  settlingTime: 1000,
+  startingPotential: -800,
+  endingPotential: 0,
+  scanRate: 100,
+  step: 100,
+  cycles: 1,
+}
+
+const defaultDPVParams = {
+  settlingTime: 1000,
+  startingPotential: -800,
+  endingPotential: 0,
+  scanRate: 100,
+  stepPotential: 100,
+  pulsePotential: 300,
+  dutyCycle: 50
+}
+
+const defaultSWVParams = {
+  settlingTime: 1000,
+  startingPotential: -800,
+  endingPotential: 0,
+  scanRate: 100,
+  stepPotential: 100,
+  pulsePotential: 300,
+  dutyCycle: 50
+}
+
+const defaultEISParams = {
+  settlingTime: 1000,
+  startOmega: 0, // Hz
+  endOmega: 100, // Hz
+  stepForADecade: 10,
+  scanRate: 5000,
+}
 
 /**
  * Custom hook to access the Datasets context
@@ -35,7 +74,8 @@ export const DataSetsProvider = ({ children }) => {
 
   const { 
     arduinoData,
-    handleSetIsReading ,
+    handleSetIsReading,
+    isDummy
   } = useArduinoContext()
   const {
     priorityMode,
@@ -48,14 +88,8 @@ export const DataSetsProvider = ({ children }) => {
   } = useDashboardContext()
 
   const [currentName, setCurrentName] = useState(defaultName)
-  const [currentParams, setCurrentParams] = useState({
-    settlingTime: 1000,
-    startPotential: -800,
-    endPotential: 0,
-    step: 10,
-    scanRate: 1000,
-    cycles: 1,
-  })
+  const [experimentType, setExperimentType] = useState('CVW') // ou 'EIS', 'DPV', SWV
+  const [currentParams, setCurrentParams] = useState(defaultCVParams)
   const [datasets, setDatasets]= useState([])
   const [isDatasetSelected, setIsDatasetSelected] = useState(false)
   const [datasetSelected, setDatasetSelected] = useState("")
@@ -108,9 +142,19 @@ export const DataSetsProvider = ({ children }) => {
     }
   }
 
-  const setNewDataSet = (name_, parameters_) => {
+  const setNewDataSet = (name_, parameters_, type_) => {
+    // Before adding, hide all datasets of a different type
+    setDatasets((prevDatasets) =>
+      prevDatasets.map((dataset) =>
+        dataset.type !== type_ && (dataset.type === "CVW" || dataset.type === "EIS")
+          ? { ...dataset, visible: false }
+          : dataset
+      )
+    )
+
     const visible_ = true
   
+    // Function to toggle visibility ensuring exclusivity by type
     const handleSetIsVisible = () => {
       setDatasets((prevDatasets) =>
         prevDatasets.map((dataset) =>
@@ -158,17 +202,33 @@ export const DataSetsProvider = ({ children }) => {
             : dataset
         )
       )
-      console.log("marcação adicionada com sucesso")
-      console.log(marker)
     }
     
+    let data_ = []
+    if(type_ === "CVW")
+      data_ = [{
+            x: [], y: [],
+            mode: 'lines',
+            line: null,
+            name: name_,
+          }]
+    else if (type_ === "EIS")
+      data_ = [{
+            omega: [], modZ: [], angZ: [], realZ: [], imagZ: [],
+            mode: 'lines',
+            line: null,
+            name: name_,
+          }]
   
     cacheDatasetsManager()
+
     setDatasets((prevDatasets) => [
       ...prevDatasets,
       {
         name: name_,
+        type: type_,
         params: parameters_,
+        params_e: [],
         visible: visible_,
         setIsVisible: handleSetIsVisible,
         addInterpolation: addInterpolation,
@@ -177,21 +237,13 @@ export const DataSetsProvider = ({ children }) => {
         interpolations: [],
         areas: [],
         markers: [],
-        data: [
-          {
-            x: [],
-            y: [],
-            mode: 'lines',
-            line: { color: theme.palette.primary.main },
-            name: toString(name_),
-          },
-        ],
+        data: data_,
       },
     ])
 
   }
 
-  const handleNewDataset = (name_, parameters_, points_) => {
+  const handleNewDataset = (name_, parameters_, points_, type_) => {
     const visible_ = true
     const handleSetIsVisible = () => {
       setDatasets((prevDatasets) =>
@@ -203,22 +255,79 @@ export const DataSetsProvider = ({ children }) => {
       )
     }
 
+    const addInterpolation = (interpolation) => {
+      setDatasets((prevDatasets) =>
+        prevDatasets.map((dataset) =>
+          dataset.name === name_
+            ? {
+                ...dataset,
+                interpolations: [...dataset.interpolations, interpolation],
+              }
+            : dataset
+        )
+      )
+    }
+
+    const addAreaMarker = (area) => {
+      setDatasets((prevDatasets) =>
+        prevDatasets.map((dataset) =>
+          dataset.name === name_
+            ? {
+                ...dataset,
+                areas: [...dataset.areas, area],
+              }
+            : dataset
+        )
+      )
+    }
+
+    const addPointMarker = (marker) =>{
+      setDatasets((prevDatasets) =>
+        prevDatasets.map((dataset) =>
+          dataset.name === name_
+            ? {
+                ...dataset,
+                markers: [...dataset.markers, marker],
+              }
+            : dataset
+        )
+      )
+    }
+
     cacheDatasetsManager()
+
+    let data_ = []
+    if(type_ === "CVW")
+      data_ = [{
+            x: points_.x, y: points_.y,
+            mode: 'lines',
+            line: null,
+            name: name_,
+          }]
+    else if (type_ === "EIS")
+      data_ = [{
+            omega: points_.omega, modZ: points_.modZ, angZ: points_.angZ, realZ: points_.realZ, imagZ: points_.imagZ,
+            mode: 'lines',
+            line: null,
+            name: name_,
+          }]
+    
     setDatasets((prevDatasets) => [
       ...prevDatasets,
       {
         name: name_,
+        type: type_,
         params: parameters_,
+        params_e: [],
         visible: visible_,
         setIsVisible: handleSetIsVisible,
-        data: [
-          {
-            x: points_.x,
-            y: points_.y,
-            mode: 'lines',
-            line: { color: theme.palette.primary.main },
-          },
-        ],
+        addInterpolation: addInterpolation,
+        addAreaMarker: addAreaMarker,
+        addPointMarker: addPointMarker,
+        interpolations: [],
+        areas: [],
+        markers: [],
+        data: data_,
       },
     ])
   }
@@ -229,7 +338,7 @@ export const DataSetsProvider = ({ children }) => {
         if (index === prevDatasets.length - 1) {
           const newData = dataset.data ? [...dataset.data] : []
           if (!newData[0]) newData[0] = { x: [], y: [] }
-  
+
           return {
             ...dataset,
             data: [
@@ -237,6 +346,39 @@ export const DataSetsProvider = ({ children }) => {
                 ...newData[0],
                 x: [...newData[0].x, voltage],
                 y: [...newData[0].y, current],
+                
+              },
+            ],
+          }
+        }
+        return dataset
+      })
+
+      return updatedDatasets
+    })
+  }
+  
+  const addComplexPoint = (omega_, realZ_, imagZ_) => {
+
+    const modZ_ = Math.sqrt(realZ_ * realZ_ + imagZ_ * imagZ_)
+    const angZ_ = Math.atan2(imagZ_, realZ_) * (180 / Math.PI) // in degree
+
+    setDatasets((prevDatasets) => {
+      const updatedDatasets = prevDatasets.map((dataset, index) => {
+        if (index === prevDatasets.length - 1) {
+          const newData = dataset.data ? [...dataset.data] : []
+          if (!newData[0]) newData[0] = { omega: [], modZ: [], angZ: [], realZ: [], imagZ: [] }
+  
+          return {
+            ...dataset,
+            data: [
+              {
+                ...newData[0],
+                omega: [...newData[0].omega, omega_],
+                modZ: [...newData[0].modZ, modZ_],
+                angZ: [...newData[0].angZ, angZ_],
+                realZ: [...newData[0].realZ, realZ_],
+                imagZ: [...newData[0].imagZ, imagZ_],
               },
             ],
           }
@@ -248,9 +390,45 @@ export const DataSetsProvider = ({ children }) => {
     })
   }
 
+  const handleExperimentType = useCallback((type) => {
+    setExperimentType(type)
+    switch (type) {
+      case 'CVW':
+        setCurrentParams(defaultCVParams)
+        break
+      case 'DPV':
+        setCurrentParams(defaultDPVParams)
+        break
+       case 'SWV':
+        setCurrentParams(defaultDPVParams)
+        break
+      case 'EIS':
+        setCurrentParams(defaultEISParams)
+        break
+      default:
+        setCurrentParams(defaultCVParams)
+        break
+    }
+  }, [])
+
   const toggleDatasetVisibility = useCallback((pos) => {
-    datasets[pos].setIsVisible(!datasets[pos].visible)
-  })
+    setDatasets(prevDatasets => {
+      const target = prevDatasets[pos]
+      if (!target) return prevDatasets
+
+      handleExperimentType(target.type)
+
+      return prevDatasets.map((ds, idx) => {
+        if (idx === pos) {
+          return { ...ds, visible: !ds.visible }
+        }
+        if (!target.visible && ds.type !== target.type && (ds.type === 'CVW' || ds.type === 'EIS')) {
+          return { ...ds, visible: false }
+        }
+        return ds
+      })
+    })
+  }, [handleExperimentType])
 
   const showOnlyDataset = useCallback((pos) => {
     datasets.forEach( (ds, i) => 
@@ -265,8 +443,8 @@ export const DataSetsProvider = ({ children }) => {
         dataset.name === datasetName
           ? {
               ...dataset,
-              params: {
-                ...dataset.params,
+              params_e: {
+                ...dataset.params_e,
                 [paramName]: paramValue,
               },
             }
@@ -274,39 +452,148 @@ export const DataSetsProvider = ({ children }) => {
       )
     )
   }
+
+  const editDatasetParam = (datasetName, paramName, paramValue) => {
+    setDatasets((prevDatasets) =>
+      prevDatasets.map((dataset) =>
+        dataset.name === datasetName
+          ? {
+              ...dataset,
+              params_e: {
+                ...dataset.params_e,
+                [paramName]: paramValue,
+              },
+            }
+          : dataset
+      )
+    )
+  }
+
+  const deleteDatasetParam = (datasetName, paramName) => {
+    setDatasets((prevDatasets) =>
+      prevDatasets.map((dataset) =>
+        dataset.name === datasetName
+          ? {
+              ...dataset,
+              params_e: Object.fromEntries(
+                Object.entries(dataset.params_e).filter(([key]) => key !== paramName)
+              ),
+            }
+          : dataset
+      )
+    )
+  }
+
+  const setExclusiveVisibility = useCallback((typeToShow) => {
+    setDatasets((prevDatasets) =>
+      prevDatasets.map((dataset) => {
+        if (dataset.type === typeToShow) {
+          return { ...dataset, visible: true }
+        } else if (dataset.type === "CVW" || dataset.type === "EIS") {
+          return { ...dataset, visible: false }
+        }
+        return dataset
+      })
+    )
+  }, [])
+
+  const toggleExclusiveVisibility = useCallback((pos) => {
+    setDatasets((prevDatasets) => {
+      const target = prevDatasets[pos]
+      if (!target) return prevDatasets
+      const typeToShow = target.type
+      return prevDatasets.map((dataset, idx) => {
+        if (idx === pos) {
+          return { ...dataset, visible: !dataset.visible }
+        } else if (dataset.type === "CVW" || dataset.type === "EIS") {
+          return typeToShow !== dataset.type ? { ...dataset, visible: false } : dataset
+        }
+        return dataset
+      })
+    })
+  }, [])
+
   
-  useEffect(()=>{
-    // Data graph
-    if (arduinoData.startsWith('$SGL')) {
-      const dataParts = arduinoData.split(',')
-      if (dataParts.length >= 3) {
-        const voltage = parseFloat(dataParts[1])
-        const current = parseFloat(dataParts[2].split('*')[0])
+  useEffect(()=>{   
+    // Data graph 
+    if(!isDummy){
+      if (arduinoData.startsWith('$SGL')) {
+        const dataParts = arduinoData.split(',')
+        const voltage =  dataParts[1]
+        const current = (dataParts[2].split('*'))[0]
         addDataPoint(voltage, current)
-      }
-      if(datasets[datasets.length - 1].data[0]!=null){
-        if( datasets[datasets.length - 1].data[0].x.length === 1 ){
-          if(!isDatasetSelected)
-            handleSetIsDatasetSelected(true)
-          handleSetDatasetSelected(datasets.length - 1)
-          if (priorityMode) 
-            showOnlyDataset(datasets.length - 1)
+        if(datasets[datasets.length - 1].data[0]!=null){
+          if( datasets[datasets.length - 1].data[0].x.length === 1 ){
+            if(!isDatasetSelected)
+              handleSetIsDatasetSelected(true)
+            handleSetDatasetSelected(datasets.length - 1)
+            if (priorityMode) 
+              showOnlyDataset(datasets.length - 1)
+          }
         }
       }
-    }
 
-    // Data start
-    else if(arduinoData.startsWith('$START')){
-      setNewDataSet(currentName, currentParams)
+      // Data start
+      if (arduinoData.startsWith('$MSG,RCD')) {
+        const CP = Object.values(currentParams) 
+        const commandBody = `$${experimentType},${CP.join(",")}*`
+        const checksum = calculateChecksum(commandBody)
+        window.electron.sendCommand(`${commandBody}${checksum}`)
+        handleSetIsReading(true)
+        setNewDataSet(currentName, currentParams, "CVW")
+      }
+      
+      // Data end
+      if(arduinoData.startsWith('$MSG,END')){
+        handleSetIsReading(false)
+        if(isDatasetsMinimized)
+          setIsDatasetsMinimized()
+        const forceReset = "CMD,DIE"
+        const checksum = calculateChecksum(forceReset)
+        window.electron.sendCommand(`$${forceReset}*${checksum}`)
+      }
     }
     
-    // Data end
-    else if(arduinoData.startsWith('$END')){
-      //const motive = arduinoData.split(',')
-      //console.log("Finalizado por "+ motive[1])
-      handleSetIsReading(false)
-      if(isDatasetsMinimized)
-        setIsDatasetsMinimized()
+    // Data graph Dummy
+    else {
+      if (arduinoData.startsWith('$SGL')) {
+        const dataParts = arduinoData.split(',')
+        if (dataParts.length >= 3) {
+          const voltage = parseFloat(dataParts[1])
+          const current = parseFloat(dataParts[2].split('*')[0])
+          addDataPoint(voltage, current)
+        }
+        if(datasets[datasets.length - 1].data[0]!=null){
+          if( datasets[datasets.length - 1].data[0].x.length === 1 ){
+            if(!isDatasetSelected)
+              handleSetIsDatasetSelected(true)
+            handleSetDatasetSelected(datasets.length - 1)
+            if (priorityMode) 
+              showOnlyDataset(datasets.length - 1)
+          }
+        }
+      }
+      else if (arduinoData.startsWith('$EOT')) {
+        const dataParts = arduinoData.split(',')
+        if(dataParts.length >= 4){
+          const omega = parseFloat(dataParts[1])
+          const realZ = parseFloat(dataParts[2])
+          const imagZ = parseFloat(dataParts[3])
+          addComplexPoint(omega, realZ, imagZ)
+        }
+      }
+      // Data start
+      if(arduinoData.startsWith('$CVS'))
+        setNewDataSet(currentName, currentParams, "CVW")
+      else if(arduinoData.startsWith('$ESS'))
+        setNewDataSet(currentName, currentParams, "EIS")
+      
+      // Data end
+      else if(arduinoData.startsWith('$END') || arduinoData.startsWith('$EBF')){
+        handleSetIsReading(false)
+        if(isDatasetsMinimized)
+          setIsDatasetsMinimized()
+      }
     }
   },[arduinoData])
 
@@ -317,6 +604,7 @@ export const DataSetsProvider = ({ children }) => {
   return (
     <DatasetsContext.Provider value={{ 
       currentName, handleCurrentName,
+      experimentType, handleExperimentType,
       currentParams, handleCurrentParams,
       isDatasetSelected, handleSetIsDatasetSelected,
       datasetSelected, handleSetDatasetSelected,
@@ -327,7 +615,8 @@ export const DataSetsProvider = ({ children }) => {
       handleNewDataset,
       toggleDatasetVisibility,
       showOnlyDataset,
-      addDatasetParam,
+      addDatasetParam, editDatasetParam, deleteDatasetParam,
+      setExclusiveVisibility, toggleExclusiveVisibility,
     }}>
       {children}
     </DatasetsContext.Provider>

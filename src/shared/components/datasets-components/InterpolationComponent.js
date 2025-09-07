@@ -14,6 +14,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import DeleteIcon from '@mui/icons-material/Delete'
+import EditIcon from '@mui/icons-material/Edit'
 
 import { PointsComponent } from '..'
 
@@ -27,12 +28,14 @@ import { PointsComponent } from '..'
  * @param {number} datasetIndex                                   - Index of the dataset in the parent collection
  * @param {function(number, number): void} onToggleVisibility     - Callback invoked with (datasetIndex, interpolationIndex) to toggle visibility
  * @param {function(number, number): void} onDeleteInterpolation  - Callback invoked with (datasetIndex, interpolationIndex) to delete interpolation
+ * @param {function} onEditInterpolationLine                      -
  */
 export const InterpolationComponent = ({ 
   dataset, 
   datasetIndex, 
   onToggleVisibility, 
   onDeleteInterpolation,
+  onEditInterpolationLine,
 }) => {
   const theme = useTheme()
 
@@ -48,7 +51,8 @@ export const InterpolationComponent = ({
         const { 
           name, type, typeCalculate, 
           data, order, coefficients, 
-          sigma, mu, amplitude 
+          sigma, mu, amplitude,
+          logKnots
         } = interpolation
         const title = name || `${type} ${i + 1}`
         const xArray = data?.[0]?.x || []
@@ -74,6 +78,11 @@ export const InterpolationComponent = ({
                   }
                 >
                 </Button>
+                <Button
+                  onClick={() => onEditInterpolationLine(datasetIndex, i)}
+                  size="small"
+                  startIcon={<EditIcon />}
+                ></Button>
                 <Button
                   onClick={() => onDeleteInterpolation(datasetIndex, i)}
                   size="small"
@@ -155,6 +164,72 @@ export const InterpolationComponent = ({
                       </Box>
                     </Stack>
                   </Box>
+                </>
+              )}
+
+              {type ==='logspline' &&(
+                <>
+                <Accordion sx={{ boxShadow: 'none' }}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Typography variant="subtitle2">Log Knots</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    {logKnots && logKnots.length > 0 ? (
+                      <Stack direction="column" spacing={1}>
+                        {logKnots.map((c, idx) => (
+                          <Box key={idx} display="flex" alignItems="center" gap={1}>
+                            <Typography variant="body2" sx={{ minWidth: 30 }}>{`a${idx}:`}</Typography>
+                            <Chip label={c.toFixed(4)} size="small" />
+                          </Box>
+                        ))}
+                      </Stack>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        No value available
+                      </Typography>
+                    )}
+                  </AccordionDetails>
+                </Accordion>
+
+                <Divider />
+
+                <Accordion sx={{ boxShadow: 'none' }}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Typography variant="subtitle2">Coefficients</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    {coefficients && typeof coefficients === 'object' && Object.keys(coefficients).length > 0 ? (
+                      <Stack direction="column" spacing={1}>
+                        {Object.entries(coefficients).map(([key, values], idx) => (
+                          <Accordion key={idx} sx={{ boxShadow: 'none', pl: 1 }}>
+                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                              <Typography variant="body2">
+                                {key}
+                              </Typography>
+                            </AccordionSummary>
+                            <AccordionDetails>
+                              {Array.isArray(values) && values.length > 0 ? (
+                                <Stack direction="row" flexWrap="wrap" gap={1}>
+                                  {values.map((v, i) => (
+                                    <Chip key={i} label={v.toFixed(2)} size="small" />
+                                  ))}
+                                </Stack>
+                              ) : (
+                                <Typography variant="body2" color="text.secondary">
+                                  No data
+                                </Typography>
+                              )}
+                            </AccordionDetails>
+                          </Accordion>
+                        ))}
+                      </Stack>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        No coefficients available
+                      </Typography>
+                    )}
+                  </AccordionDetails>
+                </Accordion>
                 </>
               )}           
 

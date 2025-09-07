@@ -11,134 +11,149 @@ import {
 import { useDatasetsContext } from '../../contexts'
 
 /**
- * A component that applies a low-pass filter to the currently visible dataset
- * and previews the filtered result. Users can control the cutoff frequency 
- * using either a slider or a numeric input field
+ * Um componente que aplica um filtro RC passa-baixa de ordem n
+ * no domínio do tempo (CVW) ou frequência (Bode e Nyquist).
  *
- * @param {(filtered: { x: number[], y: number[] }) => void} setPreviewFilter - 
- *        Callback to update the filtered signal preview
- *
- * @returns {JSX.Element}
+ * @param {(filtered: { x: number[], y: number[] }) => void} setPreviewFilter
+ * @param {string} dataType - "cvw", "bodeMod", "bodeAng" ou "nyquist"
  */
-export const LowPass = ({ setPreviewFilter }) => {
-  
+export const LowPass = ({ setPreviewFilter, dataType = "cvw" }) => {
   const { datasets } = useDatasetsContext()
   const [cutoffFrequency, setCutoffFrequency] = useState(50)
   const [order, setOrder] = useState(1)
 
-  const calculateLowPass = (x, y, cutoffFreq, fs, order = 1) => {
-    let resultY = [...y]
-    for (let n = 0; n < order; n++) {
-      const RC = 1 / (2 * Math.PI * cutoffFreq)
-      const dt = 1 / fs
-      const alpha = dt / (RC + dt)
-      let filtered = []
-      filtered[0] = resultY[0]
-      for (let i = 1; i < resultY.length; i++) {
-        filtered[i] = filtered[i-1] + alpha * (resultY[i] - filtered[i-1])
-      }
-      resultY = filtered
+  const visible = useMemo(() => {
+    const ds = datasets.find(d => d.visible)?.data?.[0]
+    if (!ds) return { x: [], y: [] }
+    switch (dataType) {
+      case "cvw":
+        return { x: ds.x || [], y: ds.y || [] }
+      case "bodeMod":
+        return { x: ds.omega || [], y: (ds.modZ || []).map(v => 20 * Math.log10(Math.max(v, 1e-12))) }
+      case "bodeAng":
+        return { x: ds.omega || [], y: ds.angZ || [] }
+      case "nyquist":
+        return {
+          x: ds.omega || [],
+          y: ds.realZ && ds.imagZ ? ds.realZ.map((_, i) => ({ re: ds.realZ[i], im: ds.imagZ[i] })) : []
+        }
+      default:
+        return { x: [], y: [] }
     }
-    return { x: [...x], y: resultY }
+  }, [datasets, dataType])
+
+  // Filtro RC discreto genérico
+  function rcFilter(data, xAxis, cutoff) {
+    if (!data || data.length < 2) return []
+    let filtered = [data[0]]
+    for (let i = 1; i < data.length; i++) {
+      const dt = xAxis[i] - xAxis[i - 1]
+      const RC = 1 / (2 * Math.PI * cutoff)
+      const alpha = dt / (RC + dt)
+      filtered[i] = filtered[i - 1] + alpha * (data[i] - filtered[i - 1])
+    }
+    return filtered
   }
 
-  const visibleDataset = useMemo(
-    () => datasets.find(d => d.visible),
-    [datasets]
-  )
-
   useEffect(() => {
-    if (!visibleDataset?.data?.[0]?.x?.length || !visibleDataset?.data?.[0]?.y?.length) {
+    if (!visible.x.length || !visible.y.length) {
       setPreviewFilter({ x: [], y: [] })
       return
     }
-    const { scanRate, step } = visibleDataset.params || {}
-    if (!scanRate || !step) return
 
-    const fs = scanRate / step
+    let xOut = [...visible.x]
+    let yOut = []
 
-    const filteredSignal = calculateLowPass(
-      visibleDataset.data[0].x,
-      visibleDataset.data[0].y,
-      cutoffFrequency,
-      fs,
-      order 
-    )
-    
-    setPreviewFilter(filteredSignal)
-  }, [cutoffFrequency, order, visibleDataset, setPreviewFilter])
+    if (dataType === "cvw") {
+      // Filtro no domínio do tempo: manter cálculo original em série
+      const ds = datasets.find(d => d.visible)
+      const { scanRate, step } = ds?.params || {}
+      if (!scanRate || !step) return
+      const fs = scanRate / step
+      const xTime = visible.x.map((_, i) => i / fs)
+      // aplica n filtros RC em série
+      yOut = [...visible.y]
+      for (let n = 0; n < order; n++) {
+        yOut = rcFilter(yOut, xTime, cutoffFrequency)
+      }
 
-  const handleSliderChange = (_evt, newValue) => {
-    const value = Array.isArray(newValue) ? newValue[0] : newValue
-    setCutoffFrequency(value)
+    } else if (dataType === "bodeMod" || dataType === "bodeAng") {
+      // Filtro RC no domínio da frequência: aplicar em série n vezes
+      yOut = [...visible.y]
+      for (let n = 0; n < order; n++) {
+        yOut = rcFilter(yOut, visible.x, cutoffFrequency)
+      }
+
+    } else if (dataType === "nyquist") {
+      // Filtro RC para real e imaginário em série
+      const reArr = visible.y.map(pt => pt.re)
+      const imArr = visible.y.map(pt => pt.im)
+      let reFilt = [...reArr]
+      let imFilt = [...imArr]
+      for (let n = 0; n < order; n++) {
+        reFilt = rcFilter(reFilt, visible.x, cutoffFrequency)
+        imFilt = rcFilter(imFilt, visible.x, cutoffFrequency)
+      }
+      xOut = reFilt
+      yOut = imFilt
+    }
+
+    setPreviewFilter({ x: xOut, y: yOut })
+  }, [cutoffFrequency, order, visible, setPreviewFilter, datasets, dataType])
+
+  const handleCutoffChange = (_evt, newValue) => {
+    const val = Array.isArray(newValue) ? newValue[0] : newValue
+    setCutoffFrequency(val)
   }
-
   const handleOrderChange = (_evt, newValue) => {
-    const value = Array.isArray(newValue) ? newValue[0] : newValue
-    setOrder(value)
+    const val = Array.isArray(newValue) ? newValue[0] : newValue
+    setOrder(Math.max(1, val))
   }
 
   return (
     <Box>
       <Box sx={{ mt: 1, p: 2, borderRadius: 1, backgroundColor: 'white', height: '100%' }}>
-        <Stack spacing={2}>
+        <Stack spacing={3}>
           <Typography variant="h6" sx={{ fontSize: '1.125rem' }}>
-            LowPass Filter
+            LowPass RC Filter
           </Typography>
 
+          {/* Cutoff Frequency Slider */}
           <Box>
-            <Typography variant="body2" gutterBottom>
-              Cutoff Frequency (Hz): 
-            </Typography>
+            <Typography variant="body2">Cutoff Frequency (Hz):</Typography>
             <Slider
               value={cutoffFrequency}
-              onChange={handleSliderChange}
-              min={1}
-              max={100}
-              step={1}
-              marks={[
-                { value: 1, label: '1Hz' },
-                { value: 50, label: '50Hz' },
-                { value: 100, label: '100Hz' },
-              ]}
+              onChange={handleCutoffChange}
+              min={dataType === 'cvw' ? 1 : 0.1}
+              max={dataType === 'cvw' ? 100 : (visible.x.length ? Math.max(...visible.x) : 100)}
+              step={dataType === 'cvw' ? 1 : 0.1}
               valueLabelDisplay="auto"
+            />
+            <TextField
+              label="Cutoff"
+              type="number"
+              value={cutoffFrequency}
+              onChange={(e) => setCutoffFrequency(parseFloat(e.target.value) || 0.1)}
+              InputProps={{ endAdornment: <InputAdornment position="end">Hz</InputAdornment> }}
+              size="small"
+              fullWidth
             />
           </Box>
 
-          <TextField
-            label="Cutoff Frequency"
-            type="number"
-            value={cutoffFrequency}
-            onChange={(e) => {
-              const value = Math.max(1, Number(e.target.value))
-              setCutoffFrequency(value)
-            }}
-            InputProps={{
-              endAdornment: <InputAdornment position="end">Hz</InputAdornment>,
-              inputProps: { min: 1 }
-            }}
-            size="small"
-            fullWidth
-          />
-
+          {/* Order Slider */}
           <Box>
-            <Typography variant="body2">
-              Filter order:
-            </Typography>
+            <Typography variant="body2">Ordem do filtro (n):</Typography>
             <Slider
               value={order}
               onChange={handleOrderChange}
               min={1}
-              max={7}
+              max={10}
               step={1}
-              marks={[
-                { value: 1, label: '1' },
-                { value: 4, label: '4' },
-                { value: 7, label: '7' },
-              ]}
+              marks={[{ value: 1, label: '1' }, { value: 5, label: '5' }, { value: 10, label: '10' }]}
               valueLabelDisplay="auto"
             />
           </Box>
+
         </Stack>
       </Box>
     </Box>

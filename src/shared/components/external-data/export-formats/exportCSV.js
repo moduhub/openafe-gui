@@ -1,108 +1,118 @@
 /**
- * Function for export in CSV
- * 
- * @param {dataset} ds                  - Dataset to be saved
+ * Exports a dataset to CSV
+ *
+ * @param {Object} ds                   - Dataset to be exported
  * @param {String} baseName             - Name of the dataset
- * @param {Boolean} includeInterpPoints - Include interpolation points
+ * @param {Boolean} includeInterp       - Include Interpolations
+ * @param {Boolean} includePointMarkers - Include points markers
+ * @param {Boolean} includeAreaMarkers  - Include area markers
  */
-export const exportCSV = (ds, baseName, includeInterpPoints = true) => {
+export const exportCSV = (ds, baseName, includeInterp, includePointMarkers, includeAreaMarkers) => {
+
+  const saveCSV = (name, lines) => {
+    const content = lines.join('\r\n')
+    const blob = new Blob([content], { type: 'text/csvcharset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = name
+    link.click()
+  }
+
   const csvLines = []
 
-  // Parameter section
-  csvLines.push('Parameters')
-  csvLines.push('key,value')
-  Object.entries(ds.params || {}).forEach(([k, v]) => {
-    const val = String(v).includes(',') ? `"${v}"` : v
-    csvLines.push(`${k},${val}`)
-  })
-  csvLines.push('')
+  const paramStr = Object.entries(ds.params || {}).map(([k, v]) => `${k}=${v}`).join(', ')
+  const paramAdvancedStr = Object.entries(ds.params_e || {}).map(([k, v]) => `${k}=${v}`).join(', ')
+  csvLines.push(`# ${baseName} ${paramStr ? ', ' + paramStr : ''} ${paramAdvancedStr ? ', ' + paramAdvancedStr : ''}`)
 
-  // Main data section
-  csvLines.push('Main Data')
-  csvLines.push('x,y')
-  const main = Array.isArray(ds.data) ? ds.data[0] : null
-  const xs = main?.x || []
-  const ys = main?.y || []
-  xs.forEach((x, i) => {
-    const xv = String(x).includes(',') ? `"${x}"` : x
-    const yv = String(ys[i]).includes(',') ? `"${ys[i]}"` : ys[i]
-    csvLines.push(`${xv},${yv}`)
-  })
-  csvLines.push('')
+  if(ds.type === "CVW"){
+    const main = Array.isArray(ds.data) ? ds.data[0] : null
+    const xs = main?.x || []
+    const ys = main?.y || []
+    xs.forEach((x, i) => {
+      const xEsc = String(x).includes(',') ? `"${x}"` : x
+      const yEsc = String(ys[i]).includes(',') ? `"${ys[i]}"` : ys[i]
+      csvLines.push(`${xEsc},${yEsc}`)
+    })
+  }
+  else if(ds.type === "EIS"){
+    const main = Array.isArray(ds.data) ? ds.data[0] : null
+    const omega = main.omega || []
+    const modZ = main.modZ || []
+    const angZ = main.angZ || []
+    const realZ = main.realZ || []
+    const imagZ = main.imagZ || []
+    omega.forEach((ω, i) => {
+      const omegaEsc = String(ω).includes(',') ? `"${ω}"` : ω
+      const modZEsc = String(modZ[i]).includes(',') ? `"${modZ[i]}"` : modZ[i]
+      const angZEsc = String(angZ[i]).includes(',') ? `"${angZ[i]}"` : angZ[i]
+      const realZEsc = String(realZ[i]).includes(',') ? `"${realZ[i]}"` : realZ[i]
+      const imagZEsc = String(imagZ[i]).includes(',') ? `"${imagZ[i]}"` : imagZ[i]
+      csvLines.push(`${omegaEsc},${modZEsc},${angZEsc},${realZEsc},${imagZEsc}`)
+    })
+  }
 
-  // Point markers section (antes das áreas)
-  csvLines.push('Markers')
+  saveCSV(`${baseName}.csv`, csvLines)
+
   const markers = Array.isArray(ds.markers) ? ds.markers : []
-  markers.forEach((marker, idx) => {
-    csvLines.push(`Marker ${idx + 1}`)
-    csvLines.push(`${marker.label}`)
-    csvLines.push(`symbol,${marker.symbol}`)
-    csvLines.push(`x,${marker.x}`)
-    csvLines.push(`y,${marker.y}`)
-    csvLines.push('')
-  })
+  const markerLines = []
+  if (includePointMarkers && markers.length > 0) {
+    markers.forEach(marker => {
+      markerLines.push(`${marker.label}\n${marker.symbol}\n${marker.x},${marker.y}\n`)
+    })
+    saveCSV(`${baseName}_markers.csv`, markerLines)
+  }
 
-  // Area markers section
-  csvLines.push('Areas')
   const areas = Array.isArray(ds.areas) ? ds.areas : []
-  areas.forEach((area, idx) => {
-    csvLines.push(`Area ${idx + 1}`)
-    csvLines.push(`value,${area.value}`)
-    csvLines.push(`start,${area.start}`)
-    csvLines.push(`end,${area.end}`)
-    csvLines.push('')
-  }); // ";" necessary to separate commands
+  if (includeAreaMarkers && areas.length > 0) {
+    const areaLines = []
+    areas.forEach(area => {
+      areaLines.push(`${area.value}\n${area.start}\n${area.end}\n`)
+    })
+    saveCSV(`${baseName}_areas.csv`, areaLines)
+  }
 
-  // Interpolation sections
-  (Array.isArray(ds.interpolations) ? ds.interpolations : []).forEach((interp, idx) => {
-    let title = interp.type || `Interp${idx}`
-    if (interp.type === 'polinomial') {
-      title = `Polinomial_ord${interp.order}_${interp.typeCalculate}`
-    } else if (interp.type === 'gaussiana') {
-      title = `Gaussian_${interp.typeCalculate}`
-    }
-    csvLines.push(`${title}`)
+  const interps = Array.isArray(ds.interpolations) ? ds.interpolations : []
+  if(includeInterp){
+    interps.forEach((interp, idx) => {
+      let title = interp.type || `interp${idx + 1}`
+      let paramLine = ''
 
-    let paramLine = ''
-    if (interp.type === 'polinomial' && Array.isArray(interp.coefficients)) {
-      paramLine = interp.coefficients.map((c, i) => `a${i}: ${c}`).join(', ')
-    } else if (interp.type === 'gaussiana') {
-      const { sigma, mu, amplitude } = interp
-      paramLine = `sigma: ${sigma}, mu: ${mu}, A: ${amplitude}`
-    }
-    if (includeInterpPoints) {
-      csvLines.push(`${paramLine}`)
-    } else {
-      if (interp.type === 'polinomial' && Array.isArray(interp.coefficients)) {
-        interp.coefficients.forEach((c, i) => {
-          csvLines.push(`a${i}: ${c}`)
-        })
+      if (interp.type === 'polinomial') {
+        title = `Polinomial_ord${interp.order}_${interp.typeCalculate}`
+        if (Array.isArray(interp.coefficients)) {
+          paramLine = interp.coefficients.map((c, i) => `a${i}=${c}`).join(', ')
+        }
       } else if (interp.type === 'gaussiana') {
-        csvLines.push(`sigma: ${interp.sigma}`)
-        csvLines.push(`mu: ${interp.mu}`)
-        csvLines.push(`A: ${interp.amplitude}`)
+        title = `Gaussian_${interp.typeCalculate}`
+        const { sigma, mu, amplitude } = interp
+        paramLine = `sigma=${sigma}, mu=${mu}, A=${amplitude}`
       }
-    }
-    if (includeInterpPoints) csvLines.push('x,y')
+      else if (interp.type === 'logspline'){
+        title = `LogSpline_${interp.typeCalculate}`
+        /* exceeds the memory cell size limit
+        if (interp.coefficients) {
+          const { a = [], b = [], c = [], d = [] } = interp.coefficients
+          const fmt = arr => `[${arr.map(v => Number(v).toPrecision(6)).join(', ')}]`
+          paramLine = `a=${fmt(a)}, b=${fmt(b)}, c=${fmt(c)}, d=${fmt(d)}`
+        }*/
+      }
 
-    const block = interp.data?.[0] || { x: [], y: [] }
-    const bxs = Array.isArray(block.x) ? block.x : []
-    const bys = Array.isArray(block.y) ? block.y : []
-    if (includeInterpPoints) {
+      const interpLines = []
+      interpLines.push(`# ${title}${paramLine ? ', ' + paramLine : ''}`)
+
+      const block = interp.data?.[0] || { x: [], y: [] }
+      const bxs = Array.isArray(block.x) ? block.x : []
+      const bys = Array.isArray(block.y) ? block.y : []
+
       bxs.forEach((xv, j) => {
-        const xvEsc = String(xv).includes(',') ? `"${xv}"` : xv
-        const yvEsc = String(bys[j]).includes(',') ? `"${bys[j]}"` : bys[j]
-        csvLines.push(`${xvEsc},${yvEsc}`)
+        const xEsc = String(xv).includes(',') ? `"${xv}"` : xv
+        const yEsc = String(bys[j]).includes(',') ? `"${bys[j]}"` : bys[j]
+        interpLines.push(`${xEsc},${yEsc}`)
       })
-    }
-    csvLines.push('')
-  })
 
-  const csvContent = csvLines.join('\r\n')
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `${baseName}.csv`
-  link.click()
+      saveCSV(`${baseName}_interp${idx + 1}.csv`, interpLines)
+    })
+  }
+  
 }

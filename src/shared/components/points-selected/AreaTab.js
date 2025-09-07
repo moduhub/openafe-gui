@@ -24,6 +24,7 @@ export const AreaTab = ({ open, onClose, selectedPoints }) => {
 
   const [points, setPoints] = useState([])
   const [area, setArea] = useState(0)
+  const [ref, setRef] = useState('cvChart')
 
   // Manage inert attribute for accessibility
   useEffect(() => {
@@ -39,29 +40,6 @@ export const AreaTab = ({ open, onClose, selectedPoints }) => {
     }
   }, [open, selectedPoints])
 
-  useEffect(() => {
-    if (points.length < 2) {
-      setArea(0)
-      return
-    }
-
-    const xValues = datasets?.[datasetSelected]?.data[0]?.x || []
-    const yValues = datasets?.[datasetSelected]?.data[0]?.y || []
-
-    const [start, end] = points[0] < points[1] ? points : [points[1], points[0]]
-
-    let soma = 0
-    for (let i = start; i < end; i++) {
-      
-      const dx = Math.abs(xValues[i + 1] - xValues[i])
-      const yAvg = (yValues[i] + yValues[i + 1]) / 2
-      soma += dx * yAvg  // signed area contribution: negative if yAvg < 0
-    }
-    soma *= 1e-9  // scale units (m * u -> n)
-
-    setArea(soma)
-  }, [points])
-
   const formatEngineeringNotation = (value) => {
     if (value === 0) return "0"
 
@@ -72,16 +50,55 @@ export const AreaTab = ({ open, onClose, selectedPoints }) => {
   }
 
   const updateData = () => {
-    if (!selectedPoints || selectedPoints.length < 2) return
-    const xValues = datasets?.[datasetSelected]?.data[0]?.x || []
-    const yValues = datasets?.[datasetSelected]?.data[0]?.y || []
-    const [p1, p2] = selectedPoints
-    const idx1 = xValues.findIndex((x, i) => x === p1?.x && yValues[i] === p1?.y)
-    const idx2 = xValues.findIndex((x, i) => x === p2?.x && yValues[i] === p2?.y)
-    if (idx1 === -1 || idx2 === -1) return
+  if (!selectedPoints || selectedPoints.length < 2) return
+  const [p1, p2] = selectedPoints
+  const currentRef = p1.ref || 'cvChart'
+  setRef(currentRef)
 
-    setPoints([idx1, idx2])
-  }
+  const idx1 = p1.index
+  const idx2 = p2.index
+
+  if (typeof idx1 !== "number" || typeof idx2 !== "number" || idx1 < 0 || idx2 < 0) return
+
+  setPoints([idx1, idx2])
+}
+
+  useEffect(() => {
+    if (points.length < 2) {
+      setArea(0)
+      return
+    }
+
+    const ds = datasets?.[datasetSelected]?.data[0] || {}
+    let xValues = []
+    let yValues = []
+
+    if (ref === 'cvChart') {
+      xValues = ds.x || []
+      yValues = ds.y || []
+    } else if (ref === 'bodeMod') {
+      xValues = ds.omega || []
+      yValues = (ds.modZ || []).map(v => 20 * Math.log10(Math.max(v, 1e-12)))
+    } else if (ref === 'bodeAng') {
+      xValues = ds.omega || []
+      yValues = ds.angZ || []
+    } else if (ref === 'nyquist') {
+      xValues = ds.realZ || []
+      yValues = ds.imagZ || []
+    }
+
+    const [start, end] = points[0] < points[1] ? points : [points[1], points[0]]
+
+    let soma = 0
+    for (let i = start; i < end; i++) {
+      const dx = Math.abs(xValues[i + 1] - xValues[i])
+      const yAvg = (yValues[i] + yValues[i + 1]) / 2
+      soma += dx * yAvg
+    }
+    soma *= 1e-9
+
+    setArea(soma)
+  }, [points, ref, datasets, datasetSelected])
 
   const handleConfirmCalculate = () => {
     const [start, end] = points[0] < points[1] ? points : [points[1], points[0]]
@@ -91,10 +108,9 @@ export const AreaTab = ({ open, onClose, selectedPoints }) => {
       start: start,
       end: end,
       isVisible: true,
+      ref: ref 
     }
     datasets[datasetSelected]?.addAreaMarker(newAreaMarker)
-
-    console.log(datasets)
   
     handleCloseDialog()
   }

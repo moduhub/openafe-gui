@@ -1,21 +1,12 @@
 import { useState } from 'react'
 import { 
-  Button, 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  useTheme, 
-  Box, 
-  Select, 
-  MenuItem, 
-  Tooltip,
-  Divider
+  Button, AppBar, Toolbar, Typography, useTheme, 
+  Box, Select, MenuItem, Tooltip, Divider
 } from '@mui/material'
 
 import { 
-  useDrawerContext, 
-  useArduinoContext,
-  useDashboardContext
+  useDrawerContext, useArduinoContext,
+  useDashboardContext, useDatasetsContext
 } from '../../contexts'
 import { DisconnectPort, ReceivePorts, ConnectPort } from '../../../arduino'
 import { useNavigate } from 'react-router-dom'
@@ -46,6 +37,8 @@ import { exportJPEG } from '../external-data/export-formats/exportJPEG'
  */
 export const TopMenu = ({ children }) => {
 
+  const { experimentType, datasets } = useDatasetsContext()
+
   const [openSaveImage, setOpenSaveImage] = useState(false)
 
   const theme = useTheme()
@@ -58,7 +51,7 @@ export const TopMenu = ({ children }) => {
     portConnected,
     isConnected,
     isConnecting, 
-    isReading
+    isReading,
   } = useArduinoContext()
 
   const navigate = useNavigate()
@@ -70,12 +63,26 @@ export const TopMenu = ({ children }) => {
     handleToggleTabDatasetsMinimized: setIsMinimizedDataset,
   } = useDashboardContext()
 
-  const handleSaveImage = async ({ format, width, height, dpi }) => {
+  const availableCharts = experimentType === 'EIS'
+    ? ['bodeMod', 'bodeAng', 'nyquist']
+    : []
+
+  const handleSaveImage = async ({ format, width, height, dpi, charts }) => {
     const baseName = 'grafico'
-    if (format === 'png') {
-      await exportPNG(baseName, width, height, dpi)
+    
+    if (charts && charts.length > 0) {
+      if (format === 'png') {
+        await exportPNG(baseName, width, height, dpi, charts)
+      } else {
+        await exportJPEG(baseName, width, height, dpi, charts)
+      }
     } else {
-      await exportJPEG(baseName, width, height, dpi)
+      // Caso CVW ou fallback
+      if (format === 'png') {
+        await exportPNG(baseName, width, height, dpi)
+      } else {
+        await exportJPEG(baseName, width, height, dpi)
+      }
     }
   }
 
@@ -85,6 +92,7 @@ export const TopMenu = ({ children }) => {
         open={openSaveImage}
         onClose={() => setOpenSaveImage(false)}
         onSave={handleSaveImage}
+        availableCharts={availableCharts}
       />
 
       <AppBar position="static" sx={{ bgcolor: theme.palette.background.paper, color: theme.palette.text.primary, height: theme.spacing(8) }}>
@@ -140,18 +148,32 @@ export const TopMenu = ({ children }) => {
             <SdStorageIcon />
           </Button>
 
-          <Button
-            variant="contained"
-            style={{
-              marginRight: theme.spacing(1),
-              borderRadius: 0,
-              minWidth: "48px",
-              backgroundColor: theme.palette.primary.main
-            }}
-            onClick={() => setOpenSaveImage(true)}
+          <Tooltip
+            title={ isReading
+                ? "It is not possible to save while the data is being read"
+                : !(datasets?.length > 0)
+                  ? "No dataset available to save image"
+                  : "Save graph image"
+            }
           >
-            <PhotoCameraIcon />
-          </Button>
+            <span>
+              <Button
+                variant="contained"
+                style={{
+                  marginRight: theme.spacing(1),
+                  borderRadius: 0,
+                  minWidth: "48px",
+                  backgroundColor: (isReading || !(datasets?.length > 0))
+                    ? theme.palette.grey[400]
+                    : theme.palette.primary.main
+                }}
+                onClick={() => setOpenSaveImage(true)}
+                disabled={isReading || !(datasets?.length > 0)}
+              >
+                <PhotoCameraIcon />
+              </Button>
+            </span>
+          </Tooltip>
     
           <Button 
             variant="contained" 

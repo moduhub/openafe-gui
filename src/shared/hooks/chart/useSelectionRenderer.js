@@ -1,71 +1,275 @@
 import { useEffect } from 'react'
 import Plotly from 'plotly.js-dist'
 
-export const useSelectionRenderer = (chartRef, datasets, selectedPoints, setSelectedPoints, handleSetDatasetSelected) => {
+export const useSelectionRenderer = (
+  chartRefs,
+  datasets, handleSetDatasetSelected,
+  selectedPoints, setSelectedPoints,
+  isPolar
+) => {
   useEffect(() => {
-    const el = chartRef.current
-    if (!el) return
+    const refs = Array.isArray(chartRefs) ? chartRefs : [chartRefs]
+    const isEIS = selectedPoints.length && selectedPoints[0].type === "EIS"
+    const isCVW = selectedPoints.length && selectedPoints[0].type === "CVW"
 
-    // Remove previous selection/highlight traces
-    const removeIdx = el.data
-      .map((t, i) =>
-        t.name === 'Selected Points' || t.name === 'Highlight Range' ? i : -1
-      )
-      .filter(i => i >= 0)
+    const removeSelectionTraces = (el) => {
+      if (!el || !el.data) return
 
-    if (removeIdx.length) {
-      Plotly.deleteTraces(el, removeIdx)
-    }
-
-    const toAdd = []
-
-    // Draw selected points
-    if (selectedPoints.length) {
-      toAdd.push({
-        x: selectedPoints.map(p => p.x),
-        y: selectedPoints.map(p => p.y),
-        mode: 'markers',
-        marker: {
-          size: 20,
-          color: 'red',
-          symbol: 'sphere',
-        },
-        name: 'Selected Points',
-        showlegend: false,
-      })
-    }
-
-    // Draw range if 2 points selected
-    if (selectedPoints.length === 2) {
-      const [p1, p2] = selectedPoints
-      const ds = datasets[p1.dataset]?.data[0]
-
-      if (ds) {
-        const { x: xs, y: ys } = ds
-        const i1 = xs.findIndex((x, i) => x === p1.x && ys[i] === p1.y)
-        const i2 = xs.findIndex((x, i) => x === p2.x && ys[i] === p2.y)
-
-        if (i1 >= 0 && i2 >= 0) {
-          const [s, e] = [Math.min(i1, i2), Math.max(i1, i2)]
-
-          toAdd.push({
-            x: xs.slice(s, e + 1),
-            y: ys.slice(s, e + 1),
-            mode: 'lines',
-            line: { width: 4, color: 'red' },
-            name: 'Highlight Range',
-            showlegend: false,
-          })
-
-          // Confirm selection and dataset
-          setSelectedPoints(selectedPoints)
-          handleSetDatasetSelected(p1.dataset)
-        }
+      const removeIdx = el.data
+        .map((t, i) =>
+          t.name === 'Selected Points' || t.name === 'Highlight Range' ? i : -1
+        )
+        .filter(i => i >= 0)
+      if (removeIdx.length) {
+        Plotly.deleteTraces(el, removeIdx)
       }
     }
 
-    if (toAdd.length) {
-      Plotly.addTraces(el, toAdd)
+    if (!selectedPoints.length) {
+      refs.forEach(ref => {
+        const el = ref.current
+        if (el) removeSelectionTraces(el)
+      })
+      return
     }
-  }, [chartRef, datasets, selectedPoints, setSelectedPoints, handleSetDatasetSelected])
+
+    if (isCVW) {
+      refs.forEach(ref => {
+        const el = ref.current
+        if (!el) return
+        removeSelectionTraces(el)
+
+        const toAdd = []
+
+        if (selectedPoints.length) {
+          const x_ = selectedPoints.map(p =>
+            datasets[p.dataset]?.data[0]?.x[p.index]
+          )
+          const y_ = selectedPoints.map(p =>
+            datasets[p.dataset]?.data[0]?.y[p.index]
+          )
+
+          toAdd.push({
+            x: x_,
+            y: y_,
+            mode: 'markers',
+            marker: { size: 20, color: 'red', symbol: 'sphere' },
+            name: 'Selected Points',
+            showlegend: false,
+          })
+        }
+
+        if (selectedPoints.length === 2) {
+          const [p1, p2] = selectedPoints
+          const ds = datasets[p1.dataset]?.data[0]
+          if (ds) {
+            const { x: xs, y: ys } = ds
+            if (p1.index >= 0 && p2.index >= 0) {
+              const [s, e] = [Math.min(p1.index, p2.index), Math.max(p1.index, p2.index)]
+              toAdd.push({
+                x: xs.slice(s, e + 1),
+                y: ys.slice(s, e + 1),
+                mode: 'lines',
+                line: { width: 4, color: 'red' },
+                name: 'Highlight Range',
+                showlegend: false,
+              })
+              setSelectedPoints(selectedPoints)
+              handleSetDatasetSelected(p1.dataset)
+            }
+          }
+        }
+
+        if (toAdd.length) 
+          Plotly.addTraces(el, toAdd)
+      })
+    } 
+
+    else if (isEIS) {
+      // EIS: refs[0]=bodeMod, refs[1]=bodeAng, refs[2]=nyquist
+      const [bodeModRef, bodeAngRef, nyquistRef] = refs
+      const p = selectedPoints[0]
+      const ds = datasets[p.dataset]?.data[0]
+
+      if (!ds) return
+
+      // Bode |Z| (omega vs modZ)
+      if (bodeModRef?.current) {
+        removeSelectionTraces(bodeModRef.current)
+        const toAdd = []
+
+        if (selectedPoints.length) {
+          const x_ = selectedPoints.map(pt => datasets[pt.dataset]?.data[0]?.omega[pt.index])
+          const y_ = selectedPoints.map(pt => {
+            const v = datasets[pt.dataset]?.data[0]?.modZ[pt.index]
+            return 20 * Math.log10(v > 0 ? v : 1e-12)
+          })  // db points
+          toAdd.push({
+            x: x_,
+            y: y_,
+            mode: 'markers',
+            marker: { size: 20, color: 'red', symbol: 'sphere' },
+            name: 'Selected Points',
+            showlegend: false,
+          })
+        }
+        if (selectedPoints.length === 2) {
+          const [p1, p2] = selectedPoints
+          const ds = datasets[p1.dataset]?.data[0]
+          const { omega: xs, modZ: ys } = ds
+          if (p1.index >= 0 && p2.index >= 0) {
+              const [s, e] = [Math.min(p1.index, p2.index), Math.max(p1.index, p2.index)]
+              toAdd.push({
+                x: xs.slice(s, e + 1),
+                y: ys.slice(s, e + 1).map(v => 20 * Math.log10(v > 0 ? v : 1e-12)), // db lines
+                mode: 'lines',
+                line: { width: 4, color: 'red' },
+                name: 'Highlight Range',
+                showlegend: false,
+              })
+              setSelectedPoints(selectedPoints)
+              handleSetDatasetSelected(p1.dataset)
+            }
+        }
+        if(toAdd.length)
+          Plotly.addTraces(bodeModRef.current,toAdd)
+      }
+
+      // Bode angZ (omega vs angZ)
+      if (bodeAngRef?.current) {
+        removeSelectionTraces(bodeAngRef.current)
+        const toAdd = []
+
+        if (selectedPoints.length) {
+          const x_ = selectedPoints.map(pt => datasets[pt.dataset]?.data[0]?.omega[pt.index])
+          const y_ = selectedPoints.map(pt => datasets[pt.dataset]?.data[0]?.angZ[pt.index])
+          toAdd.push({
+            x: x_,
+            y: y_,
+            mode: 'markers',
+            marker: { size: 20, color: 'red', symbol: 'sphere' },
+            name: 'Selected Points',
+            showlegend: false,
+          })
+        }
+        if (selectedPoints.length === 2) {
+          const [p1, p2] = selectedPoints
+          const ds = datasets[p1.dataset]?.data[0]
+          const { omega: xs, angZ: ys } = ds
+          if (p1.index >= 0 && p2.index >= 0) {
+              const [s, e] = [Math.min(p1.index, p2.index), Math.max(p1.index, p2.index)]
+              toAdd.push({
+                x: xs.slice(s, e + 1),
+                y: ys.slice(s, e + 1),
+                mode: 'lines',
+                line: { width: 4, color: 'red' },
+                name: 'Highlight Range',
+                showlegend: false,
+              })
+              setSelectedPoints(selectedPoints)
+              handleSetDatasetSelected(p1.dataset)
+            }
+        }
+        if(toAdd.length)
+          Plotly.addTraces(bodeAngRef.current,toAdd)
+      }
+
+      // Nyquist (realZ vs imagZ)
+      if (nyquistRef?.current) {
+        removeSelectionTraces(nyquistRef.current)
+        const toAdd = []
+
+        const isPolarNyquist = isPolar
+
+        if (selectedPoints.length) {
+          if (isPolarNyquist) {
+            // Polar: r/theta
+            const r_ = selectedPoints.map(pt => {
+              const real = datasets[pt.dataset]?.data[0]?.realZ?.[pt.index]
+              const imag = datasets[pt.dataset]?.data[0]?.imagZ?.[pt.index]
+              return real !== undefined && imag !== undefined
+                ? Math.sqrt(real * real + imag * imag)
+                : undefined
+            })
+            const theta_ = selectedPoints.map(pt => {
+              const real = datasets[pt.dataset]?.data[0]?.realZ?.[pt.index]
+              const imag = datasets[pt.dataset]?.data[0]?.imagZ?.[pt.index]
+              return real !== undefined && imag !== undefined
+                ? (Math.atan2(imag, real) * 180 / Math.PI)
+                : undefined
+            })
+            toAdd.push({
+              r: r_,
+              theta: theta_,
+              mode: 'markers',
+              marker: { size: 20, color: 'red', symbol: 'circle' },
+              name: 'Selected Points',
+              showlegend: false,
+              type: 'scatterpolar'
+            })
+          } else {
+            // Retangular: x/y
+            const x_ = selectedPoints.map(pt => datasets[pt.dataset]?.data[0]?.realZ?.[pt.index])
+            const y_ = selectedPoints.map(pt => datasets[pt.dataset]?.data[0]?.imagZ?.[pt.index])
+            toAdd.push({
+              x: x_,
+              y: y_,
+              mode: 'markers',
+              marker: { size: 20, color: 'red', symbol: 'sphere' },
+              name: 'Selected Points',
+              showlegend: false,
+            })
+          }
+        }
+        if (selectedPoints.length === 2) {
+          const [p1, p2] = selectedPoints
+          const ds = datasets[p1.dataset]?.data[0]
+          if (isPolarNyquist) {
+            const realZ = ds.realZ
+            const imagZ = ds.imagZ
+            if (Array.isArray(realZ) && Array.isArray(imagZ) && p1.index >= 0 && p2.index >= 0) {
+              const [s, e] = [Math.min(p1.index, p2.index), Math.max(p1.index, p2.index)]
+              const rLine = []
+              const thetaLine = []
+              for (let i = s; i <= e; i++) {
+                const real = realZ[i]
+                const imag = imagZ[i]
+                rLine.push(Math.sqrt(real * real + imag * imag))
+                thetaLine.push(Math.atan2(imag, real) * 180 / Math.PI)
+              }
+              toAdd.push({
+                r: rLine,
+                theta: thetaLine,
+                mode: 'lines',
+                line: { width: 4, color: 'red' },
+                name: 'Highlight Range',
+                showlegend: false,
+                type: 'scatterpolar'
+              })
+              setSelectedPoints(selectedPoints)
+              handleSetDatasetSelected(p1.dataset)
+            }
+          } else {
+            const { realZ: xs, imagZ: ys } = ds
+            if (p1.index >= 0 && p2.index >= 0) {
+              const [s, e] = [Math.min(p1.index, p2.index), Math.max(p1.index, p2.index)]
+              toAdd.push({
+                x: xs.slice(s, e + 1),
+                y: ys.slice(s, e + 1),
+                mode: 'lines',
+                line: { width: 4, color: 'red' },
+                name: 'Highlight Range',
+                showlegend: false,
+              })
+              setSelectedPoints(selectedPoints)
+              handleSetDatasetSelected(p1.dataset)
+            }
+          }
+        }
+        if(toAdd.length)
+          Plotly.addTraces(nyquistRef.current,toAdd)
+      }
+    }
+    
+  }, [chartRefs, datasets, selectedPoints, setSelectedPoints, handleSetDatasetSelected])
 }

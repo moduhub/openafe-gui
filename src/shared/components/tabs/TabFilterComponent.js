@@ -1,23 +1,14 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
-    Box,
-    Button,
-    useTheme,
-    Typography,
-    Select,
-    MenuItem,
-    FormControl,
-    InputLabel,
-    ListItemIcon,
-    ListItemText,
-  } from '@mui/material'
+  Box, Button, useTheme, Typography, Select,
+  MenuItem, ListItemIcon, ListItemText,
+} from '@mui/material'
 
-import AspectRatioIcon from '@mui/icons-material/AspectRatio'
 import FilterListIcon from '@mui/icons-material/FilterList'
 
 import { FiltersDialog } from '..'
 import { useDatasetsContext } from '../../contexts'
-import { MovingAverage , LowPass , HighPass , BandPass , BandStop } from '..'
+import { MovingAverage, LowPass, HighPass, BandPass, BandStop } from '..'
 
 /**
  * TabFilter component allows selection and application of filters to datasets
@@ -28,166 +19,229 @@ import { MovingAverage , LowPass , HighPass , BandPass , BandStop } from '..'
  * 
  * @returns {JSX.Element}
  */
-export const TabFilter = ({ 
-    setPreviewData, 
-    previewData, 
-    setTabIndex
+export const TabFilter = ({
+  setPreviewData,
+  previewData,
+  setTabIndex
 }) => {
-    const theme = useTheme()
+  const theme = useTheme()
 
-    const [selectedFilter, setSelectedFilter] = useState('')
-    const [openFilters, setOpenFilters] = useState(false)
+  const [selectedFilter, setSelectedFilter] = useState('')
+  const [openFilters, setOpenFilters] = useState(false)
 
-    const {
-        datasets, handleNewDataset,
-        datasetSelected, handleSetDatasetSelected,
-        showOnlyDataset,
-    } = useDatasetsContext()
+  const [selectedFilterCVW, setSelectedFilterCVW] = useState('')
+  const [selectedFilterBodeMod, setSelectedFilterBodeMod] = useState('')
+  const [selectedFilterBodeAng, setSelectedFilterBodeAng] = useState('')
+  const [selectedFilterNyquist, setSelectedFilterNyquist] = useState('')
 
-    const filtersConfig = [
-            { label: "MA", tooltip: "Moving Average", component: <MovingAverage setPreviewFilter={setPreviewData}/> },
-            { label: "LP", tooltip: "Low Pass", component: <LowPass setPreviewFilter={setPreviewData}/> },
-            { label: "HP", tooltip: "High Pass", component: <HighPass setPreviewFilter={setPreviewData}/> },
-            { label: "BP", tooltip: "Band Pass", component: <BandPass setPreviewFilter={setPreviewData}/> },
-            { label: "BS", tooltip: "Band Stop", component: <BandStop setPreviewFilter={setPreviewData}/> },
-    ]
+  const [previewCVW, setPreviewCVW] = useState({ x: [], y: [] })
+  const [previewBodeMod, setPreviewBodeMod] = useState({ x: [], y: [] })
+  const [previewBodeAng, setPreviewBodeAng] = useState({ x: [], y: [] })
+  const [previewNyquist, setPreviewNyquist] = useState({ x: [], y: [] })
 
-    const handleOpenSettings = () => {
-        setOpenFilters(true)
+  const {
+    datasets, handleNewDataset,
+    datasetSelected, handleSetDatasetSelected,
+    showOnlyDataset,
+  } = useDatasetsContext()
+
+  const [type, setType] = useState('CVW')
+
+  useEffect(() => {
+    if(datasetSelected >= 0 && datasetSelected < datasets.length)
+      setType(datasets[datasetSelected].type)
+    else
+      setType(undefined)
+  }, [datasetSelected])
+
+  useEffect(() => {
+    if (type === 'CVW') {
+      setPreviewData(previewCVW)
+    } else if (type === 'EIS') {
+      setPreviewData({
+        bodeMod: previewBodeMod,
+        bodeAng: previewBodeAng,
+        nyquist: previewNyquist,
+      })
     }
-    const handleCloseFilters = () => {
-        setOpenFilters(false)
-        setTabIndex(0)
-    }
+    // eslint-disable-next-line
+  }, [previewCVW, previewBodeMod, previewBodeAng, previewNyquist, type])
 
-    const getSelectedFilterComponent = () => {
-        const filter = filtersConfig.find(f => f.label === selectedFilter)
-        return filter ? filter.component : null
-    }
 
-    const handleSaveFilter = () => {
-        setTabIndex(0)
-    
-        const datasetFiltered = datasets[datasetSelected]
+  const filtersConfig = [
+    { label: "MA", tooltip: "Moving Average", component: MovingAverage },
+    { label: "LP", tooltip: "Low Pass", component: LowPass },
+    { label: "HP", tooltip: "High Pass", component: HighPass },
+    { label: "BP", tooltip: "Band Pass", component: BandPass },
+    { label: "BS", tooltip: "Band Stop", component: BandStop },
+  ]
 
-        handleNewDataset(
-            `${selectedFilter} de ${datasetFiltered.name}`,
-            datasetFiltered.params,
-            previewData
-        )
+  const renderFilterBlock = (
+    title, selectedFilter, setSelectedFilter, 
+    preview, setPreview, labelId, dataType
+  ) => (
+    <Box sx={{ mt: 2, px: 2 }}>
+      <Typography variant="subtitle1">{title}</Typography>
+      <Select
+        size="small"
+        fullWidth
+        value={selectedFilter}
+        onChange={e => setSelectedFilter(e.target.value)}
+        renderValue={value => {
+          if (!value) return <>Select a filter</>
+          const { tooltip } = filtersConfig.find(f => f.label === value) || {}
+          return tooltip || ''
+        }}
+        labelId={labelId}
+        displayEmpty
+      >
+        <MenuItem value="" disabled>
+          Select a filter
+        </MenuItem>
+        {filtersConfig.map((filter) => (
+          <MenuItem key={filter.label} value={filter.label}>
+            <ListItemIcon sx={{ minWidth: 32 }}>
+              <FilterListIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText primary={filter.label + " - " + filter.tooltip} />
+          </MenuItem>
+        ))}
+      </Select>
+      <Box>
+        {(() => {
+          const filter = filtersConfig.find(f => f.label === selectedFilter)
+          if (!filter) return null
+          const FilterComponent = filter.component
+          return <FilterComponent setPreviewFilter={setPreview} dataType={dataType} />
+        })()}
+      </Box>
+    </Box>
+  )
 
-        setPreviewData({ x: [], y: [] })
-    }
-    
-    const renderSelected = (value) => {
-        if (!value) {
-            return <>Select a filter</>
-        }
-        const { tooltip } = filtersConfig.find((f) => f.label === value) || {}
-        return tooltip || ''
-    }
-
-    const handleUpdateVisibility = (e) => {
-        const value = Number(e.target.value) 
-        handleSetDatasetSelected(value)
-        showOnlyDataset(value)
-    }
-    
-    return (
-        <>
-        <FiltersDialog open={openFilters} onClose={handleCloseFilters} />
-
-        <Box
-            sx={{
-                height: 440,
-                width: 248,
-                overflowY: 'auto',
-                display: 'flex',
-                flexDirection: 'column',
-            }}
-        >
-            {datasets.length === 0 ? (
-                <Typography
-                    variant="body1"
-                    color="textSecondary"
-                    align="center"
-                    sx={{ padding: theme.spacing(2), marginTop: theme.spacing(2) }}
-                >
-                    There are no datasets in cache at the moment.
-                </Typography>
-            ) : (
-                <>
-                    <Box 
-                        display="flex" 
-                        justifyContent="space-around" 
-                        alignItems="center"
-                        marginTop={theme.spacing(2)}
-                        gap={theme.spacing(1)}
-                    >
-                        <FormControl fullWidth size="small">
-                            <InputLabel id="dataset-label">Dataset</InputLabel>
-                            <Select
-                                labelId="dataset-label"
-                                label="Dataset"
-                                value={Number(datasetSelected)} // Garante que é número
-                                onChange={handleUpdateVisibility}
-                            >
-                                {datasets.map((dataset, index) => (
-                                <MenuItem key={index} value={index}>
-                                    {dataset.name}
-                                </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        <Button onClick={handleOpenSettings}>
-                            <AspectRatioIcon />
-                        </Button>
-                    </Box>
-
-                        <Box sx={{ mt: 2, px: 2 }}>                            
-                            <Select
-                                size="small"
-                                fullWidth
-                                value={selectedFilter}
-                                onChange={(e) => setSelectedFilter(e.target.value)}
-                                renderValue={renderSelected}
-                                labelId="filtro-label"
-                                displayEmpty
-                            >
-                                <MenuItem value="" disabled>
-                                    Select a filter
-                                </MenuItem>
-                                {filtersConfig.map((filter) => (
-                                <MenuItem key={filter.label} value={filter.label}>
-                                    <ListItemIcon sx={{ minWidth: 32 }}>
-                                        <FilterListIcon fontSize="small" />
-                                    </ListItemIcon>
-                                    <ListItemText primary={filter.label +" - "+ filter.tooltip} />
-                                </MenuItem>
-                                ))}
-                            </Select>
-                        
-                            <Box >
-                                {getSelectedFilterComponent()}
-                            </Box>
-                        </Box>
-                    
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handleSaveFilter}
-                        disabled={!selectedFilter}
-                        sx={{
-                            position: 'absolute',
-                            bottom: theme.spacing(2),
-                            right: theme.spacing(2),
-                        }}
-                    >
-                        Save Filter
-                    </Button>
-                </>
-            )}
-        </Box>
-        </>
+  const handleSaveFilterCVW = () => {
+    setTabIndex(0)
+    const datasetFiltered = datasets[datasetSelected]
+    handleNewDataset(
+      `${selectedFilterCVW} de ${datasetFiltered.name}`,
+      datasetFiltered.params,
+      previewCVW,
+      datasetFiltered.type
     )
+    setPreviewCVW({ x: [], y: [] })
+  }
+
+  const handleSaveFilterEIS = () => {
+    setTabIndex(0)
+    const datasetFiltered = datasets[datasetSelected]
+    const n = previewBodeMod.x.length
+    if (
+      n < 2 ||
+      previewBodeAng.x.length !== n ||
+      previewNyquist.x.length !== n
+    ) {
+      alert('Todos os filtros EIS devem estar aplicados e com o mesmo tamanho!')
+      return
+    }
+
+    const omega = [...previewBodeMod.x]
+    const modZ = [...previewBodeMod.y].map(v => Math.pow(10, v / 20))
+    const angZ = [...previewBodeAng.y]
+    const realZ = [...previewNyquist.x]
+    const imagZ = [...previewNyquist.y]
+    
+    handleNewDataset(
+      `${selectedFilterBodeMod}/${selectedFilterBodeAng}/${selectedFilterNyquist} de ${datasetFiltered.name}`,
+      datasetFiltered.params,
+      { omega, modZ, angZ, realZ, imagZ },
+      datasetFiltered.type
+    )
+
+    setPreviewBodeMod({ x: [], y: [] })
+    setPreviewBodeAng({ x: [], y: [] })
+    setPreviewNyquist({ x: [], y: [] })
+  }
+
+  const handleCloseFilters = () => {
+    setOpenFilters(false)
+    setTabIndex(0)
+  }
+
+  return (
+    <>
+      <FiltersDialog open={openFilters} onClose={handleCloseFilters} />
+
+      <Box
+        sx={{
+          height: 387.9, //440
+          width: 248,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          mb: '16px'
+        }}
+      >
+        
+
+        {datasets.length === 0 ? (
+          <Typography
+            variant="body1"
+            color="textSecondary"
+            align="center"
+            sx={{ padding: theme.spacing(2), marginTop: theme.spacing(2) }}
+          >
+            There are no datasets in cache at the moment.
+          </Typography>
+        ) : (
+          <>
+            <Box sx={{width:'100%', mt:2, mb:1}}>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<FilterListIcon />}
+                onClick={() => setOpenFilters(true)}
+              >
+                Open filter dialog
+              </Button>
+            </Box>
+
+            {type === 'CVW' && (
+              renderFilterBlock("CVW", selectedFilterCVW, setSelectedFilterCVW, previewCVW, setPreviewCVW, "filtro-cvw-label", "cvw")
+            )}
+
+            {type === 'EIS' && (
+              <>
+                {renderFilterBlock("Bode |Z|", selectedFilterBodeMod, setSelectedFilterBodeMod, previewBodeMod, setPreviewBodeMod, "filtro-bodemod-label", "bodeMod")}
+                {renderFilterBlock("Bode Fase", selectedFilterBodeAng, setSelectedFilterBodeAng, previewBodeAng, setPreviewBodeAng, "filtro-bodeang-label", "bodeAng")}
+                {renderFilterBlock("Nyquist", selectedFilterNyquist, setSelectedFilterNyquist, previewNyquist, setPreviewNyquist, "filtro-nyquist-label", "nyquist")}
+              </>
+            )}
+
+          </>
+        )}
+
+      </Box>
+
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={type === 'CVW' ? handleSaveFilterCVW : handleSaveFilterEIS}
+        disabled={
+          (type === 'CVW' && !selectedFilterCVW) ||
+          (type === 'EIS' && (
+            !selectedFilterBodeMod ||
+            !selectedFilterBodeAng ||
+            !selectedFilterNyquist ||
+            !previewBodeMod.x.length ||
+            !previewBodeAng.x.length ||
+            !previewNyquist.x.length ||
+            previewBodeMod.x.length !== previewBodeAng.x.length ||
+            previewBodeMod.x.length !== previewNyquist.x.length
+          )) ||
+          !(datasetSelected >= 0 && datasetSelected < datasets.length)
+        }
+      >
+        {type === 'CVW' ? 'Save filter CVW' : 'Save filter EIS'}
+      </Button>
+    </>
+  )
 }

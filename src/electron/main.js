@@ -17,16 +17,17 @@ let isDev = false
 async function setupSerialPort(selectedPort) {
   try {
     if (port) port.close()
-    port = new SerialPort({ path: selectedPort, baudRate: 9600 })
+    port = new SerialPort({ path: selectedPort, baudRate: 115200 })
     const parser = port.pipe(new ReadlineParser({ delimiter: '\n' }))
     parser.on('data', (data) => { if (mainWindow) mainWindow.webContents.send('arduino-data', data)})
     port.on('open', () => { 
       console.log('Porta serial aberta com sucesso!')
       if (mainWindow) mainWindow.webContents.send('serial-port-opened', 'Porta serial aberta com sucesso!')
-      port.write('$RESET\n', (err) => {
+      /*
+      port.write('$RST\n', (err) => {
         if (err) console.error('Erro ao enviar comando de reinicializacao para o Arduino:', err)
         else console.log('Comando de reinicializacao enviado para o Arduino')
-      })
+      })*/
     })
     port.on('error', (err) => { 
       if (mainWindow) mainWindow.webContents.send('serial-port-opened', 'not-connected:'+err)
@@ -86,47 +87,6 @@ function createWindow() {
 }
 
 /**
- * Creates and displays the settings window.
- * 
- * @param {Object} settingsData - The settings data to be passed to the renderer via IPC
- *//*
-function createSettingsWindow(settingsData) {
-  if (settingsWindow) {
-      settingsWindow.focus()
-      return
-  }
-
-  settingsWindow = new BrowserWindow({
-      width: 720,
-      height: 480,
-      webPreferences: {
-          contextIsolation: true,
-          sandbox: false,
-          webSecurity: true,
-          preload: path.join(__dirname, "./preload.js"),
-      },
-      autoHideMenuBar: !isDev,
-      maximizable: false,
-      resizable: false
-  })
-
-  // Pass datasets as query parameters
-  //const datasetsParam = encodeURIComponent(JSON.stringify(datasets))
-  //settingsWindow.loadURL(`http://localhost:3000/filters?datasets=${datasetsParam}`) 
-
-  // Load the URL without datasets parameter
-  settingsWindow.loadURL('http://localhost:3000/filters')  
-  // Wait for the window to be ready and then send the data
-  settingsWindow.webContents.on('did-finish-load', () => {
-    settingsWindow.webContents.send('settings-data', settingsData)
-  })
-
-  settingsWindow.on('closed', () => {
-      settingsWindow = null
-  })
-}*/
-
-/**
  * Executes initialization logic once the Electron app is ready.
  *  
  */
@@ -162,7 +122,6 @@ ipcMain.handle('get-available-ports', async () => {
 ipcMain.on('connect-to-port', (event, selectedPort) => {
   try{
     setupSerialPort(selectedPort)
-    
   }catch(erro){
     console.log("Não foi possíve conectar: "+erro)
   }
@@ -197,24 +156,3 @@ ipcMain.on('send-command', (event, arg) => {
       else console.log('Comando enviado para o Arduino:', arg)
     })
 })
-
-/**
- * Handles request to open the settings window
- * 
- * @param {Object} settingsData - The data to pass to the settings window
- *//*
-ipcMain.on('open-settings-window', (event, settingsData) => {
-  createSettingsWindow(settingsData)
-})*/
-
-/**
- * Handles request to save settings from the settings window
- * 
- * @param {Object} data - The settings data submitted by the user
- *//*
-ipcMain.on('save-settings', (event, data) => {
-  console.log('Configurações salvas:', data) 
-  if (settingsWindow) {
-      settingsWindow.close() 
-  }
-})*/

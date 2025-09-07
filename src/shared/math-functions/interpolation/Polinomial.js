@@ -1,36 +1,25 @@
 /**
  * Calculates Polinomial Interpolation (Vandermonde + Normal Equation),
  *
- * @param {[number,number]} points            - Indices [idx1, idx2] of the cut
- * @param {Array} datasets                    - Array of datasets (each with .data[0].x / .y)
- * @param {number} datasetSelected            - Index of the dataset to use
- * @param {number} degree                     - Degree of the interpolating polynomial
- * @param {{min: number, max: number}} range  - Generation point interval
+ * @param {number[]} xSlice                - Array of x values (interval recortado)
+ * @param {number[]} ySlice                - Array of y values (interval recortado)
+ * @param {number} degree                  - Degree of the interpolating polynomial
+ * @param {number[]} interpRangeX          - Array of x values to generate interpolation (linear ou log)
  * 
  * @returns {{coefficients: Array, interpolatedX: number[], interpolatedY: number[]}}
  */
 export const calculatePolynomialInterpolation = (
-  points, 
-  datasets, 
-  datasetSelected, 
-  degree, 
-  range
+  xSlice,
+  ySlice,
+  degree,
+  interpRangeX
 ) => {
-  const xValues = datasets[datasetSelected].data[0].x
-  const yValues = datasets[datasetSelected].data[0].y
-
-  let [idx1, idx2] = points
-  if (idx1 > idx2) [idx1, idx2] = [idx2, idx1] 
-
-  const xSlice = xValues.slice(idx1, idx2 + 1)
-  const ySlice = yValues.slice(idx1, idx2 + 1)
-
   const n = xSlice.length
   if (n < degree + 1) {
     throw new Error(`Insufficient points for degree ${degree} approximation.`)
   }
 
-  // Build the Valdemort matrix
+  // Build the Vandermonde matrix
   const vandermondeMatrix = xSlice.map((x) =>
     Array.from({ length: degree + 1 }, (_, i) => Math.pow(x, i))
   )
@@ -46,20 +35,33 @@ export const calculatePolynomialInterpolation = (
     )
   const invert = (matrix) => {
     const size = matrix.length
-    const identity = matrix.map((row, i) =>
+    // Deep copy to avoid mutating input
+    const m = matrix.map(row => row.slice())
+    const identity = m.map((row, i) =>
       row.map((_, j) => (i === j ? 1 : 0))
     )
     for (let i = 0; i < size; i++) {
-      const factor = matrix[i][i]
+      let factor = m[i][i]
+      if (factor === 0) {
+        // Find a row to swap
+        for (let k = i + 1; k < size; k++) {
+          if (m[k][i] !== 0) {
+            [m[i], m[k]] = [m[k], m[i]]
+            [identity[i], identity[k]] = [identity[k], identity[i]]
+            factor = m[i][i]
+            break
+          }
+        }
+      }
       for (let j = 0; j < size; j++) {
-        matrix[i][j] /= factor
+        m[i][j] /= factor
         identity[i][j] /= factor
       }
       for (let k = 0; k < size; k++) {
         if (k === i) continue
-        const factor2 = matrix[k][i]
+        const factor2 = m[k][i]
         for (let j = 0; j < size; j++) {
-          matrix[k][j] -= factor2 * matrix[i][j]
+          m[k][j] -= factor2 * m[i][j]
           identity[k][j] -= factor2 * identity[i][j]
         }
       }
@@ -73,15 +75,11 @@ export const calculatePolynomialInterpolation = (
   const XTy = multiply(XT, ySlice.map((y) => [y]))
   const coefficients = multiply(invert(XTX), XTy).map((row) => row[0])
 
-  // Generate interpolated points within the specified range
-  const interpolatedX = []
-  const interpolatedY = []
-  for (let x = range.min; x <= range.max; x += 1) {
-    interpolatedX.push(x)
-    interpolatedY.push(
-      coefficients.reduce((sum, coeff, i) => sum + coeff * Math.pow(x, i), 0)
-    )
-  }
+  // Generate interpolated points for the given interpRangeX (linear ou log)
+  const interpolatedX = interpRangeX
+  const interpolatedY = interpRangeX.map(x =>
+    coefficients.reduce((sum, coeff, i) => sum + coeff * Math.pow(x, i), 0)
+  )
 
   return { coefficients, interpolatedX, interpolatedY }
 }

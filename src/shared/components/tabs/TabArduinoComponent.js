@@ -1,146 +1,55 @@
-import { TextField, Box, Card, CardContent, List, ListItem } from '@mui/material' 
-import { Button } from '@mui/material' 
-
-import IconButton from '@mui/material/IconButton' 
-import PlayArrowIcon from '@mui/icons-material/PlayArrow' 
-import StopIcon from '@mui/icons-material/Stop' 
-import MinimizeIcon from '@mui/icons-material/Minimize' 
-
-import { useState } from "react"
-import { useTheme } from "@mui/material"
-
-import { 
-  StartReading, 
-  FinishReading 
-} from "../../../arduino"
-import { 
-  useArduinoContext, 
-  useDatasetsContext,
-  useDashboardContext,
-} from '../../contexts'
+import { useEffect, useState } from 'react'
+import { Box, Card, CardContent, Tab, Tabs, IconButton } from '@mui/material'
+import MinimizeIcon from '@mui/icons-material/Minimize'
+import { useTheme } from '@mui/material'
+import { useDashboardContext, useDatasetsContext } from '../../contexts'
+import { CVComponent, DPVComponent, SWVComponent, EISComponent } from '..'
 
 /**
- * TabArduino component provides a UI panel for configuring and controlling Arduino data acquisition
- * 
- * Features:
- * - Displays input fields for dataset name and acquisition parameters
- * - Validates inputs and manages error states
- * - Starts and stops reading data from the Arduino device
- * - Automatically handles unique naming of datasets to avoid duplicates
- * - Allows minimizing the tab
- * - Uses contexts for Arduino connection state, dataset management, and dashboard UI state
- * 
- * @returns {JSX.Element|null}
+ * TabArduino component provides a UI panel for
+ * configuring and controlling Arduino data acquisition
  */
 export const TabArduino = () => {
-
   const theme = useTheme()
-  const { 
-    isConnected,
-    isReading, handleSetIsReading  
-  } = useArduinoContext()
   const {
-    currentParams, handleCurrentParams,
-    currentName, handleCurrentName,
-    datasets
-  } = useDatasetsContext()
-  const {
-    tabArduinoIsMinimized: isMinimized, 
-    handleToggleTabArduinoMinimized: setIsMinimized, 
-    tabDatasetsIsMinimized: isMinimizedDataset, 
-    handleToggleTabDatasetsMinimized: setIsMinimizedDataset,
+    tabArduinoIsMinimized: isMinimized,
+    handleToggleTabArduinoMinimized: toggleMinimized,
   } = useDashboardContext()
 
-  const [errors, setErrors] = useState({})
+  const { 
+    handleExperimentType,
+    experimentType
+  } = useDatasetsContext()
 
-  const validateField = (field, value) => {
-    if (field === "name" && !value.trim()) 
-      return "Name cannot be empty."
-    if (Number.isNaN(value)) 
-      return "Invalid entry."
-    return ""
+  const tabTypes = ['CVW', 'DPV', 'SWV', 'EIS']
+  const [tabIndex, setTabIndex] = useState(
+    Math.max(0, tabTypes.indexOf(experimentType))
+  )
+
+  useEffect(() => {
+    const idx = tabTypes.indexOf(experimentType)
+    if (idx >= 0 && idx !== tabIndex) {
+      setTabIndex(idx)
+    }
+  }, [experimentType, tabIndex, tabTypes])
+
+  const onTabChange = (_, idx) => {
+    setTabIndex(idx)
+    handleExperimentType(tabTypes[idx])
   }
 
-  const handleChange = (field) => (e) => {
-    const value = field === "name" ? e.target.value : Number(e.target.value)
-
-    handleCurrentParams((prevState) => ({
-      ...prevState,
-      [field]: value,
-    }))
-
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      [field]: validateField(field, value),
-    }))
-  }
-
-  const handleStartReading = () => {
-    const newErrors = {}
-    let hasError = false
-
-    if (!currentName.trim()) {
-      newErrors.name = "Name cannot be empty."
-      hasError = true
-    }
-
-    Object.entries(currentParams).forEach(([field, value]) => {
-      const error = validateField(field, value)
-      if (error) {
-        newErrors[field] = error
-        hasError = true
-      }
-    })
-    if (hasError) {
-      setErrors(newErrors)
-      return
-    }
-
-    setErrors({})
-
-    const existingNames = datasets.map((dataset) => dataset.name)
-    let newName = currentName
-    while (existingNames.includes(newName)) {
-      const match = newName.match(/\((\d+)\)$/)
-      if (match) {
-        const count = parseInt(match[1], 10)
-        newName = `${newName.replace(/\(\d+\)$/, "")}(${(count + 1).toString().padStart(2, '0')})`
-      } else {
-        newName = `${newName} (01)`
-      }
-    }
-    
-    handleCurrentName(newName)
-
-    if(!isReading){
-      StartReading(
-        "$CVW",
-        currentParams.settlingTime,
-        currentParams.startPotential,
-        currentParams.endPotential,
-        currentParams.step,
-        currentParams.scanRate,
-        currentParams.cycles,
-        handleSetIsReading
-      )
-      if(!isMinimized)
-        setIsMinimized()
-      if(!isMinimizedDataset)
-        setIsMinimizedDataset()      
-    }
-    else console.log("It is not possible to start, process in progress")
-  }
-  
-  if (isMinimized) 
-    return null
+  if (isMinimized) return null
 
   return (
     <Box
       width={theme.spacing(35)}
+      minWidth={theme.spacing(35)}
+      height={530}
+      minHeight={530}
       display="flex"
-      flexShrink="0"
-      marginTop={theme.spacing(2)}
-      marginBottom={theme.spacing(2)}
+      flexShrink={0}
+      mt={2}
+      mb={2}
       transition="width 0.3s ease"
       alignItems="start"
       position="absolute"
@@ -148,84 +57,52 @@ export const TabArduino = () => {
       left={0}
       zIndex={2}
     >
-      <Card 
+      <Card
         sx={{
-          borderRadius: "16px",
+          borderRadius: 2,
           backgroundColor: theme.palette.background.paper,
-          boxShadow: `0 2px 10px rgba(0, 0, 0, 0.2)`,
-          border: "1px solid rgba(0, 0, 0, 0.12)"
+          boxShadow: 2,
+          border: '1px solid rgba(0, 0, 0, 0.12)',
+          width: '100%',
+          height: '100%',
         }}
       >
         <CardContent
           sx={{
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-            padding: null,
-            color: theme.palette.text.primary, 
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            p: 0,
+            color: theme.palette.text.primary,
           }}
         >
-          <Box display="flex" justifyContent="end" flexDirection="row" width="100%">
-            <IconButton
-              aria-label="toggle"
-              size="small"
-              onClick={() => setIsMinimized(!isMinimized)}
+          <Box display="flex" justifyContent="space-between" alignItems="center" p={1}>
+             <Tabs
+              value={tabIndex}
+              onChange={onTabChange}
+              variant="fullWidth"
             >
+              <Tab label="CVW" sx={{ minWidth: 55, p: 0 }} />
+              <Tab label="DPV" sx={{ minWidth: 55, p: 0 }} />
+              <Tab label="SWV" sx={{ minWidth: 55, p: 0 }} />
+              <Tab label="EIS" sx={{ minWidth: 55, p: 0 }} />
+            </Tabs>
+            <IconButton size="small" onClick={() => toggleMinimized(true)}>
               <MinimizeIcon />
             </IconButton>
           </Box>
-          
-          <List>
-            <ListItem>
-              <TextField
-                label="Name"
-                value={currentName}
-                onChange={(e) => handleCurrentName(e.target.value)}
-                size="small"
-                fullWidth
-                error={!!errors.name}
-                helperText={errors.name}
-              />
-            </ListItem>
-            {Object.keys(currentParams).map((field) => (
-              <ListItem key={field}>
-                <TextField
-                  label={`${field
-                    .replace(/([A-Z])/g, " $1")
-                    .replace(/^./, (str) => str.toUpperCase())}`}
-                  value={currentParams[field]}
-                  onChange={handleChange(field)}
-                  type="number"
-                  size="small"
-                  fullWidth
-                  error={!!errors[field]}
-                  helperText={errors[field]}
-                />
-              </ListItem>
-            ))}
-          </List>
-          
-          <Box width="100%" display="flex" justifyContent="center" gap={theme.spacing(3)}>
-            <Button
-              onClick={handleStartReading}
-              variant="contained"
-              color="success"
-              size="small"
-              disabled={isReading || !isConnected} 
-              style={{ opacity: isReading ? 0.5 : 1 }}
-            >
-              <PlayArrowIcon />
-            </Button>
-            <Button
-              onClick={FinishReading}
-              variant="contained"
-              color="error"
-              size="small"
-              disabled={!isReading} 
-              style={{ opacity: !isReading ? 0.5 : 1 }} 
-            >
-              <StopIcon />
-            </Button>
+
+          <Box
+            flex={1}
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            overflow="auto"
+          >
+            {tabIndex === 0 && <CVComponent key="cv" />}
+            {tabIndex === 1 && <DPVComponent key="dpv" />}
+            {tabIndex === 2 && <DPVComponent key="swv" />}
+            {tabIndex === 3 && <EISComponent key="eis" />}
           </Box>
         </CardContent>
       </Card>

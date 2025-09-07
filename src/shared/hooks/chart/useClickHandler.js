@@ -1,44 +1,98 @@
 import { useEffect } from 'react'
-
 import { useDatasetsContext } from '../../contexts'
 
-export const useClickHandler = (chartRef, setSelectedPoints, theme) => {
-  const { 
-    datasets, 
-    handleSetDatasetSelected, handleSetIsDatasetSelected 
+export const useClickHandler = (
+  chartRefsWithNames, // [{ ref, name }]
+  setSelectedPoints,
+  theme,
+  isPolar
+) => {
+  const {
+    datasets,
+    handleSetDatasetSelected,
+    handleSetIsDatasetSelected
   } = useDatasetsContext()
 
   useEffect(() => {
-    const el = chartRef.current
-    if (!el) return
+    const listeners = chartRefsWithNames
+      .map(({ ref, name }) => ({ el: ref.current, name }))
+      .filter(({ el }) => el)
+      .map(({ el, name }) => {
+        const handler = (eventData) => {
+          if (!eventData?.points?.length) return
+          const pt = eventData.points[0]
+          if (!pt.data || !pt.data.name || !datasets[pt.data.name]) return
+          if (pt.data.name.startsWith('Interpolação')) return
 
-    const handleClick = (eventData) => {
-      if (!eventData?.points?.length) return
-      const pt = eventData.points[0]
-      if (pt.data.name.startsWith('Interpolação')) return
+          setSelectedPoints(prev => {
+            let newPoints
 
-      setSelectedPoints(prev => {
-        let newPoints
-        if (prev.length && prev[0].dataset !== pt.data.name) {
-          newPoints = [{ x: pt.x, y: pt.y, dataset: pt.data.name, color: pt.fullData.line?.color || theme.palette.secondary.main }]
-        } else {
-          const dup = prev.some(p => p.x === pt.x && p.y === pt.y)
-          if (!dup && prev.length < 2) {
-            newPoints = [...prev, { x: pt.x, y: pt.y, dataset: pt.data.name, color: pt.fullData.line?.color || theme.palette.secondary.main }]
-          } else {
-            newPoints = prev
-          }
+            const visibleDatasets = datasets.filter(ds => ds.visible)
+            const datasetIndex = visibleDatasets[pt.curveNumber]
+            if (!datasetIndex) return
+            
+            const isPolar = pt.data.type === 'scatterpolar'
+            const datasetX = isPolar ? pt.data.theta : pt.data.x
+            const datasetY = isPolar ? pt.data.r : pt.data.y
+
+            const index = datasetX.findIndex(
+              (xVal, i) =>
+                (isPolar
+                  ? (xVal === pt.theta && datasetY[i] === pt.r)
+                  : (xVal === pt.x && datasetY[i] === pt.y)
+                )
+            )
+
+            if (index === -1) return
+
+            const pointData = {
+              dataset: datasets.findIndex(ds => ds.name === datasetIndex.name), // índice real no array global
+              type: datasetIndex.type,
+              color: pt.fullData.line?.color || theme.palette.secondary.main,
+              index,
+              ref: name,
+              ...(isPolar
+                ? { theta: pt.theta, r: pt.r }
+                : { x: pt.x, y: pt.y }
+              )
+            }
+
+            if (prev.length && prev[0].dataset !== pointData.dataset) {
+              newPoints = [pointData]
+            } else {
+              const dup = prev.some(p =>
+                isPolar
+                  ? (p.theta === pt.theta && p.r === pt.r)
+                  : (p.x === pt.x && p.y === pt.y)
+              )
+              if (!dup && prev.length < 2) {
+                newPoints = [...prev, pointData]
+              } else {
+                newPoints = prev
+              }
+            }
+
+            handleSetDatasetSelected(pointData.dataset)
+            handleSetIsDatasetSelected(true)
+
+            return newPoints
+          })
         }
 
-        if (pt.data.name !== -1) {
-          handleSetDatasetSelected(pt.data.name)
-          handleSetIsDatasetSelected(true)
-        }
-        return newPoints
+        el.on('plotly_click', handler)
+        return { el, handler }
+      })
+
+    return () => {
+      listeners.forEach(({ el, handler }) => {
+        el.removeListener('plotly_click', handler)
       })
     }
-
-    el.on('plotly_click', handleClick)
-    return () => el.removeListener('plotly_click', handleClick)
-  }, [chartRef, setSelectedPoints, theme])
+  }, [
+    chartRefsWithNames,
+    setSelectedPoints,
+    theme,
+    handleSetDatasetSelected,
+    handleSetIsDatasetSelected
+  ])
 }

@@ -12,7 +12,7 @@ import { Box,
   ListItemIcon,
   Typography,
 } from '@mui/material'
-import { Circle, Square, Star, Close, ChangeHistory } from '@mui/icons-material'
+import { Circle, Square, Star, Add, ChangeHistory } from '@mui/icons-material'
 import { useState } from 'react'
 import { MuiColorInput } from 'mui-color-input'
 
@@ -22,7 +22,7 @@ const SYMBOL_OPTIONS = [
   { value: 'circle', icon: <Circle /> },
   { value: 'square', icon: <Square /> },
   { value: 'star', icon: <Star /> },
-  { value: 'cross', icon: <Close /> },
+  { value: 'cross', icon: <Add /> },
   { value: 'triangle-up', icon: <ChangeHistory /> }
 ]
 
@@ -33,14 +33,51 @@ export const AddMarkDialog = ({ open, onClose, point }) => {
   const [label, setLabel] = useState('')
   const [symbol, setSymbol] = useState('star')
   const [color, setColor] = useState('#000000')
+  const [size, setSize] = useState(12)
+
+  //console.log(point)
+  let posPoint = []
+  if(point && point.dataset !== undefined && point.index !== undefined && datasets?.[point.dataset]?.data?.[0]){
+
+    if(point.type === "CVW"){
+      posPoint = { 
+        x : datasets[point.dataset].data[0].x[point.index], 
+        y : datasets[point.dataset].data[0].y[point.index] 
+      }
+    }
+
+    else if(point.type === "EIS"){
+      if(point.ref === "bodeMod"){
+        posPoint = {
+          x : datasets[point.dataset].data[0].omega[point.index],
+          y : 20 * Math.log10(datasets[point.dataset].data[0].modZ[point.index])
+        }
+      }
+      else if(point.ref === "bodeAng"){
+        posPoint = {
+          x : datasets[point.dataset].data[0].omega[point.index],
+          y : datasets[point.dataset].data[0].angZ[point.index]
+        }
+      }
+      else if(point.ref === "nyquist"){
+        posPoint = {
+          x : datasets[point.dataset].data[0].realZ[point.index],
+          y : datasets[point.dataset].data[0].imagZ[point.index]
+        }
+      }
+    }
+  }
+    
 
   const handleSave = () => {
     const newMarker = { 
-      ...point, 
+      ...posPoint, 
       label, 
       symbol, 
       color, 
+      size,
       isVisible: true,
+      ref: point.ref
     }
 
     datasets[datasetSelected]?.addPointMarker(newMarker)
@@ -57,7 +94,11 @@ export const AddMarkDialog = ({ open, onClose, point }) => {
       <DialogContent>
 
         <Typography mb={3}>
-          Point: ({point?.x}, {point?.y})
+          {point && point.dataset !== undefined && point.index !== undefined && datasets?.[point.dataset]?.data?.[0] ? (
+            <>Point: ({posPoint.x}, {posPoint.y})</>
+          ) : (
+            <>Selecione um ponto</>
+          )}
         </Typography>
 
         <TextField
@@ -91,11 +132,18 @@ export const AddMarkDialog = ({ open, onClose, point }) => {
             <MuiColorInput value={color} onChange={setColor}/>
           </FormControl>
         </Box>
-        
+
+        <TextField
+          label="Tamanho do marcador"
+          type="number"
+          value={size}
+          onChange={e => setSize(Number(e.target.value))}
+          fullWidth
+        />
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancelar</Button>
-        <Button onClick={handleSave} disabled={!label}>Salvar</Button>
+        <Button onClick={handleSave} variant="contained" disabled={!label}>Salvar</Button>
       </DialogActions>
     </Dialog>
   )

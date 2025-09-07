@@ -15,7 +15,12 @@ import { useDatasetsContext } from '../../contexts'
  * @returns {JSX.Element}
  */
 export const ImportDataset = ({ onClose }) => {
-  const { datasets, handleSetDataset } = useDatasetsContext()
+  const { 
+    datasets, 
+    handleSetDataset,
+    handleExperimentType, experimentType,
+    setExclusiveVisibility
+  } = useDatasetsContext()
   const [error, setError] = useState('')
 
   const handleFileChange = (event) => {
@@ -114,7 +119,11 @@ export const ImportDataset = ({ onClose }) => {
           },
         }))
 
+        handleExperimentType(renamedDatasets[0].type)
         handleSetDataset(prev => [...prev, ...enriched])
+        if (typeof setExclusiveVisibility === 'function') {
+          setExclusiveVisibility(renamedDatasets[0].type)
+        }
         setError('')
         onClose()
       } catch {

@@ -1,12 +1,11 @@
-import React, { useEffect, useMemo, useContext, useRef } from 'react'
-import { Box } from '@mui/material'
-import Plotly from 'plotly.js-dist'
-
+import { useRef, useContext, useEffect, useState } from 'react'
+import { Box, ToggleButton, ToggleButtonGroup, Paper, Typography } from '@mui/material'
+import CropSquareIcon from '@mui/icons-material/CropSquare'
+import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked'
 import {
   ThemeContext,
   useDatasetsContext,
 } from '../../contexts'
-
 import {
   useResizeHandler,
   useInitialPlot,
@@ -43,41 +42,210 @@ import {
  * @param {string} selectedPoints[].dataset   - Dataset name the point belongs to.
  * @param {string} [selectedPoints[].color]   - Optional color of the point marker.
  */
-export const ChartComponent = ({ 
-  type_, 
-  previewData, 
-  setSelectedPoints, 
+export const ChartComponent = ({
+  type_,
+  previewData,
+  setSelectedPoints,
   selectedPoints,
-  onContextMenu 
+  onContextMenu
 }) => {
   const { theme } = useContext(ThemeContext)
-  const { datasets, handleSetDatasetSelected } = useDatasetsContext()
+  const { datasets, handleSetDatasetSelected, experimentType } = useDatasetsContext()
+
+  const bodeModRef = useRef(null)
+  const bodeAngRef = useRef(null)
+  const nyquistRef = useRef(null)
   const chartRef = useRef(null)
   const prevLengths = useRef({})
 
-  
+  const [isPolar, setIsPolar] = useState(false)
+
+  const eisDatasets = datasets.filter(ds => ds.visible && ds.type === 'EIS')
+
+  // EIS: Bode |Z| vs omega
+  useInitialPlot(
+    bodeModRef,
+    experimentType === 'EIS'
+      ? eisDatasets.map(ds => ({
+          ...ds,
+          data: [{ 
+            x: ds.data[0].omega, 
+            y: ds.data[0].modZ.map(v => 20 * Math.log10(v > 0 ? v : 1e-12))
+          }]
+        }))
+      : [],
+    theme,
+    'Frequency (Hz)',
+    '|Z| (dB)', // eixo Y
+    true, // islogX
+  )
+  useResizeHandler(bodeModRef)
+
+  // EIS: Bode angZ vs omega
+  useInitialPlot(
+    bodeAngRef,
+    experimentType === 'EIS'
+      ? eisDatasets.map(ds => ({
+          ...ds,
+          data: [{ x: ds.data[0].omega, y: ds.data[0].angZ }]
+        }))
+      : [],
+    theme,
+    'Frequency (Hz)',
+    'Phase (°)', // eixo Y
+    true, // islogX
+  )
+  useResizeHandler(bodeAngRef)
+
+  // EIS: Nyquist realZ vs imagZ
+  useInitialPlot(
+    nyquistRef,
+    experimentType === 'EIS'
+      ? eisDatasets.map(ds => ({
+          ...ds,
+          data: [{ x: ds.data[0].realZ, y: ds.data[0].imagZ }]
+        }))
+      : [],
+    theme,
+    'Re(Z) (Ohm)',
+    (isPolar)?'|Z| (Ohm)':'-Im(Z) (Ohm)', // Y invertido, comum em Nyquist
+    false, // islogX
+    true, // is Nyquist
+    isPolar, // Retangular ou Polar
+  )
+  useResizeHandler(nyquistRef)
+
+  // CV hooks
   useResizeHandler(chartRef)
+  useInitialPlot(chartRef,experimentType !== 'EIS' ? datasets : [],theme,'Voltage (mV)','Current (µA)') 
+  useExtendTraces(chartRef, experimentType !== 'EIS' ? datasets : [], prevLengths)
   
-  useInitialPlot(chartRef, datasets, theme)
+  // Prepare refs and datasets for preview & markers
+  const previewRefs = experimentType === 'EIS'
+    ? [bodeModRef, bodeAngRef, nyquistRef]
+    : [chartRef]
+  const previewDatasets = experimentType === 'EIS' ? eisDatasets : datasets
+  usePreviewAndInterpolations(previewRefs, previewDatasets, previewData, theme, prevLengths, isPolar)
 
-  useExtendTraces(chartRef, datasets, prevLengths)
-  
-  usePreviewAndInterpolations(chartRef, datasets, previewData, theme, prevLengths)
+  //Clicks
+  let clickRefs = experimentType === 'EIS'
+    ? [
+        { ref: bodeModRef, name: 'bodeMod' },
+        { ref: bodeAngRef, name: 'bodeAng' },
+        { ref: nyquistRef, name: 'nyquist' }
+      ]
+    : [{ ref: chartRef, name: 'cvChart' }]
+  useClickHandler(clickRefs, setSelectedPoints, theme, isPolar)
 
-  useClickHandler(chartRef, setSelectedPoints, theme)
+  // Selection rendering 
+  useSelectionRenderer(
+    previewRefs,
+    datasets, handleSetDatasetSelected,
+    selectedPoints, setSelectedPoints,
+    isPolar
+  )
 
-  useSelectionRenderer(chartRef, datasets, selectedPoints, setSelectedPoints, handleSetDatasetSelected)
+  useEffect(() => {
+    if (selectedPoints.length) {
+      handleSetDatasetSelected(selectedPoints[0].dataset)
+    }
+  }, [selectedPoints, handleSetDatasetSelected])
 
+  const commonProps = {
+    position: 'absolute',
+    top: type_.top,
+    right: 0,
+    width: type_.width,
+    height: type_.height,
+    zIndex: 0,
+    onContextMenu
+  }
+
+  // EIS
+  if (experimentType === 'EIS') {
+    return (
+      <Box 
+        key={`chart-${experimentType}`} 
+        {...commonProps} 
+        display="flex" flexDirection="row"
+      >
+        <Box position="absolute" top={12} right={12} zIndex={10}>
+          <Paper elevation={4} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+            <ToggleButtonGroup
+              size="small"
+              exclusive
+              value={isPolar ? 'polar' : 'rectangular'}
+              onChange={(_, val) => {
+                if (val) setIsPolar(val === 'polar')
+              }}
+              sx={{
+                '& .MuiToggleButton-root': {
+                  px: 1.5,
+                  py: 0.5,
+                  border: 'none'
+                },
+                '& .MuiToggleButton-root.Mui-selected': {
+                  bgcolor: 'primary.main',
+                  color: 'primary.contrastText',
+                  '&:hover': { bgcolor: 'primary.dark' }
+                }
+              }}
+            >
+              <ToggleButton value="rectangular">
+                <CropSquareIcon fontSize="small" />
+                <Typography variant="caption" sx={{ ml: 0.5 }}>Rectangular</Typography>
+              </ToggleButton>
+              <ToggleButton value="polar">
+                <RadioButtonCheckedIcon fontSize="small" />
+                <Typography variant="caption" sx={{ ml: 0.5 }}>Polar</Typography>
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Paper>
+        </Box>
+
+        <Box height="97%" width="50%" display="flex" flexDirection="column">
+          <Box flex={1} p={1}>
+            <div
+              ref={bodeModRef}
+              data-plotly
+              data-chart-type="bodeMod"
+              style={{ width: '100%', height: '100%' }}
+            />
+          </Box>
+          <Box flex={1} p={1}>
+            <div
+              ref={bodeAngRef}
+              data-plotly
+              data-chart-type="bodeAng"
+              style={{ width: '100%', height: '100%' }}
+            />
+          </Box>
+        </Box>
+        <Box height="97%" width="50%" p={1}>
+          <div
+            ref={nyquistRef}
+            data-plotly
+            data-chart-type="nyquist"
+            style={{ width: '100%', height: '100%' }}
+          />
+        </Box>
+      </Box>
+    )
+  }
+
+  // CV
   return (
     <Box
-      ref={chartRef}
-      position="absolute"
-      top={type_.top}
-      right={0}
-      height={type_.height}
-      width={type_.width}
-      zIndex={0}
-      onContextMenu={onContextMenu}
-    />
+      key={`chart-${experimentType}`}
+      {...commonProps}
+    >
+      <div
+        ref={chartRef}
+        data-plotly
+        data-chart-type="cvChart"
+        style={{ width: '100%', height: '100%' }}
+      />
+    </Box>
   )
+
 }

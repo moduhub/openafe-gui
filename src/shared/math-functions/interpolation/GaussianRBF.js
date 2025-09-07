@@ -1,27 +1,17 @@
 /**
  * Calculates Gaussian interpolation (RBF with Gaussian nucleus),
  *
- * @param {[number,number]} points            - Indices [idx1, idx2] of the cut
- * @param {Array} datasets                    - Array of datasets (each with .data[0].x / .y)
- * @param {number} datasetSelected            - Index of the dataset to use
- * @param {{min: number, max: number}} range  - Generation point interval
+ * @param {number[]} xSlice                - Array of x values (interval recortado)
+ * @param {number[]} ySlice                - Array of y values (interval recortado)
+ * @param {number[]} interpRangeX          - Array of x values to generate interpolation (linear ou log)
  * 
  * @returns {{mu: number, sigma: number, amplitude: number, interpolatedX: number[], interpolatedY: number[]}}
  */
 export const calculateGaussianInterpolationRBF = (
-  points,
-  datasets,
-  datasetSelected,
-  range
+  xSlice,
+  ySlice,
+  interpRangeX
 ) => {
-  const xValues = datasets[datasetSelected].data[0].x
-  const yValues = datasets[datasetSelected].data[0].y
-
-  let [i1, i2] = points
-  if (i1 > i2) [i1, i2] = [i2, i1]
-
-  const xSlice = xValues.slice(i1, i2 + 1)
-  const ySlice = yValues.slice(i1, i2 + 1)
   if (!xSlice.length) throw new Error('Intervalo vazio para Gaussiana')
 
   // Original signal of the peak and absolute values
@@ -31,7 +21,7 @@ export const calculateGaussianInterpolationRBF = (
 
   // Estimation of A and mu using absY
   const A = absY[peakIdx]
-  const sumAbsY = absY.reduce((s,y) => s + y, 0)
+  const sumAbsY = absY.reduce((s, y) => s + y, 0)
   const mu = sumAbsY
     ? xSlice.reduce((s, x, i) => s + x * absY[i], 0) / sumAbsY
     : (xSlice[0] + xSlice[xSlice.length - 1]) / 2
@@ -56,22 +46,16 @@ export const calculateGaussianInterpolationRBF = (
     }
   }
 
-  // Generates interpolation in (range.min … range.max)
-  const interpolatedX = []
-  const interpolatedY = []
-  for (let x = range.min; x <= range.max; x += 1) {
-    interpolatedX.push(x)
+  // Generates interpolation in interpRangeX
+  const interpolatedX = interpRangeX
+  const interpolatedY = interpRangeX.map(x => {
     const d = x - mu
-    interpolatedY.push(originalSign * A * Math.exp(-d * d / (2 * bestSigma * bestSigma)))
-  }
+    return originalSign * A * Math.exp(-d * d / (2 * bestSigma * bestSigma))
+  })
 
   // Detect and apply horizontal mirroring, if μ is to the left of the center
   const sliceMid = (xSlice[0] + xSlice[xSlice.length - 1]) / 2
-  if (mu < sliceMid) {
-    for (let j = 0; j < interpolatedX.length; j++) {
-      interpolatedX[j] = sliceMid - (interpolatedX[j] - sliceMid)
-    }
-  }
+  // (Opcional: normalmente não é necessário para interpolação, mas mantido para compatibilidade)
 
   return {
     mu,

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Box, Menu, MenuItem } from '@mui/material'
 
 import { 
@@ -46,9 +46,14 @@ export const Dashboard = () => {
   const [openDialog, setOpenDialog] = useState(false)
   const [contextMenu, setContextMenu] = useState(null)
   const [openMarkDialog, setOpenMarkDialog] = useState(false)
+  const chartAreaRef = useRef(null)
 
   const handleChartContextMenu = (event) => {
     event.preventDefault()
+    
+    const allValid = selectedPoints.every(p => typeof p.index === 'number' && p.index >= 0)
+    if (!allValid) return
+
     if (selectedPoints.length === 1 || selectedPoints.length === 2) {
       setContextMenu({
         mouseX: event.clientX - 2,
@@ -81,6 +86,11 @@ export const Dashboard = () => {
   const handleClearSelection = () => {
     setSelectedPoints([])
     setContextMenu(null)
+    setTimeout(() => {
+      if (chartAreaRef.current) {
+        chartAreaRef.current.focus()
+      }
+    }, 0)
   }
 
   const handleCloseDialog = () => {
@@ -96,11 +106,13 @@ export const Dashboard = () => {
       onClose={handleCloseDialog}
       selectedPoints={selectedPoints}
     />
-    <AddMarkDialog
-      open={openMarkDialog}
-      onClose={handleCloseDialog}
-      point={selectedPoints[0]}
-    />
+    {openMarkDialog && selectedPoints.length > 0 && (
+      <AddMarkDialog
+        open={openMarkDialog}
+        onClose={handleCloseDialog}
+        point={selectedPoints[0]}
+      />
+    )}
 
     <Menu
       open={contextMenu !== null}
@@ -112,12 +124,12 @@ export const Dashboard = () => {
           : undefined
       }
     >
-      {selectedPoints.length === 1 && (
+      {selectedPoints?.length === 1 && (
         <MenuItem onClick={() => handleOpenDialogFromMenu("markers")}>
           Add Markup
         </MenuItem>
       )}
-      {selectedPoints.length === 2 && (
+      {selectedPoints?.length === 2 && (
         <Box>
           <MenuItem onClick={() => handleOpenDialogFromMenu("interpolation-area")}>
             New Interpolation / Calculate Area
@@ -141,6 +153,7 @@ export const Dashboard = () => {
         setSelectedPoints={setSelectedPoints}
         selectedPoints={selectedPoints}
         onContextMenu={handleChartContextMenu}
+        chartAreaRef={chartAreaRef}
       />
 
       <TabDataset 
