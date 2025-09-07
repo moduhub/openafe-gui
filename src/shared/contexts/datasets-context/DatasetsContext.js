@@ -29,6 +29,15 @@ const defaultDPVParams = {
   pulsePotential: 300,
   dutyCycle: 50
 }
+
+const defaultSWVParams = {
+  settlingTime: 1000,
+  startingPotential: -800,
+  endingPotential: 0,
+  scanRate: 100,
+  stepPotential: 100,
+  pulsePotential: 300,
+  dutyCycle: 50
 }
 
 const defaultEISParams = {
