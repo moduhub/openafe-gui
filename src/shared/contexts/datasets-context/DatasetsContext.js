@@ -22,13 +22,13 @@ const defaultCVParams = {
 
 const defaultDPVParams = {
   settlingTime: 1000,
-  startPotential: -800,
-  endPotential: 0,
-  pulseAmplitude: 200,
-  pulseLength: 10,
-  scanRate: 200,
-  step: 100,
-  cycles: 1,
+  startingPotential: -800,
+  endingPotential: 0,
+  scanRate: 100,
+  stepPotential: 100,
+  pulsePotential: 300,
+  dutyCycle: 50
+}
 }
 
 const defaultEISParams = {
