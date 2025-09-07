@@ -13,9 +13,9 @@ const DatasetsContext = createContext({})
 
 const defaultCVParams = {
   settlingTime: 1000,
-  startPotential: -800,
-  endPotential: 0,
-  scanRate: 200,
+  startingPotential: -800,
+  endingPotential: 0,
+  scanRate: 100,
   step: 100,
   cycles: 1,
 }
