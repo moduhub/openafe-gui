@@ -1,6 +1,23 @@
 import { useEffect } from 'react'
 import Plotly from 'plotly.js-dist'
 
+/**
+ * @brief Render selection highlights and highlight ranges on Plotly charts based on selected points.
+ *
+ * @param {React.RefObject|React.RefObject[]} chartRefs - Single or array of chart refs. For EIS charts array order is [bodeMod, bodeAng, nyquist].
+ * @param {Array} datasets - Full datasets array used to resolve coordinates and series.
+ * @param {(index:number) => void} handleSetDatasetSelected - Context handler to set currently selected dataset index.
+ * @param {Array} selectedPoints - Array of selected point objects (up to two). EIS points include {ref, dataset, index, ...}.
+ * @param {(points: any[]) => void} setSelectedPoints - State setter to update selected points (used to normalize selection when a valid range is chosen).
+ * @param {boolean} isPolar - Whether Nyquist rendering and selection should be handled in polar coordinates.
+ *
+ * Behavior:
+ * - Removes previous 'Selected Points' and 'Highlight Range' traces before adding new selection traces.
+ * - For CVW: displays markers for selected points and a highlighted line range between two indices.
+ * - For EIS: supports Bode magnitude/phase and Nyquist (polar or rectangular) selection markers and ranges.
+ * - Uses Plotly.addTraces and Plotly.deleteTraces for selection overlays.
+ * - Ensures dataset selection state is synchronized when valid selections exist.
+ */
 export const useSelectionRenderer = (
   chartRefs,
   datasets, handleSetDatasetSelected,

@@ -1,6 +1,21 @@
 import { useEffect } from 'react'
 import Plotly from 'plotly.js-dist'
 
+/**
+ * @brief Incrementally extend Plotly traces for a single chart ref when new data arrives.
+ *
+ * @param {React.RefObject} chartRef - Reference to the Plotly DOM element.
+ * @param {Array} datasets - Array of dataset objects used to obtain x/y arrays.
+ * @param {React.MutableRefObject<Object>} prevLengths - Mutable ref that stores previous lengths per dataset name (updated in-place).
+ *
+ * Behavior:
+ * - For each visible dataset, compares current data length with prevLengths.current[key].
+ * - Calls Plotly.extendTraces to append only the new points to the appropriate trace index.
+ * - Updates prevLengths.current for each dataset that had appended data.
+ *
+ * Notes:
+ * - Does nothing if chartRef is not mounted.
+ */
 export const useExtendTraces = (chartRef, datasets, prevLengths) => {
   useEffect(() => {
     const el = chartRef.current

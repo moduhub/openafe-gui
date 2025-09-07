@@ -2,6 +2,32 @@ import { useState } from 'react'
 import { useDatasetsContext, useArduinoContext } from '../../contexts'
 import { useDeleteDialog } from '../../components'
 
+/**
+ * @brief Hook that centralizes tab and dialog state for dataset storage UI.
+ *
+ * @param {(index:number) => void} setTabIndex - Setter to switch the application tab index.
+ * @returns {object} An object exposing datasets, UI state flags, and action handlers used by the storage tab:
+ *   - datasets, datasetSelected, isReading
+ *   - toggleDatasetVisibility, handleOpenTabFilter, handleOpenExportDialogWithIndex, handleOpenImportExportDialog
+ *   - openDialog, close, handleDelete, deleteDialogOpen, setDeleteDialogOpen, handleDeleteInterpolation, openDeleteDialog
+ *   - importExportDialogOpen, setImportExportDialogOpen, importExportType, importExportDefaultIndex
+ *   - interpolationLineEditorOpen, interpolationLineEditorInitial, openInterpolationLineEditor
+ *   - datasetSelectorOpen, handleOpenDatasetSelector, handleCloseDatasetSelector
+ *   - datasetTypes, handleDatasetSelected, filterType, setFilterType
+ *   - showOnlyVisible, setShowOnlyVisible, showOnlyHidden, setShowOnlyHidden
+ *   - hasPointMarkers, setHasPointMarkers, hasAreaMarkers, setHasAreaMarkers
+ *   - hasInterpolations, setHasInterpolations
+ *   - openLineEditor, closeLineEditor, handleChangeLine, lineEditorOpen, lineEditorInitial
+ *   - closeInterpolationLineEditor, handleChangeInterpolationLine
+ *   - filteredDatasets
+ *   - open (alias from useDeleteDialog)
+ *   - handleToggleInterpolationVisibility
+ *
+ * Behavior:
+ * - Manages many UI state booleans for dialogs/editors and temporary targets.
+ * - Provides helper functions to open editors, apply line changes, delete interpolations, filter datasets and return filtered list.
+ * - Integrates with datasets/dash contexts (useDatasetsContext, useArduinoContext) and the reusable delete dialog hook.
+ */
 export const useTabStorage = (setTabIndex) => {
   const {
     handleDeleteDataset,

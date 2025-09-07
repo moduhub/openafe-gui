@@ -1,6 +1,23 @@
 import { useEffect, useMemo } from 'react'
 import Plotly from 'plotly.js-dist'
 
+/**
+ * @brief Initialize a Plotly plot for a chart ref based on datasets and layout preferences.
+ *
+ * @param {React.RefObject} chartRef - The Plotly container ref.
+ * @param {Object|Array} datasets - Collection of datasets keyed by name or array of dataset objects.
+ * @param {object} theme - MUI theme for colors and styling.
+ * @param {string} xName - Label for the X axis.
+ * @param {string} yName - Label for the Y axis.
+ * @param {boolean} [isLogX=false] - If true, X axis will use a logarithmic scale.
+ * @param {boolean} [isNyquist=false] - If true, Y axis autorange will be reversed for Nyquist plots.
+ * @param {boolean} [isPolar=false] - If true, render as polar chart (scatterpolar).
+ *
+ * Behavior:
+ * - Builds layout and config using useMemo for performance.
+ * - Constructs data traces from visible datasets (supports polar and rectangular modes).
+ * - Calls Plotly.react to render or re-render the chart when dependencies change.
+ */
 export const useInitialPlot = (
   chartRef, datasets, theme, 
   xName, yName, 

@@ -1,6 +1,23 @@
 import { useEffect } from 'react'
 import Plotly from 'plotly.js-dist'
 
+/**
+ * @brief Render preview overlays and interpolations across one or more Plotly chart refs.
+ *
+ * @param {React.RefObject|React.RefObject[]} chartRefs - Single ref or array of refs (order: bodeMod, bodeAng, nyquist, cvChart when array).
+ * @param {Array} datasets - Array of dataset objects (each containing data[0], markers, areas, interpolations, visible flag).
+ * @param {Object} previewData - Preview data structure (for EIS: {bodeMod, bodeAng, nyquist}; or for CVW: {x,y}).
+ * @param {object} theme - MUI theme used for preview line styling.
+ * @param {React.MutableRefObject<Object>} prevLengthsRef - Mutable ref used to store latest lengths per dataset after rendering.
+ * @param {boolean} isPolar - Whether nyquist chart should render in polar coordinates.
+ *
+ * Behavior:
+ * - For each provided chart ref, builds traces for visible datasets, their interpolations, markers, areas and preview overlays.
+ * - Supports EIS graphs (bode magnitude/phase/nyquist) and CVW.
+ * - Converts Nyquist traces to polar when isPolar is true and also handles conversion for markers/interpolations/areas.
+ * - Calls Plotly.react for each chart ref to render assembled data and layout.
+ * - Updates prevLengthsRef.current to reflect the last known lengths for each dataset.
+ */
 export const usePreviewAndInterpolations = (
   chartRefs,
   datasets,

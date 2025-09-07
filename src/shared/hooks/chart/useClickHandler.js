@@ -1,6 +1,24 @@
 import { useEffect } from 'react'
 import { useDatasetsContext } from '../../contexts'
 
+/**
+ * @brief Handle Plotly click events across one or more chart refs and update selected points.
+ *
+ * @param {Array<{ref: React.RefObject, name: string}>} chartRefsWithNames - Array of chart refs with logical names (e.g. [{ref, name: 'bodeMod'}]).
+ * @param {(points: any[]) => void} setSelectedPoints - State setter to store selected points (keeps up to two points).
+ * @param {object} theme - MUI theme object used to pick default colors.
+ * @param {boolean} isPolar - Whether the target charts render polar data (affects coordinate mapping).
+ *
+ * Behavior:
+ * - Attaches a 'plotly_click' handler to each provided chart element.
+ * - When a point is clicked it maps the Plotly point to the application dataset/index and composes a point object:
+ *   { dataset, type, color, index, ref, x/y or theta/r }.
+ * - Prevents clicks on interpolation traces and avoids duplicate selections.
+ * - Updates global selected dataset state via datasets context helpers.
+ *
+ * Notes:
+ * - The hook cleans up listeners on unmount or when inputs change.
+ */
 export const useClickHandler = (
   chartRefsWithNames, // [{ ref, name }]
   setSelectedPoints,
