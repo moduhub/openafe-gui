@@ -548,6 +548,9 @@ export const DataSetsProvider = ({ children }) => {
         handleSetIsReading(false)
         if(isDatasetsMinimized)
           setIsDatasetsMinimized()
+        const forceReset = "CMD,DIE"
+        const checksum = calculateChecksum(forceReset)
+        window.electron.sendCommand(`$${forceReset}*${checksum}`)
       }
     }
     

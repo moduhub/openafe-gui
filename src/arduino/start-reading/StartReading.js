@@ -24,6 +24,8 @@ export const StartReading = (
     const checksum = calculateChecksum(commandBody)
     window.electron.sendCommand(`${commandBody}${checksum}`)
   }
+
+  // DUMMY
   else {
     handleSetIsReading(true)
     switch (experimentType) {
@@ -39,6 +41,9 @@ export const StartReading = (
         )
         break
       case 'DPV':
+        // NOT IMPLEMENTED
+        break
+      case 'SWV':
         // NOT IMPLEMENTED
         break
       case 'EIS':

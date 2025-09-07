@@ -123,6 +123,7 @@ export const ArduinoProvider = ({ children }) => {
       handleSetPortConnected(portSelected)
       handleSetIsConnecting(false)
       handleSetIsConnect(true)
+      handleSetIsReading(false)
       setSnackbar({ open: false, message: '', severity: 'info' }) 
       setSnackbar({ open: true, message: 'Conectado com sucesso na porta '+portSelected+'!', severity: 'success' })
       if(isArduinoMinimized)
