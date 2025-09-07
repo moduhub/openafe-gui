@@ -30,6 +30,7 @@ import { PointsComponent } from '..'
  * @param {function(number, number): void} onDeleteInterpolation  - Callback invoked with (datasetIndex, interpolationIndex) to delete interpolation
  * @param {function} onEditInterpolationLine                      -
  */
+
 export const InterpolationComponent = ({ 
   dataset, 
   datasetIndex, 

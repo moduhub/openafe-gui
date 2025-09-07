@@ -18,14 +18,19 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import { DeleteDialog } from '..'
 
 /**
- * Displays a dialog that allows the user to insert a new parameter with a name and value
+ * @brief Displays a dialog that allows the user to insert a new parameter with a name and value
  *
- * @param {(name: string, value: string) => void} onCreate  // criar novo
- * @param {(name: string, value: string) => void} onEdit    // editar existente
- * @param {(name: string) => void} onDelete                 // deletar existente
- * @param {Object.<string, string>} parameters              // parâmetros atuais (usado para listar e editar)
+ * @param {boolean} open - controls dialog visibility
+ * @param {() => void} onClose - callback to close the dialog
+ * @param {(name: string, value: string) => void} onCreate - create new
+ * @param {(name: string, value: string) => void} onEdit - edit existing
+ * @param {(name: string) => void} onDelete - delete existing
+ * @param {Object.<string, string>} parameters - existing parameters as key-value pairs
  *
- * @returns {JSX.Element}
+ * Behavior:
+ * - Allows creating, editing, and deleting parameters.
+ * - When editing, the parameter name field is disabled to prevent changing it.
+ * - Shows a confirmation dialog before deleting a parameter.
  */
 export const ParametersInsertionDialog = ({
   open,

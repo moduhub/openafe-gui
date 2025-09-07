@@ -20,12 +20,16 @@ import { useNavigate } from 'react-router-dom'
 import { useDrawerContext } from '../../contexts'
 
 /**
- * A navigation drawer menu component that toggles open/closed state and
+ * @brief A navigation drawer menu component that toggles open/closed state and
  * provides navigation links to main app sections such as Home, Data Processing, and Settings.
  * 
  * @param {{ children: React.ReactNode }} props - The children elements to render alongside the drawer.
  * 
- * @returns {JSX.Element} 
+ * Behavior:
+ * - Uses Material-UI's Drawer component for the side menu.
+ * - Contains navigation buttons with icons for Home, Data Processing, and Settings.
+ * - The drawer's open/close state is managed via context (useDrawerContext).
+ * - The main content area renders the passed children prop.
  */
 export const DrawerMenu = ({ children }) => {
 

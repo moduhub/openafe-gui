@@ -12,9 +12,15 @@ import { useDatasetsContext } from '../../contexts'
 import { DeleteDialog, MarkerEditorDialog } from '..'
 
 /**
- * PointMarkers displays the list of saved points markers for a dataset
+ * @brief PointMarkers displays the list of saved points markers for a dataset
  *
  * @param {Object[]} points - Array of points [{ value, start, end }]
+ * @param {number} datasetIndex - Index of the dataset in the datasets array
+ * 
+ * Behavior:
+ * - Allows toggling visibility, editing, and deleting markers.
+ * - Uses MarkerEditorDialog for editing marker properties.
+ * - Uses DeleteDialog for confirming marker deletion.
  */
 export const PointMarkers = ({ points, datasetIndex }) => {
 

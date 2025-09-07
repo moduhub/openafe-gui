@@ -5,6 +5,31 @@ import {
 } from '@mui/material'
 import { useState, useEffect } from 'react'
 
+/**
+ * @brief Dialogue to select and filter displayed datasets.
+ *
+ * Props:
+ * @param {boolean} open - It checks if the dialogue is open.
+ * @param {() => void} onClose - Callback to close.
+ * @param {(type: string) => void} onSelect - Optional callback called with the selected type.
+ * @param {string[]} datasetTypes - List of available dataset types.
+ * @param {string} filterType - Current filter type.
+ * @param {(t: string) => void} setFilterType - Setter to apply the type of filter.
+ * @param {boolean} showOnlyVisible - Filter "only visible."
+ * @param {(b: boolean) => void} setShowOnlyVisible
+ * @param {boolean} showOnlyHidden - Filter "only hidden."
+ * @param {(b: boolean) => void} setShowOnlyHidden
+ * @param {boolean} hasPointMarkers - Filter by point markers.
+ * @param {(b: boolean) => void} setHasPointMarkers
+ * @param {boolean} hasAreaMarkers - Filter by area markers.
+ * @param {(b: boolean) => void} setHasAreaMarkers
+ * @param {boolean} hasInterpolations - Filter by interpolations.
+ * @param {(b: boolean) => void} setHasInterpolations
+ *
+ * Behavior:
+ * - When opened, it initializes temporary states with the current filter values.
+ * - Upon confirming, it applies the temporary states to the actual filters and calls onSelect with the selected type.
+ */
 export const DatasetSelectorDialog = ({
   open, onClose, onSelect, datasetTypes,
   filterType, setFilterType,

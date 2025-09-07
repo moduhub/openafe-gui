@@ -3,12 +3,15 @@ import { Box, Stack, Typography, Slider, TextField, InputAdornment } from '@mui/
 import { useDatasetsContext } from '../../contexts'
 
 /**
- * Componente que aplica filtro rejeita-faixa (notch) de ordem n
- * tanto no domínio do tempo (CVW) quanto no domínio da frequência (EIS).
- * Baseado em combinação de filtros passa-baixa e passa-alta RC em série.
+ * Component that applies notch filter of order n,
+ * both in the time domain (CVW) and in the frequency domain (EIS).
  *
- * @param {(filtered: { x: number[], y: number[] }) => void} setPreviewFilter
+ * @param {(filtered: { x: number[], y: number[] }) => void} setPreviewFilter - Callback to set the filtered data for preview
  * @param {string} dataType - "cvw", "bodeMod", "bodeAng" ou "nyquist"
+ * 
+ * Behavior:
+ * - For CVW data, the filter is applied in the time domain using the scan rate and step size from dataset parameters.
+ * - For EIS data (Bode and Nyquist), the filter is applied in the frequency domain.
  */
 export const BandStop = ({ setPreviewFilter, dataType = "cvw" }) => {
   const { datasets } = useDatasetsContext()
@@ -73,7 +76,7 @@ export const BandStop = ({ setPreviewFilter, dataType = "cvw" }) => {
     let y = []
     let xOut = [...visible.x]
     if (dataType === 'nyquist') {
-      // separar real/imaginário
+      
       const re = visible.y.map(p=>p.re)
       const im = visible.y.map(p=>p.im)
       let reFilt = [...re]
@@ -90,7 +93,7 @@ export const BandStop = ({ setPreviewFilter, dataType = "cvw" }) => {
       const axis = dataType==='cvw' ? visible.x.map((_,i)=>i/fs) : visible.x
       y = [...data]
       for (let n=0;n<order;n++) {
-        // primeiro low-pass, depois high-pass para rejeitar banda
+        
         y = rcFilter(y, axis, lowCut)
         y = rcFilter(y, axis, highCut, true)
       }

@@ -15,14 +15,16 @@ import { ImportDataset } from '..'
 import { ExportDataset } from '..'
 
 /**
- * Renders a dialog interface for importing or exporting a dataset
+ * @brief Renders a dialog interface for importing or exporting a dataset
  *
- * @param {boolean} open             - Indicates whether the dialog is open
- * @param {() => void} onClose       - Callback to close the dialog
- * @param {number} [type=0]          - Initial selected tab index (0 for import, 1 for export)
- * @param {number} [defaultIndex]    - Default dataset index to use during export
+ * @param {boolean} open - Indicates whether the dialog is open
+ * @param {() => void} onClose - Callback to close the dialog
+ * @param {number} [type=0] - Initial selected tab index (0 for import, 1 for export)
+ * @param {number} [defaultIndex] - Default dataset index to use during export
  *
- * @returns {JSX.Element}
+ * Behavior:
+ * - Keep the inert attribute on #root while open (accessibility).
+ * - Exchange between the ImportDataset and ExportDataset components through the tabs.
  */
 export const ImportExportDialog = ({
   open,

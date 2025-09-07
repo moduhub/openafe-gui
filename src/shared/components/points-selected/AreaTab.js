@@ -8,16 +8,18 @@ import {
 import { useDatasetsContext } from '../../contexts'
 
 /**
- * Area Tab Component
- * Internal component of the point selection dialog, 
+ * @brief Internal component of the point selection dialog, 
  *  responsible for calculating the area over the graph within 
  *  the range of the selected points.
  *
- * @param {boolean} open                              - Whether the dialog is currently visible
- * @param {() => void} onClose                        - Callback to trigger when the dialog is closed
+ * @param {boolean} open - Whether the dialog is currently visible
+ * @param {() => void} onClose - Callback to trigger when the dialog is closed
  * @param {{ x: number, y: number }[]} selectedPoints - Array of two points selected for interpolation
  *
- * @returns {JSX.Element}
+ * Behavior:
+ * - Calculates the area under the curve between two selected points using the trapezoidal rule.
+ * - Displays the calculated area in engineering notation (V·A).
+ * - Provides a button to save the calculated area as a marker in the dataset.
  */
 export const AreaTab = ({ open, onClose, selectedPoints }) => {
   const { datasets, datasetSelected } = useDatasetsContext()

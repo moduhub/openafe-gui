@@ -33,7 +33,9 @@ import { exportJPEG } from '../external-data/export-formats/exportJPEG'
  * 
  * @param {{ children: React.ReactNode }} props - Children elements to render below the top menu bar
  * 
- * @returns {JSX.Element} 
+ * Behavior:
+ * - Uses Material-UI components for layout and styling.
+ * - Integrates with various contexts (Drawer, Arduino, Dashboard, Datasets) for state management.
  */
 export const TopMenu = ({ children }) => {
 

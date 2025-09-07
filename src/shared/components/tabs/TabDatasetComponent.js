@@ -37,7 +37,10 @@ import {
  * @param {{ x: any[], y: any[] }} previewData                    - The current preview data to be filtered or displayed.
  * @param {(data: { x: any[], y: any[] }) => void} setPreviewData - Function to update the preview data.
  * 
- * @returns {JSX.Element|null}
+ * behavior:
+ * - When switching to the Filter tab, if no dataset is selected, it automatically selects the first dataset.
+ * - If a dataset is already selected, it ensures only that dataset is visible when switching to the Filter tab.
+ * - The component can be minimized to hide the panel, controlled by the dashboard context.
  */
 export const TabDataset = ({ setPreviewData , previewData }) => {
 

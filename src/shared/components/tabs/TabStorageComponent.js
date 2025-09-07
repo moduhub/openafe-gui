@@ -31,6 +31,16 @@ import {
   DatasetSelectorDialog,
 } from '..'
 
+/**
+ * @brief TabStorage component provides a UI panel for managing datasets in storage
+ * 
+ * @param {()=>{void}} setTabIndex - Function to switch tabs in the parent component 
+ * 
+ * Behavior:
+ * - Displays a list of datasets with options to view, edit, export, delete, and filter them.
+ * - Integrates multiple dialogs for dataset operations (delete confirmation, import/export, line editing, dataset selection).
+ * - Uses context hooks to manage dataset state and actions.
+ */
 export const TabStorage = ({ setTabIndex }) => {
   const theme = useTheme()
 

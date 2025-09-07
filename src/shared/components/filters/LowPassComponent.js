@@ -11,11 +11,15 @@ import {
 import { useDatasetsContext } from '../../contexts'
 
 /**
- * Um componente que aplica um filtro RC passa-baixa de ordem n
- * no domínio do tempo (CVW) ou frequência (Bode e Nyquist).
+ * @brief A component that applies a low-pass RC filter of order n
+ * in the domain of time (CVW) or frequency (Bode and Nyquist).
  *
  * @param {(filtered: { x: number[], y: number[] }) => void} setPreviewFilter
  * @param {string} dataType - "cvw", "bodeMod", "bodeAng" ou "nyquist"
+ * 
+ * Behavior:
+ * - For CVW data, the filter is applied in the time domain using the scan rate and step size from dataset parameters.
+ * - For EIS data (Bode and Nyquist), the filter is applied in the frequency domain.
  */
 export const LowPass = ({ setPreviewFilter, dataType = "cvw" }) => {
   const { datasets } = useDatasetsContext()
@@ -42,7 +46,6 @@ export const LowPass = ({ setPreviewFilter, dataType = "cvw" }) => {
     }
   }, [datasets, dataType])
 
-  // Filtro RC discreto genérico
   function rcFilter(data, xAxis, cutoff) {
     if (!data || data.length < 2) return []
     let filtered = [data[0]]
@@ -65,27 +68,26 @@ export const LowPass = ({ setPreviewFilter, dataType = "cvw" }) => {
     let yOut = []
 
     if (dataType === "cvw") {
-      // Filtro no domínio do tempo: manter cálculo original em série
       const ds = datasets.find(d => d.visible)
       const { scanRate, step } = ds?.params || {}
       if (!scanRate || !step) return
       const fs = scanRate / step
       const xTime = visible.x.map((_, i) => i / fs)
-      // aplica n filtros RC em série
+      
       yOut = [...visible.y]
       for (let n = 0; n < order; n++) {
         yOut = rcFilter(yOut, xTime, cutoffFrequency)
       }
 
     } else if (dataType === "bodeMod" || dataType === "bodeAng") {
-      // Filtro RC no domínio da frequência: aplicar em série n vezes
+      
       yOut = [...visible.y]
       for (let n = 0; n < order; n++) {
         yOut = rcFilter(yOut, visible.x, cutoffFrequency)
       }
 
     } else if (dataType === "nyquist") {
-      // Filtro RC para real e imaginário em série
+      
       const reArr = visible.y.map(pt => pt.re)
       const imArr = visible.y.map(pt => pt.im)
       let reFilt = [...reArr]

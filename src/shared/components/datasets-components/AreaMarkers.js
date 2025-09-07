@@ -11,10 +11,15 @@ import { useDatasetsContext } from '../../contexts'
 import { DeleteDialog, AreaEditorDialog } from '..'
 
 /**
- * AreaMarkers displays the list of saved areas for a dataset
+ * @brief AreaMarkers displays the list of saved areas for a dataset
  *
  * @param {Object[]} areas - Array of areas [{ value, start, end }]
  * @param {number} datasetIndex - Index of the dataset
+ * 
+ * Behavior:
+ * - Allows toggling visibility, editing, and deleting markers.
+ * - Uses AreaEditorDialog for editing area properties.
+ * - Uses DeleteDialog for confirming area deletion.
  */
 export const AreaMarkers = ({ areas, datasetIndex }) => {
   const { datasets, handleSetDataset } = useDatasetsContext()

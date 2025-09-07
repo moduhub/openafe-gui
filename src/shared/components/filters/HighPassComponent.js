@@ -11,14 +11,16 @@ import {
 import { useDatasetsContext } from '../../contexts'
 
 /**
- * A component that applies a high-pass filter to the currently visible dataset
+ * @brief A component that applies a high-pass filter to the currently visible dataset
  * and previews the filtered signal. Users can configure the cutoff frequency
  * via a slider or text input. The filter uses a basic IIR implementation
  *
  * @param {(filtered: { x: number[], y: number[] }) => void} setPreviewFilter - 
  *        Callback to update the preview with the filtered signal.
  *
- * @returns {JSX.Element}
+ * Behavior:
+ * - For CVW data, the filter is applied in the time domain using the scan rate and step size from dataset parameters.
+ * - For EIS data (Bode and Nyquist), the filter is applied in the frequency domain.
  */
 export const HighPass = ({ setPreviewFilter, dataType = "cvw" }) => {
   const { datasets } = useDatasetsContext()

@@ -1,11 +1,15 @@
 /**
- * Exports a dataset to CSV
+ * @brief Exports a dataset to CSV
  *
- * @param {Object} ds                   - Dataset to be exported
- * @param {String} baseName             - Name of the dataset
- * @param {Boolean} includeInterp       - Include Interpolations
+ * @param {Object} ds - Dataset to be exported
+ * @param {String} baseName - Name of the dataset
+ * @param {Boolean} includeInterp - Include Interpolations
  * @param {Boolean} includePointMarkers - Include points markers
- * @param {Boolean} includeAreaMarkers  - Include area markers
+ * @param {Boolean} includeAreaMarkers - Include area markers
+ * 
+ * Behavior:
+ * - Exports the main dataset to a CSV file named `${baseName}.csv`.
+ * - If `includePointMarkers` is true and the dataset has point markers, exports them to `${baseName}_markers.csv`.
  */
 export const exportCSV = (ds, baseName, includeInterp, includePointMarkers, includeAreaMarkers) => {
 

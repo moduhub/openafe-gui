@@ -9,20 +9,21 @@ import {
 import { useDatasetsContext } from '../../contexts'
 
 /**
- * A component that applies a moving average filter to the visible dataset and
+ * @brief A component that applies a moving average filter to the visible dataset and
  * previews the filtered result. Users can adjust the window size using a slider
  *
  * @param {(filtered: { x: number[], y: number[] }) => void} setPreviewFilter -
  *        Callback to update the filtered signal preview.
  * @param {string} dataType - "cvw", "bodeMod", "bodeAng", "nyquist"
  *
- * @returns {JSX.Element}
+ * Behavior:
+ * - The moving average filter smooths the data by averaging points within a specified window size.
+ * - The window size can be adjusted via a slider, with a maximum size limited by the dataset length.
  */
 export const MovingAverage = ({ setPreviewFilter, dataType = "cvw" }) => {
   const { datasets } = useDatasetsContext()
   const [windowSize, setWindowSize] = useState(3)
 
-  // Seleciona os dados corretos conforme o tipo de gráfico
   const visible = useMemo(() => {
     const ds = datasets.find(d => d.visible)?.data?.[0]
     if (!ds) return { x: [], y: [] }
@@ -50,7 +51,6 @@ export const MovingAverage = ({ setPreviewFilter, dataType = "cvw" }) => {
       return
     }
 
-    // Média móvel padrão
     const result = { x: [], y: [] }
     const half = Math.floor(adjusted / 2)
     for (let i = 0; i < visible.y.length; i++) {

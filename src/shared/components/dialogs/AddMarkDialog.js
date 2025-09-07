@@ -1,4 +1,5 @@
-import { Box,
+import { 
+  Box,
   Dialog, 
   DialogTitle, 
   DialogContent, 
@@ -26,6 +27,17 @@ const SYMBOL_OPTIONS = [
   { value: 'triangle-up', icon: <ChangeHistory /> }
 ]
 
+/**
+ * @brief Dialog to add a new point marker to a dataset
+ * 
+ * @param {boolean} open - Boolean to control dialog visibility
+ * @param {() => void} onClose - Callback to close the export dialog
+ * @param {useState([])} point - Object with point info
+ * 
+ * Behaviour:
+ * - Allows to set label, symbol, color and size of the marker
+ * - On save, it adds the marker to the selected dataset and closes the dialog
+ */
 export const AddMarkDialog = ({ open, onClose, point }) => {
 
   const { datasets, datasetSelected } = useDatasetsContext()

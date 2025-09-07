@@ -11,13 +11,15 @@ import { useDatasetsContext } from '../../contexts'
 import { MovingAverage, LowPass, HighPass, BandPass, BandStop } from '..'
 
 /**
- * TabFilter component allows selection and application of filters to datasets
+ * @brief TabFilter component allows selection and application of filters to datasets
  * 
- * @param {function} setPreviewData             - Function to update the filtered preview data
- * @param {{ x: any[], y: any[] }} previewData  - The current data previewed for filtering
- * @param {function} setTabIndex                - Function to switch tabs in the parent component
+ * @param {function} setPreviewData - Function to update the filtered preview data
+ * @param {{ x: any[], y: any[] }} previewData - The current data previewed for filtering
+ * @param {function} setTabIndex - Function to switch tabs in the parent component
  * 
- * @returns {JSX.Element}
+ * Behavior:
+ * - Displays filter options based on the type of the selected dataset (CVW or EIS).
+ * - Allows users to select filters for CVW (Moving Average, Low Pass, High Pass, Band Pass, Band Stop).
  */
 export const TabFilter = ({
   setPreviewData,

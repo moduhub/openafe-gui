@@ -15,13 +15,17 @@ import { InterpolationTab } from '../points-selected/InterpolationTab'
 import { AreaTab } from "../points-selected/AreaTab"
 
 /**
- * Dialogue that controls the functions when the user selects two points
+ * @brief Dialog that controls the functions when the user selects two points
  * 
- * @param {boolean} open                              - Whether the dialog is currently visible
- * @param {() => void} onClose                        - Callback to trigger when the dialog is closed
+ * @param {boolean} open - Whether the dialog is currently visible
+ * @param {() => void} onClose - Callback to trigger when the dialog is closed
  * @param {{ x: number, y: number }[]} selectedPoints - Array of two points selected for interpolation
  *
- * @returns {JSX.Element} 
+ * Behavior:
+ * - Displays the coordinates of the selected points.
+ * - If the dataset is of type EIS, it shows additional information about the selected points.
+ * - Provides tabs to switch between interpolation and area under the curve functionalities.
+ * - Uses InterpolationTab and AreaTab components to handle specific functionalities.
  */
 export const PointsSelectedDialog = ({ open, onClose, selectedPoints }) => {
   const { datasets, datasetSelected } = useDatasetsContext()

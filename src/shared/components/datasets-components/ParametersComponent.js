@@ -18,6 +18,16 @@ import EditIcon from '@mui/icons-material/Edit'
 import { useDatasetsContext } from '../../contexts'
 import { ParametersInsertionDialog } from '..'
 
+/**
+ * @brief Component used to display the saved parameters within a dataset
+ * 
+ * @param {object} dataset - The dataset object containing data and type.
+ * 
+ * Behavior:
+ * - Allows creating, editing, and deleting parameters.
+ * - When editing, the parameter name field is disabled to prevent changing it.
+ * - Shows a confirmation dialog before deleting a parameter.
+ */
 export const ParametersComponent = ({ dataset }) => {
   const theme = useTheme()
   const isXs = useMediaQuery(theme.breakpoints.down('sm'))

@@ -14,6 +14,20 @@ const LINE_STYLES = [
   { value: 'longdashdot', label: 'Long dash dot' }
 ]
 
+/**
+ * @brief Dialog to edit properties of a line (color, style, and width).
+ *
+ * Props:
+ * @param {boolean} open - Controls the visibility of the dialogue.
+ * @param {() => void} onClose - Callback to close.
+ * @param {{color?: string, dash?: string, width?: number}} initialLine - Initial values of the line.
+ * @param {(line: {color: string, dash: string, width: number}) => void} onSave - Callback called on save.
+ * 
+ * Behavior:
+ * - Initializes state with initialLine values when opened.
+ * - Updates state as user modifies inputs.
+ * - Calls onSave with updated line properties when user saves.
+ */
 export const LineEditorDialog = ({ open, onClose, initialLine, onSave }) => {
   const [color, setColor] = useState('#000000')
   const [style, setStyle] = useState('solid')

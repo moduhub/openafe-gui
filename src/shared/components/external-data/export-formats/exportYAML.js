@@ -1,10 +1,14 @@
 import YAML from 'js-yaml'
 
 /**
- * Function to remove methods from datasets
+ * @brief Function to remove methods from datasets
  * 
- * @param {dataset} obj
- * @returns             - treated dataset
+ * @param {dataset} obj - Dataset to be treated
+ * @returns - treated dataset
+ * 
+ * Behavior:
+ * - Recursively traverses the object and removes any functions or undefined values.
+ * - Handles nested objects and arrays.
  */
 const removeFunctions = (obj) => {
   if (Array.isArray(obj)) {
@@ -23,10 +27,14 @@ const removeFunctions = (obj) => {
 }
 
 /**
- * Function for export in YAML
+ * @brief Function for export in YAML
  * 
- * @param {dataset} ds                  - Dataset to be saved
- * @param {String} baseName             - Name of the dataset
+ * @param {dataset} ds - Dataset to be saved
+ * @param {String} baseName - Name of the dataset
+ * 
+ * Behavior:
+ * - Converts the dataset to YAML format, removing any functions.
+ * - Saves the dataset as a YAML file named `${baseName}.yaml`.
  */
 export const exportYAML = (ds, baseName) => {
   // Convert the entire dataset to YAML

@@ -14,6 +14,18 @@ const SYMBOL_OPTIONS = [
   { value: 'triangle-up', icon: <ChangeHistory /> }
 ]
 
+/**
+ * @brief Dialog to create or edit a marker.
+ *
+ * Props:
+ * @param {boolean} open - Controls visibility.
+ * @param {() => void} onClose - Callback to close.
+ * @param {{label?: string, symbol?: string, color?: string, size?: number}} initialMarker - Initial values.
+ * @param {(marker: {label: string, symbol: string, color: string, size: number}) => void} onSave - Callback on saving.
+ *
+ * Behavior:
+ * - Initialize fields when opened and return the normalized values upon saving.
+ */
 export const MarkerEditorDialog = ({ open, onClose, initialMarker, onSave }) => {
   const [label, setLabel] = useState('')
   const [symbol, setSymbol] = useState('star')

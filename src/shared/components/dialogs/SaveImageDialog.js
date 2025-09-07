@@ -11,6 +11,20 @@ const CHART_LABELS = {
   nyquist: 'Nyquist'
 }
 
+/**
+ * @brief Dialog to configure and save the image of the charts.
+ *
+ * Props:
+ * @param {boolean} open - Boolean to control dialog visibility
+ * @param {() => void} onClose - Callback to close the export dialog
+ * @param {(options: {format: string, width: number, height: number, dpi: number, charts?: string[]}) => void} onSave 
+ * - Callback executed upon confirming the save; receives the export options.
+ * @param {string[]} [availableCharts] - List of available chart identifiers (ex: ['bodeMod','bodeAng','nyquist']).
+ *
+ * Behavior:
+ * - Allows you to select format (png/jpeg), dimensions, DPI, and which graphs to export.
+ * - If `availableCharts` is empty, the chart selection field is omitted.
+ */
 export const SaveImageDialog = ({ open, onClose, onSave, availableCharts = [] }) => {
   const [format, setFormat] = useState('png')
   const [width, setWidth] = useState(800)

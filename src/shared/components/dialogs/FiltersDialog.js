@@ -8,7 +8,18 @@ import {
 } from '../../components'
 import { useDatasetsContext } from '../../contexts'
 
-
+/**
+ * @brief Dialog to apply filters to the datasets and view the preview.
+ *
+ * Props:
+ * @param {boolean} open - Indicates if the dialog is open.
+ * @param {() => void} onClose - Function to close the dialog.
+ *
+ * beahvior:
+ * - Reads data and the state of the context of datasets (useDatasetsContext).
+ * - Allows you to choose filters for CVW or for each EIS graph (Bode |Z|, Bode Phase, Nyquist).
+ * - Generate a preview that can be saved as a new dataset via handleNewDataset.
+ */
 export const FiltersDialog = ({ open, onClose }) => {
   const {
     datasets, handleNewDataset,

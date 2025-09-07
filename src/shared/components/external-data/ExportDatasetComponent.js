@@ -22,12 +22,15 @@ import { exportJPEG } from './export-formats/exportJPEG'
 import { exportPNG } from './export-formats/exportPNG'
 
 /**
- * A component that allows the user to export selected datasets in either JSON or Excel format
+ * @brief A component that allows the user to export selected datasets in either JSON or Excel format
  *
  * @param {() => void} onClose           - Callback to close the export dialog
  * @param {number|string} [defaultIndex] - Optional dataset key to be selected by default on open
  *
- * @returns {JSX.Element}
+ * Behavior:
+ * - Fetches datasets from the context and allows multiple selection.
+ * - Supports exporting in JSON, Excel, PNG, JPEG, CSV, and YAML formats.
+ * - For Excel and CSV formats, includes options to include interpolation points and markers.
  */
 export const ExportDataset = ({ onClose, defaultIndex }) => {
   const { datasets } = useDatasetsContext()

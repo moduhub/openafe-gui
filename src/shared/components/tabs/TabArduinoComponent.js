@@ -6,8 +6,14 @@ import { useDashboardContext, useDatasetsContext } from '../../contexts'
 import { ArduinoReadingComponent } from '..'
 
 /**
- * TabArduino component provides a UI panel for
+ * @brief TabArduino component provides a UI panel for
  * configuring and controlling Arduino data acquisition
+ * 
+ * Behavior:
+ * - Displays tabs for different experiment types (CVW, DPV, SWV, EIS).
+ * - Allows switching between experiment types, updating the global context.
+ * - Can be minimized to hide the panel.
+ * - Integrates the ArduinoReadingComponent to show real-time data/status.
  */
 export const TabArduino = () => {
   const theme = useTheme()

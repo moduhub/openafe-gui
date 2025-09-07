@@ -1,8 +1,11 @@
 /**
- * function for export in JSON
+ * @brief function for export in JSON
  * 
- * @param {dataset} ds                  - Dataset to be saved
- * @param {String} baseName             - Name of the dataset
+ * @param {dataset} ds - Dataset to be saved
+ * @param {String} baseName - Name of the dataset
+ * 
+ * Behavior:
+ * - Saves the dataset as a JSON file named `${baseName}.json`.
  */
 export const exportJSON = (ds, baseName) => {
   const blob = new Blob([JSON.stringify(ds, null, 2)], { type: 'application/json' })

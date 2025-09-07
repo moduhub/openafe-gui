@@ -9,6 +9,16 @@ import {
   useDashboardContext,
 } from '../../contexts'
 
+/**
+ * @brief Component responsible for receiving user inputs 
+ * and converting them into command structure to send via electron
+ * 
+ * Behavior:
+ * - Displays input fields for dataset name and parameters.
+ * - Validates inputs to ensure name is not empty and parameters are valid numbers.
+ * - Provides buttons to start and stop reading from Arduino.
+ * - Disables buttons based on connection and reading status.
+ */
 export const ArduinoReadingComponent = () => {
   const {
     isConnected,

@@ -1,18 +1,17 @@
 import { useState } from 'react'
-import {
-  Box,
-  Typography
-} from '@mui/material'
+import { Box, Typography } from '@mui/material'
 
 import { useDatasetsContext } from '../../contexts'
 
 /**
- * A component for importing datasets from a JSON file. Validates and integrates datasets,
+ * @brief A component for importing datasets from a JSON file. Validates and integrates datasets,
  * enriching them with visibility controls and interpolation capabilities
  *
  * @param {() => void} onClose - Callback to close the import dialog after successful import
  *
- * @returns {JSX.Element}
+ * Behavior:
+ * - Validates the selected file to ensure it is a JSON file.
+ * - Parses the JSON content and checks for required dataset structure.
  */
 export const ImportDataset = ({ onClose }) => {
   const { 
@@ -68,7 +67,7 @@ export const ImportDataset = ({ onClose }) => {
           }
         })
 
-        // Enriquecer com visible e setIsVisible
+        // Enrich with visible and setIsVisible
         const enriched = renamedDatasets.map(ds => ({
           ...ds,
           visible: typeof ds.visible === 'boolean' ? ds.visible : true,

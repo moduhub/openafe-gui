@@ -16,7 +16,9 @@ import {
 } from '../../hooks'
 
 /**
- * ChartComponent renders an interactive Plotly chart with multiple datasets and supports:
+ * @brief ChartComponent renders an interactive Plotly chart with multiple datasets 
+ * 
+ * supports:
  *  - Dynamic layout and theming based on the current theme context
  *  - Reactively updates when datasets or preview data change
  *  - Efficiently extends existing traces when new data points arrive

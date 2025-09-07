@@ -1,5 +1,21 @@
 import Plotly from 'plotly.js-dist'
 
+/**
+ * @brief Export the current chart(s) as a JPEG image
+ * 
+ * @param {string} baseName - Base name for the exported file
+ * @param {number} width - Width of the exported image in pixels
+ * @param {number} height - Height of the exported image in pixels
+ * @param {number} dpi - Dots per inch for the exported image
+ * @param {string|string[]} chartTypes - Type or array of types of charts to export (e.g., 'bodeMod', 'bodeAng', 'nyquist')
+ * 
+ * Behavior:
+ * - If multiple chart types are provided, it attempts to export them side by side (for Bode plots) or stacked (for Nyquist).
+ * - If only one chart type is provided, it exports that single chart.
+ * - If no chart type is specified, it exports the first available chart.
+ * - The exported image has a white background for better visibility.
+ * - The image is downloaded as a JPEG file named `${baseName}.jpeg`.
+ */
 export const exportJPEG = async (
   baseName,
   width = 800, height = 600, 
@@ -49,7 +65,7 @@ export const exportJPEG = async (
     }
 
     if (bodeImages.length === 0 && !nyquistImg) {
-      alert('Nenhum gráfico encontrado para exportação!')
+      alert('No chart found for export!')
       return
     }
 
@@ -112,7 +128,7 @@ export const exportJPEG = async (
     chartDiv = document.querySelector('[data-plotly]') || document.querySelector('.js-plotly-plot')
   }
   if (!chartDiv) {
-    alert('Gráfico não encontrado para exportação!')
+    alert('Graph not found for export!')
     return
   }
   try {
@@ -138,6 +154,6 @@ export const exportJPEG = async (
       await Plotly.relayout(chartDiv, originalLayout)
     }
   } catch (e) {
-    alert('Erro ao exportar gráfico: ' + e.message)
+    alert('Error exporting graph: ' + e.message)
   }
 }

@@ -11,10 +11,15 @@ import { FixedSizeList } from 'react-window'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 
 /**
- * PointsComponent renders a scrollable list of points for a dataset.
+ * @brief PointsComponent renders a scrollable list of points for a dataset.
  * Handles both simple (CV) and complex (IES) datasets.
  *
  * @param {object} dataset - The dataset object containing data and type.
+ * 
+ * Behavior:
+ * - For CV datasets, displays points as (x, y) pairs.
+ * - For EIS datasets, displays points with omega, modZ, angZ, realZ, and imagZ.
+ * - Uses react-window for efficient rendering of large lists.
  */
 export const PointsComponent = ({ dataset }) => {
   if (!dataset || !dataset.data || !dataset.data[0]) return null

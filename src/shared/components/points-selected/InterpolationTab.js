@@ -24,12 +24,11 @@ import newStyled from "@emotion/styled"
 /**
  * Interpolation Tab Component
  * (polynomial or Gaussian) to a selected dataset using two selected points
- * Internal component of the point selection dialog, 
- *  responsible for calculating interpolations within 
- *  the range of the selected points.
+ * Internal component of the point selection dialog, responsible for calculating interpolations within 
+ * the range of the selected points.
  *
- * @param {boolean} open                              - Whether the dialog is currently visible
- * @param {() => void} onClose                        - Callback to trigger when the dialog is closed
+ * @param {boolean} open - Whether the dialog is currently visible
+ * @param {() => void} onClose - Callback to trigger when the dialog is closed
  * @param {{ x: number, y: number }[]} selectedPoints - Array of two points selected for interpolation
  *
  * @returns {JSX.Element}
