@@ -40,4 +40,5 @@ export * from './points-selected/InterpolationTab'
 
 export * from './arduino-readings/CVComponent'
 export * from './arduino-readings/DPVComponent'
+export * from './arduino-readings/SWVComponent'
 export * from './arduino-readings/EISComponent'

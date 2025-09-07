@@ -3,7 +3,7 @@ import { Box, Card, CardContent, Tab, Tabs, IconButton } from '@mui/material'
 import MinimizeIcon from '@mui/icons-material/Minimize'
 import { useTheme } from '@mui/material'
 import { useDashboardContext, useDatasetsContext } from '../../contexts'
-import { CVComponent, DPVComponent, EISComponent } from '..'
+import { CVComponent, DPVComponent, SWVComponent, EISComponent } from '..'
 
 /**
  * TabArduino component provides a UI panel for
@@ -21,7 +21,7 @@ export const TabArduino = () => {
     experimentType
   } = useDatasetsContext()
 
-  const tabTypes = ['CVW', 'DPV', 'EIS']
+  const tabTypes = ['CVW', 'DPV', 'SWV', 'EIS']
   const [tabIndex, setTabIndex] = useState(
     Math.max(0, tabTypes.indexOf(experimentType))
   )
@@ -82,9 +82,10 @@ export const TabArduino = () => {
               onChange={onTabChange}
               variant="fullWidth"
             >
-              <Tab label="CVW" sx={{ minWidth: 70, p: 0 }} />
-              <Tab label="DPV" sx={{ minWidth: 70, p: 0 }} />
-              <Tab label="EIS" sx={{ minWidth: 70, p: 0 }} />
+              <Tab label="CVW" sx={{ minWidth: 55, p: 0 }} />
+              <Tab label="DPV" sx={{ minWidth: 55, p: 0 }} />
+              <Tab label="SWV" sx={{ minWidth: 55, p: 0 }} />
+              <Tab label="EIS" sx={{ minWidth: 55, p: 0 }} />
             </Tabs>
             <IconButton size="small" onClick={() => toggleMinimized(true)}>
               <MinimizeIcon />
@@ -100,7 +101,8 @@ export const TabArduino = () => {
           >
             {tabIndex === 0 && <CVComponent key="cv" />}
             {tabIndex === 1 && <DPVComponent key="dpv" />}
-            {tabIndex === 2 && <EISComponent key="eis" />}
+            {tabIndex === 2 && <DPVComponent key="swv" />}
+            {tabIndex === 3 && <EISComponent key="eis" />}
           </Box>
         </CardContent>
       </Card>
