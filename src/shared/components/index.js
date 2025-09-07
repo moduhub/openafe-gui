@@ -38,7 +38,4 @@ export * from './datasets-components/PointMarkers'
 export * from './points-selected/AreaTab'
 export * from './points-selected/InterpolationTab'
 
-export * from './arduino-readings/CVComponent'
-export * from './arduino-readings/DPVComponent'
-export * from './arduino-readings/SWVComponent'
-export * from './arduino-readings/EISComponent'
+export * from './arduino-readings/ArduinoReadingComponent'

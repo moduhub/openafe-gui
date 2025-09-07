@@ -3,7 +3,7 @@ import { Box, Card, CardContent, Tab, Tabs, IconButton } from '@mui/material'
 import MinimizeIcon from '@mui/icons-material/Minimize'
 import { useTheme } from '@mui/material'
 import { useDashboardContext, useDatasetsContext } from '../../contexts'
-import { CVComponent, DPVComponent, SWVComponent, EISComponent } from '..'
+import { ArduinoReadingComponent } from '..'
 
 /**
  * TabArduino component provides a UI panel for
@@ -99,10 +99,7 @@ export const TabArduino = () => {
             alignItems="center"
             overflow="auto"
           >
-            {tabIndex === 0 && <CVComponent key="cv" />}
-            {tabIndex === 1 && <DPVComponent key="dpv" />}
-            {tabIndex === 2 && <DPVComponent key="swv" />}
-            {tabIndex === 3 && <EISComponent key="eis" />}
+            <ArduinoReadingComponent />
           </Box>
         </CardContent>
       </Card>

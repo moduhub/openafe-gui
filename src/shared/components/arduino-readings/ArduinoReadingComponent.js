@@ -9,7 +9,7 @@ import {
   useDashboardContext,
 } from '../../contexts'
 
-export const SWVComponent = () => {
+export const ArduinoReadingComponent = () => {
   const {
     isConnected,
     isReading, handleSetIsReading,
@@ -100,7 +100,7 @@ export const SWVComponent = () => {
     else console.log("It is not possible to start, process in progress")
   }
 
-  return (
+  return ( // Small Windows: 440px
     <Box display="flex" flexDirection="column" height="440px">
       
       <Box flex="1" overflow="auto">
