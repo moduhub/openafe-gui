@@ -54,6 +54,8 @@ export const TopMenu = ({ children }) => {
     isConnected,
     isConnecting, 
     isReading,
+    handleSetIsConnecting, 
+    setSnackbar,
   } = useArduinoContext()
 
   const navigate = useNavigate()
@@ -122,7 +124,7 @@ export const TopMenu = ({ children }) => {
                 <MenuItem 
                   key={index} 
                   value={port.path} 
-                  onClick={() => ConnectPort(port.path, handleSetPortSelected)}
+                  onClick={() => {ConnectPort(port.path, handleSetPortSelected, handleSetIsConnecting, setSnackbar)}}
                   disabled={isConnected}
                 >
                   {isConnecting?<CircularProgress size={15} sx={{ marginRight: 1 }} />:""}
