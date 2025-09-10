@@ -84,13 +84,18 @@ export const ArduinoProvider = ({ children }) => {
         handleSetIsConnecting(true)
         setSnackbar({ open: true, message: 'Connecting to Arduino...', severity: 'info' })
       }
+      
+      if(message.startsWith("not-connected:Error: Opening COM3: Access denied")){
+        handleSetIsConnecting(false)
+        setSnackbar({ open: true, message: 'Access denied', severity: 'error' })
+      }
     }
     const handleSerialPortDisconnected = (message) => {
       handleSetPortConnected('')
       handleSetPortSelected('')
       handleSetIsConnect(false)
       handleSetArduinoData('')
-      setSnackbar({ open: true, message: 'Desconectado com sucesso!', severity: 'success' })
+      setSnackbar({ open: true, message: 'Disconnected successfully!', severity: 'success' })
     }
 
     // Listeners
