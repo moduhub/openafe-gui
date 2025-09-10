@@ -81,7 +81,11 @@ export const DataSetsProvider = ({ children }) => {
   const { 
     arduinoData,
     handleSetIsReading,
-    isDummy
+    isDummy,
+    handleSetPortConnected, 
+    handleSetIsConnecting, handleSetIsConnect,
+    portSelected,
+    setSnackbar
   } = useArduinoContext()
   const {
     priorityMode,
@@ -91,6 +95,8 @@ export const DataSetsProvider = ({ children }) => {
   const { 
     tabDatasetsIsMinimized: isDatasetsMinimized, 
     handleToggleTabDatasetsMinimized: setIsDatasetsMinimized,
+    tabArduinoIsMinimized: isArduinoMinimized, 
+    handleToggleTabArduinoMinimized: setIsArduinoMinimized,
   } = useDashboardContext()
 
   const [currentName, setCurrentName] = useState(defaultName)
@@ -609,7 +615,7 @@ export const DataSetsProvider = ({ children }) => {
         }
       }
       // Data start
-      else if(arduinoData.startsWith('$VS'))
+      else if(arduinoData.startsWith('VS'))
         setNewDataSet(currentName, currentParams, "CVW")
       else if(arduinoData.startsWith('ESS'))
         setNewDataSet(currentName, currentParams, "EIS")
