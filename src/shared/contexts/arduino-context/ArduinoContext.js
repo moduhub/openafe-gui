@@ -94,43 +94,18 @@ export const ArduinoProvider = ({ children }) => {
     }
 
     // Listeners
-    window.electron.onArduinoData(handleArduinoData)
-    window.electron.onSerialPortOpened(handleSerialPortOpened)
-    window.electron.onSerialPortDisconnected(handleSerialPortDisconnected)
+    const offArduino = window.electron.onArduinoData(handleArduinoData)
+    const offOpened = window.electron.onSerialPortOpened(handleSerialPortOpened)
+    const offDisconnected = window.electron.onSerialPortDisconnected(handleSerialPortDisconnected)
+
 
     // Destructor
     return () => {
-      window.electron.onArduinoData(null)
-      window.electron.onSerialPortOpened(null)
-      window.electron.onSerialPortDisconnected(null)
+      offArduino && offArduino()
+      offOpened && offOpened()
+      offDisconnected && offDisconnected()
     }
   },[])
-
-  // Data Connect
-  useEffect(() => {
-    // Dummy
-    if (arduinoData.startsWith('$CNT')){
-      handleSetPortConnected(portSelected)
-      handleSetIsConnecting(false)
-      handleSetIsConnect(true)
-      setSnackbar({ open: false, message: '', severity: 'info' }) 
-      setSnackbar({ open: true, message: 'Conectado com sucesso na porta '+portSelected+'!', severity: 'success' })
-      if(isArduinoMinimized)
-        setIsArduinoMinimized()
-    }
-
-    // Comm
-    if (arduinoData.startsWith('$MSG,RDY')){
-      handleSetPortConnected(portSelected)
-      handleSetIsConnecting(false)
-      handleSetIsConnect(true)
-      handleSetIsReading(false)
-      setSnackbar({ open: false, message: '', severity: 'info' }) 
-      setSnackbar({ open: true, message: 'Conectado com sucesso na porta '+portSelected+'!', severity: 'success' })
-      if(isArduinoMinimized)
-        setIsArduinoMinimized()
-    }
-  }, [arduinoData])
 
   return (
     <ArduinoContext.Provider value={{ 
@@ -141,7 +116,8 @@ export const ArduinoProvider = ({ children }) => {
       isConnected, handleSetIsConnect,
       isConnecting, handleSetIsConnecting,
       isReading, handleSetIsReading,
-      isDummy, setIsDummy
+      isDummy, setIsDummy,
+      setSnackbar
     }}>
       {children}
 

@@ -519,11 +519,23 @@ export const DataSetsProvider = ({ children }) => {
     })
   }, [])
 
-  
-  useEffect(()=>{   
-    // Data graph 
+  useEffect(()=>{
+    if (!arduinoData) return
+
     if(!isDummy){
-      if (arduinoData.startsWith('$SGL')) {
+      // COMM
+      if (arduinoData.startsWith('MSG,RDY')){
+        handleSetPortConnected(portSelected)
+        handleSetIsConnecting(false)
+        handleSetIsConnect(true)
+        handleSetIsReading(false)
+        setSnackbar({ open: false, message: '', severity: 'info' }) 
+        setSnackbar({ open: true, message: 'Successfully connected to the port '+portSelected+'!', severity: 'success' })
+        if(isArduinoMinimized) setIsArduinoMinimized()
+      }
+
+      // Get Point
+      else if (arduinoData.startsWith('SGL')) {
         const dataParts = arduinoData.split(',')
         const voltage =  dataParts[1]
         const current = (dataParts[2].split('*'))[0]
@@ -540,7 +552,7 @@ export const DataSetsProvider = ({ children }) => {
       }
 
       // Data start
-      if (arduinoData.startsWith('$MSG,RCD')) {
+      else if (arduinoData.startsWith('MSG,RCD')) {
         const CP = Object.values(currentParams) 
         const commandBody = `$${experimentType},${CP.join(",")}*`
         const checksum = calculateChecksum(commandBody)
@@ -550,7 +562,7 @@ export const DataSetsProvider = ({ children }) => {
       }
       
       // Data end
-      if(arduinoData.startsWith('$MSG,END')){
+      else if(arduinoData.startsWith('MSG,END')){
         handleSetIsReading(false)
         if(isDatasetsMinimized)
           setIsDatasetsMinimized()
@@ -562,7 +574,15 @@ export const DataSetsProvider = ({ children }) => {
     
     // Data graph Dummy
     else {
-      if (arduinoData.startsWith('$SGL')) {
+      if(arduinoData.startsWith('CNT')){
+        handleSetPortConnected(portSelected)
+        handleSetIsConnecting(false)
+        handleSetIsConnect(true)
+        setSnackbar({ open: false, message: '', severity: 'info' }) 
+        setSnackbar({ open: true, message: 'Successfully connected to the port '+portSelected+'!', severity: 'success' })
+        if(isArduinoMinimized) setIsArduinoMinimized()
+      }
+      else if (arduinoData.startsWith('SGL')) {
         const dataParts = arduinoData.split(',')
         if (dataParts.length >= 3) {
           const voltage = parseFloat(dataParts[1])
@@ -589,19 +609,19 @@ export const DataSetsProvider = ({ children }) => {
         }
       }
       // Data start
-      if(arduinoData.startsWith('$CVS'))
+      else if(arduinoData.startsWith('$VS'))
         setNewDataSet(currentName, currentParams, "CVW")
-      else if(arduinoData.startsWith('$ESS'))
+      else if(arduinoData.startsWith('ESS'))
         setNewDataSet(currentName, currentParams, "EIS")
       
       // Data end
-      else if(arduinoData.startsWith('$END') || arduinoData.startsWith('$EBF')){
+      else if(arduinoData.startsWith('END') || arduinoData.startsWith('$EBF')){
         handleSetIsReading(false)
         if(isDatasetsMinimized)
           setIsDatasetsMinimized()
       }
     }
-  },[arduinoData])
+  }, [arduinoData])
 
   useEffect(()=>{
     setCurrentName(defaultName)

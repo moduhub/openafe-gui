@@ -26,8 +26,12 @@ contextBridge.exposeInMainWorld('electron', {
     ipcRenderer.send('disconnect-port'),
   getAvailablePorts: (callback) => 
     ipcRenderer.invoke('get-available-ports').then(callback),
-  onArduinoData: (callback) => 
-    ipcRenderer.on('arduino-data', (event, data) => callback(data)),
+  onArduinoData: (callback) => {
+    if (typeof callback !== 'function') return () => {}
+    const listener = (event, data) => callback(data)
+    ipcRenderer.on('arduino-data', listener)
+    return () => ipcRenderer.removeListener('arduino-data', listener)
+  },
   onSerialPortOpened: (callback) => 
     ipcRenderer.on('serial-port-opened', (event, message) => callback(message)),
   onSerialPortDisconnected: (callback) => 

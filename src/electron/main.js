@@ -1,6 +1,5 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
 const { SerialPort } = require('serialport')
-const { ReadlineParser } = require('@serialport/parser-readline')
 const path = require('path')
 
 let mainWindow
@@ -9,34 +8,54 @@ let port
 
 let isDev = false
 
+let buffer = Buffer.alloc(0)
+
 /**
  * Initializes and configures the serial port communication with the Arduino
  * 
  * @param {String} selectedPort - The path of the serial port selected by the user (e.g., 'COM3')
  */
-async function setupSerialPort(selectedPort) {
-  try {
-    if (port) port.close()
-    port = new SerialPort({ path: selectedPort, baudRate: 115200 })
-    const parser = port.pipe(new ReadlineParser({ delimiter: '\n' }))
-    parser.on('data', (data) => { if (mainWindow) mainWindow.webContents.send('arduino-data', data)})
-    port.on('open', () => { 
-      console.log('Porta serial aberta com sucesso!')
-      if (mainWindow) mainWindow.webContents.send('serial-port-opened', 'Porta serial aberta com sucesso!')
-      /*
-      port.write('$RST\n', (err) => {
-        if (err) console.error('Erro ao enviar comando de reinicializacao para o Arduino:', err)
-        else console.log('Comando de reinicializacao enviado para o Arduino')
-      })*/
-    })
-    port.on('error', (err) => { 
-      if (mainWindow) mainWindow.webContents.send('serial-port-opened', 'not-connected:'+err)
-      console.error('Erro na porta serial:', err)
-    })
-  } catch (err) {
-    if (mainWindow) mainWindow.webContents.send('serial-port-opened', 'Erro ao abrir a porta serial:')
-    console.error('Erro ao abrir a porta serial:', err)
-  }
+function setupSerialPort(selectedPort) {
+  if (port) port.close()
+  
+  port = new SerialPort({ path: selectedPort, baudRate: 115200 })
+
+  port.on('data', (chunk) => {
+    if (mainWindow) mainWindow.webContents.send('serial-port-opened', 'Serial port opened successfully!')
+    buffer = Buffer.concat([buffer, chunk])
+
+    let start, end
+    while ((start = buffer.indexOf(0x24)) !== -1) { // '$' == 0x24
+      end = buffer.indexOf(0x2A, start) // '*' == 0x2A
+      if (end === -1) break 
+
+      const possible = buffer.slice(start, end + 3) // includes '*XX'
+      if (possible.length < 5) {
+        buffer = buffer.slice(end + 1)
+        continue
+      }
+      const payload = possible.toString('utf8')
+      const data = payload.slice(1, -3) // remove '$' e '*XX'
+      const checksumStr = payload.slice(-2) // XX
+      const expected = parseInt(checksumStr, 16)
+
+      // Calculate CRC
+      let calc = 0
+      for (let i = 1; i < payload.length - 3; i++) 
+        calc ^= payload.charCodeAt(i)
+      
+
+      if (calc === expected) mainWindow.webContents.send('arduino-data', data)
+      else console.warn('Invalid checksum:', payload, 'calc=', calc.toString(16))
+
+      buffer = buffer.slice(end + 3)
+    }
+  })
+
+  port.on('error', (err) => {
+    if (mainWindow) mainWindow.webContents.send('serial-port-opened', 'not-connected:'+err)
+    console.error('Serial error:', err)
+  })
 }
 
 /**
@@ -69,9 +88,9 @@ function createWindow() {
     if (port) 
       port.close((err) => {
         if (err)
-          console.error('Erro ao fechar a porta serial:', err)
+          console.error('Error closing the serial port:', err)
         else
-          console.log('Porta serial fechada com sucesso!')
+          console.log('Serial port closed successfully!')
       })
   })
 
@@ -109,7 +128,6 @@ app.on('window-all-closed', () => {
  * Handles request from renderer to retrieve a list of available serial ports
  */
 ipcMain.handle('get-available-ports', async () => {
-  console.log("Portas requeridas")
   const ports = await SerialPort.list()
   return ports
 })
@@ -123,7 +141,7 @@ ipcMain.on('connect-to-port', (event, selectedPort) => {
   try{
     setupSerialPort(selectedPort)
   }catch(erro){
-    console.log("Não foi possíve conectar: "+erro)
+    console.error("Could not connect: "+erro)
   }
   
 })
@@ -134,12 +152,10 @@ ipcMain.on('connect-to-port', (event, selectedPort) => {
 ipcMain.on('disconnect-port', () => {
   if (port) {
     port.close((err) => {
-      if (err) {
-        console.error('Erro ao desconectar da porta serial:', err)
-      } else {
-        console.log('Desconectado da porta serial com sucesso!')
-        if (mainWindow) mainWindow.webContents.send('serial-port-disconnected', 'Desconectado da porta serial com sucesso!')
-      }
+      if (err) 
+        console.error('Error disconnecting from the serial port:', err)
+      else 
+        if (mainWindow) mainWindow.webContents.send('serial-port-disconnected', 'Successfully disconnected from the serial port!')
     })
   }
 })
@@ -152,7 +168,7 @@ ipcMain.on('disconnect-port', () => {
 ipcMain.on('send-command', (event, arg) => {
   if (port) 
     port.write(arg + '\n', (err) => {
-      if (err) console.error('Erro ao enviar comando para o Arduino:', err)
-      else console.log('Comando enviado para o Arduino:', arg)
+      if (err) console.error('Error sending command to the Arduino:', err)
+      else console.log('Command sent to the Arduino:', arg)
     })
 })
