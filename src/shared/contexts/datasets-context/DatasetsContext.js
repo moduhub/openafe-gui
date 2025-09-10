@@ -15,28 +15,28 @@ const defaultCVParams = {
   settlingTime: 1000,
   startingPotential: -800,
   endingPotential: 0,
-  scanRate: 100,
-  step: 100,
+  scanRate: 1000,
+  stepPotential: 100,
   cycles: 1,
 }
 
 const defaultDPVParams = {
   settlingTime: 1000,
-  startingPotential: -800,
-  endingPotential: 0,
-  scanRate: 100,
+  startingPotential: -500,
+  endingPotential: 500,
+  scanRate: 1000,
   stepPotential: 100,
-  pulsePotential: 300,
-  dutyCycle: 50
+  pulsePotential: 50,
+  dutyCycle: 10
 }
 
 const defaultSWVParams = {
   settlingTime: 1000,
-  startingPotential: -800,
-  endingPotential: 0,
-  scanRate: 100,
+  startingPotential: -500,
+  endingPotential: 500,
+  scanRate: 1000,
   stepPotential: 100,
-  pulsePotential: 300,
+  pulsePotential: 50,
   dutyCycle: 50
 }
 
@@ -599,7 +599,7 @@ export const DataSetsProvider = ({ children }) => {
           }
         }
       }
-      else if (arduinoData.startsWith('$EOT')) {
+      else if (arduinoData.startsWith('EOT')) {
         const dataParts = arduinoData.split(',')
         if(dataParts.length >= 4){
           const omega = parseFloat(dataParts[1])
