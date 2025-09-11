@@ -79,11 +79,11 @@ export const DataSetsProvider = ({ children }) => {
   const { theme } = useContext(ThemeContext)
 
   const { 
-    arduinoData,
-    handleSetIsReading,
+    arduinoData, clearArduinoData,
+    handleSetIsReading, isReading,
     isDummy,
     handleSetPortConnected, 
-    handleSetIsConnecting, handleSetIsConnect,
+    handleSetIsConnecting, handleSetIsConnect, isConnecting,
     portSelected,
     setSnackbar
   } = useArduinoContext()
@@ -100,7 +100,7 @@ export const DataSetsProvider = ({ children }) => {
   } = useDashboardContext()
 
   const [currentName, setCurrentName] = useState(defaultName)
-  const [experimentType, setExperimentType] = useState('CVW') // ou 'EIS', 'DPV', SWV
+  const [experimentType, setExperimentType] = useState('CVW') // or  'DPV', SWV, 'EIS'
   const [currentParams, setCurrentParams] = useState(defaultCVParams)
   const [datasets, setDatasets]= useState([])
   const [isDatasetSelected, setIsDatasetSelected] = useState(false)
@@ -158,7 +158,7 @@ export const DataSetsProvider = ({ children }) => {
     // Before adding, hide all datasets of a different type
     setDatasets((prevDatasets) =>
       prevDatasets.map((dataset) =>
-        dataset.type !== type_ && (dataset.type === "CVW" || dataset.type === "EIS")
+        dataset.type !== type_ && (dataset.type === "CVW" || dataset.type === "DPV" || dataset.type === "SWV" || dataset.type === "EIS")
           ? { ...dataset, visible: false }
           : dataset
       )
@@ -217,7 +217,7 @@ export const DataSetsProvider = ({ children }) => {
     }
     
     let data_ = []
-    if(type_ === "CVW")
+    if(type_ === "CVW" || type_ === "DPV" || type_ === "SWV")
       data_ = [{
             x: [], y: [],
             mode: 'lines',
