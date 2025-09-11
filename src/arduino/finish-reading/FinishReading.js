@@ -1,7 +1,10 @@
-/**
- * Forces the reading stop
- */
+import { calculateChecksum } from '../../shared/math-functions'
 
+/**
+ * Forces the reading stop and reset Arduino
+ */
 export const FinishReading = () => {
-  window.electron.sendCommand('$BFE')
+  const forceReset = "CMD,DIE"
+  const checksum = calculateChecksum(forceReset)
+  window.electron.sendCommand(`$${forceReset}*${checksum}`)
 }
