@@ -49,6 +49,40 @@ export const ArduinoReadingComponent = () => {
     return ""
   }
 
+  const validateParams = (params, type) => {
+    const errors = {}
+
+    const { settlingTime, startingPotential, endingPotential, stepPotential, scanRate, dutyCycle, cycles } = params
+
+    if (settlingTime < 0)
+      errors.settlingTime = "Settling time must be greater than 0 ms."
+    if (startingPotential > endingPotential) 
+      errors.startingPotential = "Starting potential cannot be greater than ending potential."
+    if (stepPotential < 1) 
+      errors.stepPotential = "Step potential must be at least 1 mV."
+    
+    const stepTime = stepPotential / scanRate // ms
+    if (type === "CVW") {
+      if (stepTime < 1) 
+        errors.scanRate = "Step time per cycle must be at least 1 ms."
+      if (!Number.isInteger(cycles) || cycles < 1)
+        errors.cycles = "Cycles must be an integer greater or equal to 1."
+    }
+
+    if (type === "DPV" || type === "SWV") {
+      if (dutyCycle <= 0 || dutyCycle >= 100) 
+        errors.dutyCycle = "Duty cycle must be between 0 and 100."
+      else {
+        const fraction = dutyCycle / 100
+        const minSlice = stepTime * Math.min(fraction, 1 - fraction)
+        if (minSlice < 1) 
+          errors.dutyCycle = "Duty cycle produces a slice shorter than 1 ms."
+      }
+    }
+
+    return errors
+  }
+
   const handleChange = (field) => (e) => {
     const value = field === "name" ? e.target.value : Number(e.target.value)
 
@@ -81,6 +115,12 @@ export const ArduinoReadingComponent = () => {
     })
     if (hasError) {
       setErrors(newErrors)
+      return
+    }
+
+    const paramErrors = validateParams(currentParams, experimentType)
+    if (Object.keys(paramErrors).length > 0) {
+      setErrors(paramErrors)
       return
     }
 
