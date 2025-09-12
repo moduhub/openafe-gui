@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import {
-  Dialog, Box, Typography, Select, MenuItem,Tabs, Tab, Tooltip, Paper, Button, IconButton
+  Dialog, Box, Typography, Select, MenuItem, Button, IconButton
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import { 
@@ -23,8 +23,7 @@ import { useDatasetsContext } from '../../contexts'
 export const FiltersDialog = ({ open, onClose }) => {
   const {
     datasets, handleNewDataset,
-    datasetSelected, handleSetDatasetSelected,
-    showOnlyDataset,
+    datasetSelected,
   } = useDatasetsContext()
 
   const [type, setType] = useState('CVW')
@@ -48,7 +47,7 @@ export const FiltersDialog = ({ open, onClose }) => {
   // Atualiza previewData conforme o tipo
   const [previewData, setPreviewData] = useState({ x: [], y: [] })
   useEffect(() => {
-    if (type === 'CVW') setPreviewData(previewCVW)
+    if (type === 'CVW' || type === 'DPV' || type === 'SWV') setPreviewData(previewCVW)
     else if (type === 'EIS') setPreviewData({
       bodeMod: previewBodeMod,
       bodeAng: previewBodeAng,
@@ -108,7 +107,7 @@ export const FiltersDialog = ({ open, onClose }) => {
     const datasetFiltered = datasets[datasetSelected]
     if (!datasetFiltered) return
 
-    if (type === 'CVW') {
+    if (type === 'CVW' || type === 'DPV' || type === 'SWV') {
       handleNewDataset(
         `${selectedFilterCVW} de ${datasetFiltered.name}`,
         datasetFiltered.params,
@@ -177,7 +176,7 @@ export const FiltersDialog = ({ open, onClose }) => {
             overflowY: 'auto'
           }}
           >
-            {type === 'CVW' && (
+            {(type === 'CVW' || type === 'DPV' || type === 'SWV') && (
               renderFilterBlock("CVW", selectedFilterCVW, setSelectedFilterCVW, previewCVW, setPreviewCVW, "filtro-cvw-label", "cvw")
             )}
             {type === 'EIS' && (
@@ -195,7 +194,7 @@ export const FiltersDialog = ({ open, onClose }) => {
             sx={{ mt: 'auto' }}
             onClick={handleSaveFilter}
             disabled={
-              (type === 'CVW' && !selectedFilterCVW) ||
+              ((type === 'CVW' || type === 'DPV' || type === 'SWV') && !selectedFilterCVW) ||
               (type === 'EIS' && (
                 !selectedFilterBodeMod ||
                 !selectedFilterBodeAng ||

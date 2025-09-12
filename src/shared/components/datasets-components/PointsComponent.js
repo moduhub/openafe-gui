@@ -31,12 +31,14 @@ export const PointsComponent = ({ dataset }) => {
   // Decide mapping based on dataset type
   const type = dataset.type || ''
   const data = dataset.data[0]
+  const isVoltammetry = (type.startsWith('CV') || type.startsWith('DPV') || type.startsWith('SW'))
+  const isEIS = type.startsWith('IE') || type.startsWith('EIS')
 
   let itemCount = 0
   let renderRow = () => null
   let itemSize = 20
 
-  if (type.startsWith('CV')) {
+  if (isVoltammetry) {
     // Simple points (x, y)
     const xArray = data.x || []
     const yArray = data.y || []
@@ -48,7 +50,8 @@ export const PointsComponent = ({ dataset }) => {
         </Typography>
       </Box>
     )
-  } else if (type.startsWith('IE') || type.startsWith('EIS')) {
+  } 
+  else if (isEIS) {
     // Complex points (omega, modZ, angZ, realZ, imagZ)
     const omega = data.omega || []
     const modZ = data.modZ || []

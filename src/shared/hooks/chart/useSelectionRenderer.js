@@ -26,8 +26,9 @@ export const useSelectionRenderer = (
 ) => {
   useEffect(() => {
     const refs = Array.isArray(chartRefs) ? chartRefs : [chartRefs]
-    const isEIS = selectedPoints.length && selectedPoints[0].type === "EIS"
-    const isCVW = selectedPoints.length && selectedPoints[0].type === "CVW"
+    const type = selectedPoints.length && selectedPoints[0].type
+    const isEIS = type === "EIS"
+    const isVoltammetry = (type === "CVW" || type === "DPV" || type === "SWV")
 
     const removeSelectionTraces = (el) => {
       if (!el || !el.data) return
@@ -50,7 +51,7 @@ export const useSelectionRenderer = (
       return
     }
 
-    if (isCVW) {
+    if (isVoltammetry) {
       refs.forEach(ref => {
         const el = ref.current
         if (!el) return

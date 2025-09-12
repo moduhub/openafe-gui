@@ -29,7 +29,7 @@ export const exportCSV = (ds, baseName, includeInterp, includePointMarkers, incl
   const paramAdvancedStr = Object.entries(ds.params_e || {}).map(([k, v]) => `${k}=${v}`).join(', ')
   csvLines.push(`# ${baseName} ${paramStr ? ', ' + paramStr : ''} ${paramAdvancedStr ? ', ' + paramAdvancedStr : ''}`)
 
-  if(ds.type === "CVW"){
+  if(ds.type === "CVW" || ds.type === "DPV" || ds.type === "SWV"){
     const main = Array.isArray(ds.data) ? ds.data[0] : null
     const xs = main?.x || []
     const ys = main?.y || []

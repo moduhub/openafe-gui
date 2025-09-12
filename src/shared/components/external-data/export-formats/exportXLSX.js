@@ -16,7 +16,7 @@ export const exportXLSX = (ds, baseName, includeInterpPoints) => {
   const ws = {}
   const merges = []
 
-  if(ds.type === "CVW"){
+  if(ds.type === "CVW" || ds.type === "DPV" || ds.type === "SWV"){
     ws['A1'] = { v: 'X' }
     ws['B1'] = { v: 'Y' }
     ws['C1'] = { v: '' }

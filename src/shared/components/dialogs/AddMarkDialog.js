@@ -47,18 +47,20 @@ export const AddMarkDialog = ({ open, onClose, point }) => {
   const [color, setColor] = useState('#000000')
   const [size, setSize] = useState(12)
 
+  const isVoltammetry = (point.type === "CVW", point.type === "DPV", point.type === "SWV")
+  const isEIS = (point.type === "EIS")
+
   //console.log(point)
   let posPoint = []
   if(point && point.dataset !== undefined && point.index !== undefined && datasets?.[point.dataset]?.data?.[0]){
 
-    if(point.type === "CVW"){
+    if(isVoltammetry){
       posPoint = { 
         x : datasets[point.dataset].data[0].x[point.index], 
         y : datasets[point.dataset].data[0].y[point.index] 
       }
     }
-
-    else if(point.type === "EIS"){
+    else if(isEIS){
       if(point.ref === "bodeMod"){
         posPoint = {
           x : datasets[point.dataset].data[0].omega[point.index],

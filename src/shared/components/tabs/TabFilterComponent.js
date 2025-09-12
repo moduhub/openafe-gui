@@ -43,8 +43,7 @@ export const TabFilter = ({
 
   const {
     datasets, handleNewDataset,
-    datasetSelected, handleSetDatasetSelected,
-    showOnlyDataset,
+    datasetSelected
   } = useDatasetsContext()
 
   const [type, setType] = useState('CVW')
@@ -57,7 +56,7 @@ export const TabFilter = ({
   }, [datasetSelected])
 
   useEffect(() => {
-    if (type === 'CVW') {
+    if (type === 'CVW' || type === 'DPV' || type === 'SWV') {
       setPreviewData(previewCVW)
     } else if (type === 'EIS') {
       setPreviewData({
@@ -206,7 +205,7 @@ export const TabFilter = ({
               </Button>
             </Box>
 
-            {type === 'CVW' && (
+            {(type === 'CVW' || type === 'DPV' || type === 'SWV') && (
               renderFilterBlock("CVW", selectedFilterCVW, setSelectedFilterCVW, previewCVW, setPreviewCVW, "filtro-cvw-label", "cvw")
             )}
 
@@ -226,9 +225,9 @@ export const TabFilter = ({
       <Button
         variant="contained"
         color="primary"
-        onClick={type === 'CVW' ? handleSaveFilterCVW : handleSaveFilterEIS}
+        onClick={(type === 'CVW' || type === 'DPV' || type === 'SWV') ? handleSaveFilterCVW : handleSaveFilterEIS}
         disabled={
-          (type === 'CVW' && !selectedFilterCVW) ||
+          ((type === 'CVW' || type === 'DPV' || type === 'SWV') && !selectedFilterCVW) ||
           (type === 'EIS' && (
             !selectedFilterBodeMod ||
             !selectedFilterBodeAng ||
@@ -242,7 +241,7 @@ export const TabFilter = ({
           !(datasetSelected >= 0 && datasetSelected < datasets.length)
         }
       >
-        {type === 'CVW' ? 'Save filter CVW' : 'Save filter EIS'}
+        {(type === 'CVW' || type === 'DPV' || type === 'SWV') ? 'Save filter CVW' : 'Save filter EIS'}
       </Button>
     </>
   )
