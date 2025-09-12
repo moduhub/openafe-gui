@@ -45,7 +45,6 @@ export const ArduinoProvider = ({ children }) => {
     setSnackbar((prev) => ({ ...prev, open: false }))
   }
   
-  //const handleSetArduinoData = useCallback((newArduinoData)=>{setArduinoData(newArduinoData)}, [])
   const pushArduinoData = useCallback((data) => {
     setArduinoQueue(prev => [...prev, data])
   }, [])
@@ -76,14 +75,14 @@ export const ArduinoProvider = ({ children }) => {
     ReceivePorts(setPorts)
 
     const handleSerialPortOpened = (message) => {
-      if(message.startsWith("Serial port opened successfully!")){
+      if (message === "Serial port opened successfully!") {
         handleSetIsConnecting(true)
         setSnackbar({ open: true, message: 'Connecting to Arduino...', severity: 'info' })
-      }
-      
-      if(message.startsWith("not-connected:Error: Opening COM3: Access denied")){
+      } 
+      else if (message.startsWith("not-connected:")) {
         handleSetIsConnecting(false)
-        setSnackbar({ open: true, message: 'Access denied', severity: 'error' })
+        const err = message.replace('not-connected:', '')
+        setSnackbar({ open: true, message: `${err}`, severity: 'error' })
       }
     }
     const handleSerialPortDisconnected = (message) => {

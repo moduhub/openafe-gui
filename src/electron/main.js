@@ -3,7 +3,6 @@ const { SerialPort } = require('serialport')
 const path = require('path')
 
 let mainWindow
-//let settingsWindow
 let port
 
 let isDev = false
@@ -20,8 +19,12 @@ function setupSerialPort(selectedPort) {
   
   port = new SerialPort({ path: selectedPort, baudRate: 115200 })
 
+  port.on('open', () => {
+    if (mainWindow) 
+      mainWindow.webContents.send('serial-port-opened', 'Serial port opened successfully!')
+  })
+
   port.on('data', (chunk) => {
-    if (mainWindow) mainWindow.webContents.send('serial-port-opened', 'Serial port opened successfully!')
     buffer = Buffer.concat([buffer, chunk])
 
     let start, end
@@ -47,7 +50,6 @@ function setupSerialPort(selectedPort) {
       for (let i = 1; i < payload.length - 3; i++) 
         calc ^= payload.charCodeAt(i)
       
-
       if (calc === expected) mainWindow.webContents.send('arduino-data', data)
       else console.warn('Invalid checksum:', payload, 'calc=', calc.toString(16))
 
