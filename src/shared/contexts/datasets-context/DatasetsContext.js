@@ -534,7 +534,9 @@ export const DataSetsProvider = ({ children }) => {
         if (msg.startsWith('SGL')) {
           const dataParts = msg.split(',')
           const voltage = parseFloat(dataParts[1])
-          const current = parseFloat(dataParts[2])
+          const current = (experimentType==="CVW")
+            ? parseFloat(dataParts[2])
+            : parseFloat((parseFloat(dataParts[2]) - parseFloat(dataParts[3])).toFixed(2))
           addDataPoint(voltage, current)
           if(datasets[datasets.length - 1].data[0]!=null){
             if( datasets[datasets.length - 1].data[0].x.length === 1 ){
