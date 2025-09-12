@@ -5,8 +5,6 @@ import { createContext, useCallback, useContext, useState, useEffect } from 'rea
 
 import { ReceivePorts } from '../../../arduino'
 
-import { useDashboardContext } from '..'
-
 const ArduinoContext = createContext({})
 
 /**
@@ -34,7 +32,7 @@ export const useArduinoContext = () => {
  */
 export const ArduinoProvider = ({ children }) => {
   const [isDummy, setIsDummy] = useState(false)
-  const [arduinoData, setArduinoData] = useState('')
+  const [arduinoData, setArduinoQueue] = useState([])
   const [portSelected, setPortSelected] = useState('')
   const [portConnected, setPortConnected] = useState('')
   const [ports, setPorts] = useState([])
@@ -46,14 +44,13 @@ export const ArduinoProvider = ({ children }) => {
   const handleCloseSnackbar = () => {
     setSnackbar((prev) => ({ ...prev, open: false }))
   }
-
-  const {
-    tabArduinoIsMinimized: isArduinoMinimized, 
-    handleToggleTabArduinoMinimized: setIsArduinoMinimized,
-  } = useDashboardContext()
   
-  const handleSetArduinoData = useCallback((newArduinoData)=>{
-    setArduinoData(newArduinoData)
+  //const handleSetArduinoData = useCallback((newArduinoData)=>{setArduinoData(newArduinoData)}, [])
+  const pushArduinoData = useCallback((data) => {
+    setArduinoQueue(prev => [...prev, data])
+  }, [])
+  const clearArduinoData = useCallback(() => {
+    setArduinoQueue([])
   }, [])
   const handleSetPortSelected = useCallback((newPortSelected)=>{
     setPortSelected(newPortSelected)
@@ -78,9 +75,8 @@ export const ArduinoProvider = ({ children }) => {
   useEffect(()=>{
     ReceivePorts(setPorts)
 
-    const handleArduinoData = (data) => handleSetArduinoData(data)
     const handleSerialPortOpened = (message) => {
-      if(!message.startsWith("not-connected")){
+      if(message.startsWith("Serial port opened successfully!")){
         handleSetIsConnecting(true)
         setSnackbar({ open: true, message: 'Connecting to Arduino...', severity: 'info' })
       }
@@ -94,12 +90,12 @@ export const ArduinoProvider = ({ children }) => {
       handleSetPortConnected('')
       handleSetPortSelected('')
       handleSetIsConnect(false)
-      handleSetArduinoData('')
+      clearArduinoData()
       setSnackbar({ open: true, message: 'Disconnected successfully!', severity: 'success' })
     }
 
     // Listeners
-    const offArduino = window.electron.onArduinoData(handleArduinoData)
+    const offArduino = window.electron.onArduinoData(pushArduinoData)
     const offOpened = window.electron.onSerialPortOpened(handleSerialPortOpened)
     const offDisconnected = window.electron.onSerialPortDisconnected(handleSerialPortDisconnected)
 
@@ -114,7 +110,7 @@ export const ArduinoProvider = ({ children }) => {
 
   return (
     <ArduinoContext.Provider value={{ 
-      arduinoData, handleSetArduinoData,
+      arduinoData, pushArduinoData, clearArduinoData,
       ports, handleSetPorts,
       portSelected, handleSetPortSelected, 
       portConnected, handleSetPortConnected,

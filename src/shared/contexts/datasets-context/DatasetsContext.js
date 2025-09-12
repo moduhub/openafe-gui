@@ -8,6 +8,7 @@ import {
 } from '..'
 
 import { calculateChecksum } from '../../math-functions'
+import { FinishReading } from '../../../arduino'
 
 const DatasetsContext = createContext({})
 
@@ -85,7 +86,7 @@ export const DataSetsProvider = ({ children }) => {
     handleSetPortConnected, 
     handleSetIsConnecting, handleSetIsConnect, isConnecting,
     portSelected,
-    setSnackbar
+    setSnackbar, isConnected
   } = useArduinoContext()
   const {
     priorityMode,
@@ -105,6 +106,7 @@ export const DataSetsProvider = ({ children }) => {
   const [datasets, setDatasets]= useState([])
   const [isDatasetSelected, setIsDatasetSelected] = useState(false)
   const [datasetSelected, setDatasetSelected] = useState("")
+  const [pendingReset, setpendingReset] = useState(false)
   
   const handleCurrentName = useCallback((newName)=>{
     setCurrentName(newName)
@@ -525,113 +527,130 @@ export const DataSetsProvider = ({ children }) => {
     })
   }, [])
 
-  useEffect(()=>{
-    if (!arduinoData) return
+  useEffect(() => {
+    if (!arduinoData.length) return
 
-    if(!isDummy){
-      // COMM
-      if (arduinoData.startsWith('MSG,RDY')){
-        handleSetPortConnected(portSelected)
-        handleSetIsConnecting(false)
-        handleSetIsConnect(true)
-        handleSetIsReading(false)
-        setSnackbar({ open: false, message: '', severity: 'info' }) 
-        setSnackbar({ open: true, message: 'Successfully connected to the port '+portSelected+'!', severity: 'success' })
-        if(isArduinoMinimized) setIsArduinoMinimized()
-      }
+    arduinoData.forEach((msg,i) => {
+      if(!isDummy){
 
-      // Get Point
-      else if (arduinoData.startsWith('SGL')) {
-        const dataParts = arduinoData.split(',')
-        const voltage =  dataParts[1]
-        const current = (dataParts[2].split('*'))[0]
-        addDataPoint(voltage, current)
-        if(datasets[datasets.length - 1].data[0]!=null){
-          if( datasets[datasets.length - 1].data[0].x.length === 1 ){
-            if(!isDatasetSelected)
-              handleSetIsDatasetSelected(true)
-            handleSetDatasetSelected(datasets.length - 1)
-            if (priorityMode) 
-              showOnlyDataset(datasets.length - 1)
-          }
-        }
-      }
-
-      // Data start
-      else if (arduinoData.startsWith('MSG,RCD')) {
-        const CP = Object.values(currentParams) 
-        const commandBody = `$${experimentType},${CP.join(",")}*`
-        const checksum = calculateChecksum(commandBody)
-        window.electron.sendCommand(`${commandBody}${checksum}`)
-        handleSetIsReading(true)
-        setNewDataSet(currentName, currentParams, "CVW")
-      }
-      
-      // Data end
-      else if(arduinoData.startsWith('MSG,END')){
-        handleSetIsReading(false)
-        if(isDatasetsMinimized)
-          setIsDatasetsMinimized()
-        const forceReset = "CMD,DIE"
-        const checksum = calculateChecksum(forceReset)
-        window.electron.sendCommand(`$${forceReset}*${checksum}`)
-      }
-    }
-    
-    // Data graph Dummy
-    else {
-      if(arduinoData.startsWith('CNT')){
-        handleSetPortConnected(portSelected)
-        handleSetIsConnecting(false)
-        handleSetIsConnect(true)
-        setSnackbar({ open: false, message: '', severity: 'info' }) 
-        setSnackbar({ open: true, message: 'Successfully connected to the port '+portSelected+'!', severity: 'success' })
-        if(isArduinoMinimized) setIsArduinoMinimized()
-      }
-      else if (arduinoData.startsWith('SGL')) {
-        const dataParts = arduinoData.split(',')
-        if (dataParts.length >= 3) {
+        // Get Point
+        if (msg.startsWith('SGL')) {
+          const dataParts = msg.split(',')
           const voltage = parseFloat(dataParts[1])
-          const current = parseFloat(dataParts[2].split('*')[0])
+          const current = parseFloat(dataParts[2])
           addDataPoint(voltage, current)
-        }
-        if(datasets[datasets.length - 1].data[0]!=null){
-          if( datasets[datasets.length - 1].data[0].x.length === 1 ){
-            if(!isDatasetSelected)
-              handleSetIsDatasetSelected(true)
-            handleSetDatasetSelected(datasets.length - 1)
-            if (priorityMode) 
-              showOnlyDataset(datasets.length - 1)
+          if(datasets[datasets.length - 1].data[0]!=null){
+            if( datasets[datasets.length - 1].data[0].x.length === 1 ){
+              if(!isDatasetSelected)
+                handleSetIsDatasetSelected(true)
+              handleSetDatasetSelected(datasets.length - 1)
+              if (priorityMode) 
+                showOnlyDataset(datasets.length - 1)
+            }
           }
         }
-      }
-      else if (arduinoData.startsWith('EOT')) {
-        const dataParts = arduinoData.split(',')
-        if(dataParts.length >= 4){
-          const omega = parseFloat(dataParts[1])
-          const realZ = parseFloat(dataParts[2])
-          const imagZ = parseFloat(dataParts[3])
-          addComplexPoint(omega, realZ, imagZ)
+
+        // COMM
+        else if (msg.startsWith('MSG,RDY') && !isConnected){ 
+          console.log("POrnto no momento")
+          handleSetPortConnected(portSelected)
+          handleSetIsConnecting(false)
+          handleSetIsConnect(true)
+          handleSetIsReading(false)
+          setSnackbar({ open: false, message: '', severity: 'info' }) 
+          setSnackbar({ open: true, message: 'Successfully connected to the port '+portSelected+'!', severity: 'success' })
+          if(isArduinoMinimized) setIsArduinoMinimized()
+        } 
+
+        // Data start
+        else if (msg.startsWith('MSG,CUR,UPDT')){ 
+          const CP = Object.values(currentParams) 
+          const commandBody = `$${experimentType},${CP.join(",")}*`
+          const checksum = calculateChecksum(commandBody)
+          window.electron.sendCommand(`${commandBody}${checksum}`)
+        }
+        else if (msg.startsWith('MSG,CVS')) { 
+          handleSetIsReading(true)
+          setNewDataSet(currentName, currentParams, experimentType)
+        }
+        
+        // Data end
+        else if(msg.startsWith('MSG,END')){
+          handleSetIsReading(false)
+          if(isDatasetsMinimized) setIsDatasetsMinimized()
+          setpendingReset(true)
         }
       }
-      // Data start
-      else if(arduinoData.startsWith('VS'))
-        setNewDataSet(currentName, currentParams, "CVW")
-      else if(arduinoData.startsWith('ESS'))
-        setNewDataSet(currentName, currentParams, "EIS")
       
-      // Data end
-      else if(arduinoData.startsWith('END') || arduinoData.startsWith('$EBF')){
-        handleSetIsReading(false)
-        if(isDatasetsMinimized)
-          setIsDatasetsMinimized()
+      // Data graph Dummy
+      else {
+        if(msg.startsWith('CNT')){
+          handleSetPortConnected(portSelected)
+          handleSetIsConnecting(false)
+          handleSetIsConnect(true)
+          setSnackbar({ open: false, message: '', severity: 'info' }) 
+          setSnackbar({ open: true, message: 'Successfully connected to the port '+portSelected+'!', severity: 'success' })
+          if(isArduinoMinimized) setIsArduinoMinimized()
+        }
+        else if (msg.startsWith('SGL')) {
+          const dataParts = msg.split(',')
+          if (dataParts.length >= 3) {
+            const voltage = parseFloat(dataParts[1])
+            const current = parseFloat(dataParts[2].split('*')[0])
+            addDataPoint(voltage, current)
+          }
+          if(datasets[datasets.length - 1].data[0]!=null){
+            if( datasets[datasets.length - 1].data[0].x.length === 1 ){
+              if(!isDatasetSelected)
+                handleSetIsDatasetSelected(true)
+              handleSetDatasetSelected(datasets.length - 1)
+              if (priorityMode) 
+                showOnlyDataset(datasets.length - 1)
+            }
+          }
+        }
+        else if (msg.startsWith('EOT')) {
+          const dataParts = msg.split(',')
+          if(dataParts.length >= 4){
+            const omega = parseFloat(dataParts[1])
+            const realZ = parseFloat(dataParts[2])
+            const imagZ = parseFloat(dataParts[3])
+            addComplexPoint(omega, realZ, imagZ)
+          }
+        }
+        // Data start
+        else if(msg.startsWith('VS'))
+          setNewDataSet(currentName, currentParams, "CVW")
+        else if(msg.startsWith('ESS'))
+          setNewDataSet(currentName, currentParams, "EIS")
+        
+        // Data end
+        else if(msg.startsWith('END') || msg.startsWith('$EBF')){
+          handleSetIsReading(false)
+          if(isDatasetsMinimized)
+            setIsDatasetsMinimized()
+          setpendingReset(true)
+        }
       }
-    }
+
+    })
+
+    
+
+    clearArduinoData()
   }, [arduinoData])
 
   useEffect(()=>{
     setCurrentName(defaultName)
   },[defaultName])
+
+  useEffect(()=>{
+    if(pendingReset){
+      setpendingReset(false)
+      FinishReading()
+    }
+  },[pendingReset])
+
 
   return (
     <DatasetsContext.Provider value={{ 

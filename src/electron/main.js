@@ -29,7 +29,10 @@ function setupSerialPort(selectedPort) {
       end = buffer.indexOf(0x2A, start) // '*' == 0x2A
       if (end === -1) break 
 
-      const possible = buffer.slice(start, end + 3) // includes '*XX'
+      if (buffer.length < end + 3) {// includes '*XX'
+        break
+      }
+      const possible = buffer.slice(start, end + 3)
       if (possible.length < 5) {
         buffer = buffer.slice(end + 1)
         continue
