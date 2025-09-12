@@ -2,7 +2,6 @@ import React, { createContext, useCallback, useContext, useState, useEffect } fr
 
 import { 
   useArduinoContext, 
-  ThemeContext, 
   useSettingsContext,
   useDashboardContext
 } from '..'
@@ -77,14 +76,12 @@ export const useDatasetsContext = () => {
  */
 export const DataSetsProvider = ({ children }) => {
 
-  const { theme } = useContext(ThemeContext)
-
   const { 
     arduinoData, clearArduinoData,
-    handleSetIsReading, isReading,
+    handleSetIsReading,
     isDummy,
     handleSetPortConnected, 
-    handleSetIsConnecting, handleSetIsConnect, isConnecting,
+    handleSetIsConnecting, handleSetIsConnect,
     portSelected,
     setSnackbar, isConnected
   } = useArduinoContext()
@@ -414,7 +411,7 @@ export const DataSetsProvider = ({ children }) => {
         setCurrentParams(defaultDPVParams)
         break
        case 'SWV':
-        setCurrentParams(defaultDPVParams)
+        setCurrentParams(defaultSWVParams)
         break
       case 'EIS':
         setCurrentParams(defaultEISParams)
@@ -551,14 +548,18 @@ export const DataSetsProvider = ({ children }) => {
         }
 
         // COMM
-        else if (msg.startsWith('MSG,RDY') && !isConnected){ 
-          console.log("POrnto no momento")
+        else if (msg.startsWith('MSG,RDY')){ 
           handleSetPortConnected(portSelected)
           handleSetIsConnecting(false)
-          handleSetIsConnect(true)
           handleSetIsReading(false)
-          setSnackbar({ open: false, message: '', severity: 'info' }) 
-          setSnackbar({ open: true, message: 'Successfully connected to the port '+portSelected+'!', severity: 'success' })
+          if(!isConnected){
+            setSnackbar({ open: false, message: '', severity: 'info' }) 
+            setSnackbar({ open: true, message: 'Successfully connected to the port '+portSelected+'!', severity: 'success' }) 
+            handleSetIsConnect(true)
+          }
+          else {
+            setSnackbar({ open: false, message: '', severity: 'info' }) 
+          }
           if(isArduinoMinimized) setIsArduinoMinimized()
         } 
 
@@ -569,6 +570,8 @@ export const DataSetsProvider = ({ children }) => {
           const checksum = calculateChecksum(commandBody)
           window.electron.sendCommand(`${commandBody}${checksum}`)
         }
+
+        // Voltammetry start
         else if (msg.startsWith('MSG,CVS')) { 
           handleSetIsReading(true)
           setNewDataSet(currentName, currentParams, experimentType)
@@ -634,9 +637,6 @@ export const DataSetsProvider = ({ children }) => {
       }
 
     })
-
-    
-
     clearArduinoData()
   }, [arduinoData])
 
@@ -644,12 +644,13 @@ export const DataSetsProvider = ({ children }) => {
     setCurrentName(defaultName)
   },[defaultName])
 
-  useEffect(()=>{
-    if(pendingReset){
+  useEffect(()=> {
+    if (pendingReset){
       setpendingReset(false)
-      FinishReading()
+      setSnackbar({ open: true, message: 'Restarting Arduino...', severity: 'info' })
+      setTimeout(() => {FinishReading()}, 50)
     }
-  },[pendingReset])
+  }, [pendingReset])
 
 
   return (
@@ -661,7 +662,6 @@ export const DataSetsProvider = ({ children }) => {
       datasetSelected, handleSetDatasetSelected,
       handleDeleteDatasetSelected,
       handleDeleteDataset,
-      //handleDatasetIsVisible,
       datasets, handleSetDataset,
       handleNewDataset,
       toggleDatasetVisibility,
