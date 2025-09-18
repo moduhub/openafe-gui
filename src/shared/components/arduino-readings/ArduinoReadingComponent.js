@@ -61,7 +61,7 @@ export const ArduinoReadingComponent = () => {
     if (stepPotential < 1) 
       errors.stepPotential = "Step potential must be at least 1 mV."
     
-    const stepTime = stepPotential / scanRate // ms
+    const stepTime = (stepPotential / scanRate) * 1000.0 // ms
     if (type === "CVW") {
       if (stepTime < 1) 
         errors.scanRate = "Step time per cycle must be at least 1 ms."
