@@ -42,10 +42,9 @@ const defaultSWVParams = {
 
 const defaultEISParams = {
   settlingTime: 1000,
-  startOmega: 0, // Hz
-  endOmega: 100, // Hz
-  stepForADecade: 10,
-  scanRate: 5000,
+  startOmega: 100, // Hz
+  endOmega: 10000, // Hz
+  stepForADecade: 10
 }
 
 /**
@@ -548,6 +547,15 @@ export const DataSetsProvider = ({ children }) => {
             }
           }
         }
+        else if (msg.startsWith('EOT')) {
+          const dataParts = msg.split(',')
+          if(dataParts.length >= 4){
+            const omega = parseFloat(dataParts[1])
+            const realZ = parseFloat(dataParts[2])
+            const imagZ = parseFloat(dataParts[3])
+            addComplexPoint(omega, realZ, imagZ)
+          }
+        }
 
         // COMM
         else if (msg.startsWith('MSG,RDY')){ 
@@ -565,18 +573,16 @@ export const DataSetsProvider = ({ children }) => {
           if(isArduinoMinimized) setIsArduinoMinimized()
         } 
 
-        // Data start
-        else if (msg.startsWith('MSG,CUR,UPDT')){ 
-          const CP = Object.values(currentParams) 
-          const commandBody = `$${experimentType},${CP.join(",")}*`
-          const checksum = calculateChecksum(commandBody)
-          window.electron.sendCommand(`${commandBody}${checksum}`)
-        }
-
         // Voltammetry start
         else if (msg.startsWith('MSG,CVS')) { 
           handleSetIsReading(true)
           setNewDataSet(currentName, currentParams, experimentType)
+        }
+
+        // EIS start
+        else if (msg.startsWith('MSG,EISS')) { 
+          handleSetIsReading(true)
+          setNewDataSet(currentName, currentParams, "EIS")
         }
         
         // Data end
