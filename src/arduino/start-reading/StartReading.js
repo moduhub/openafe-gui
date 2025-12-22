@@ -19,10 +19,22 @@ export const StartReading = (
   portConnected = "COM3"
 ) => {
 
+  
   if(!isDummy){
-    const commandBody = `$CMD,CUR,${currentRange_microamps}*`
-    const checksum = calculateChecksum(commandBody)
-    window.electron.sendCommand(`${commandBody}${checksum}`)
+    if(experimentType == "EIS"){     // EIS 
+      const CP = Object.values(currentParams) 
+      const commandBody = `$${experimentType},${CP.join(",")}*`
+      const checksum = calculateChecksum(commandBody)
+      //console.log(`${commandBody}${checksum}`) //$EIS,1000,100,10000,10*42
+      window.electron.sendCommand(`${commandBody}${checksum}`)
+    }
+    else { // voltammetry
+      const CP = Object.values(currentParams) 
+      const commandBody = `$${experimentType},${CP.join(",")}*`
+      const checksum = calculateChecksum(commandBody)
+      //console.log(`${commandBody}${checksum} - ${experimentType}`)
+      window.electron.sendCommand(`${commandBody}${checksum}`)
+    }
   }
 
   // DUMMY
