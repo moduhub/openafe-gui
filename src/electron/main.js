@@ -9,6 +9,26 @@ let isDev = false
 
 let buffer = Buffer.alloc(0)
 
+// 
+let arduinoQueue = []
+let queueTimer = null
+const SEND_INTERVAL_MS = 500
+function enqueueArduinoData(msg){
+  arduinoQueue.push(msg)
+  if (!queueTimer) {
+    queueTimer = setInterval(() => {
+      if (!arduinoQueue.length) {
+        clearInterval(queueTimer)
+        queueTimer = null
+        return
+      }
+      const item = arduinoQueue.shift()
+      if (mainWindow) mainWindow.webContents.send('arduino-data', item)
+    }, SEND_INTERVAL_MS)
+  }
+}
+
+
 /**
  * Initializes and configures the serial port communication with the Arduino
  * 
@@ -50,7 +70,10 @@ function setupSerialPort(selectedPort) {
       for (let i = 1; i < payload.length - 3; i++) 
         calc ^= payload.charCodeAt(i)
       
-      if (calc === expected) mainWindow.webContents.send('arduino-data', data)
+      if (calc === expected) {
+        enqueueArduinoData(data)
+        console.log(data)
+      }
       else console.warn('Invalid checksum:', payload, 'calc=', calc.toString(16))
 
       buffer = buffer.slice(end + 3)
@@ -90,6 +113,10 @@ function createWindow() {
 
   mainWindow.on('closed', () => {
     mainWindow = null
+    if (queueTimer) {
+      clearInterval(queueTimer)
+      queueTimer = null
+    }
     if (port) 
       port.close((err) => {
         if (err)
