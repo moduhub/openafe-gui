@@ -10,6 +10,7 @@ import Plotly from 'plotly.js-dist'
  * @param {Array} selectedPoints - Array of selected point objects (up to two). EIS points include {ref, dataset, index, ...}.
  * @param {(points: any[]) => void} setSelectedPoints - State setter to update selected points (used to normalize selection when a valid range is chosen).
  * @param {boolean} isPolar - Whether Nyquist rendering and selection should be handled in polar coordinates.
+ * @param {boolean} isDb - Whether magnitude (modZ) should be shown in dB (true) or linear (false).
  *
  * Behavior:
  * - Removes previous 'Selected Points' and 'Highlight Range' traces before adding new selection traces.
@@ -22,7 +23,8 @@ export const useSelectionRenderer = (
   chartRefs,
   datasets, handleSetDatasetSelected,
   selectedPoints, setSelectedPoints,
-  isPolar
+  isPolar,
+  isDb
 ) => {
   useEffect(() => {
     const refs = Array.isArray(chartRefs) ? chartRefs : [chartRefs]
@@ -98,12 +100,9 @@ export const useSelectionRenderer = (
           }
         }
 
-        if (toAdd.length) 
-          Plotly.addTraces(el, toAdd)
+        if (toAdd.length) Plotly.addTraces(el, toAdd)
       })
-    } 
-
-    else if (isEIS) {
+    } else if (isEIS) {
       // EIS: refs[0]=bodeMod, refs[1]=bodeAng, refs[2]=nyquist
       const [bodeModRef, bodeAngRef, nyquistRef] = refs
       const p = selectedPoints[0]
@@ -120,8 +119,8 @@ export const useSelectionRenderer = (
           const x_ = selectedPoints.map(pt => datasets[pt.dataset]?.data[0]?.omega[pt.index])
           const y_ = selectedPoints.map(pt => {
             const v = datasets[pt.dataset]?.data[0]?.modZ[pt.index]
-            return 20 * Math.log10(v > 0 ? v : 1e-12)
-          })  // db points
+            return isDb ? 20 * Math.log10(v > 0 ? v : 1e-12) : v
+          })
           toAdd.push({
             x: x_,
             y: y_,
@@ -136,21 +135,20 @@ export const useSelectionRenderer = (
           const ds = datasets[p1.dataset]?.data[0]
           const { omega: xs, modZ: ys } = ds
           if (p1.index >= 0 && p2.index >= 0) {
-              const [s, e] = [Math.min(p1.index, p2.index), Math.max(p1.index, p2.index)]
-              toAdd.push({
-                x: xs.slice(s, e + 1),
-                y: ys.slice(s, e + 1).map(v => 20 * Math.log10(v > 0 ? v : 1e-12)), // db lines
-                mode: 'lines',
-                line: { width: 4, color: 'red' },
-                name: 'Highlight Range',
-                showlegend: false,
-              })
-              setSelectedPoints(selectedPoints)
-              handleSetDatasetSelected(p1.dataset)
-            }
+            const [s, e] = [Math.min(p1.index, p2.index), Math.max(p1.index, p2.index)]
+            toAdd.push({
+              x: xs.slice(s, e + 1),
+              y: isDb ? ys.slice(s, e + 1).map(v => 20 * Math.log10(v > 0 ? v : 1e-12)) : ys.slice(s, e + 1),
+              mode: 'lines',
+              line: { width: 4, color: 'red' },
+              name: 'Highlight Range',
+              showlegend: false,
+            })
+            setSelectedPoints(selectedPoints)
+            handleSetDatasetSelected(p1.dataset)
+          }
         }
-        if(toAdd.length)
-          Plotly.addTraces(bodeModRef.current,toAdd)
+        if (toAdd.length) Plotly.addTraces(bodeModRef.current, toAdd)
       }
 
       // Bode angZ (omega vs angZ)
@@ -175,21 +173,20 @@ export const useSelectionRenderer = (
           const ds = datasets[p1.dataset]?.data[0]
           const { omega: xs, angZ: ys } = ds
           if (p1.index >= 0 && p2.index >= 0) {
-              const [s, e] = [Math.min(p1.index, p2.index), Math.max(p1.index, p2.index)]
-              toAdd.push({
-                x: xs.slice(s, e + 1),
-                y: ys.slice(s, e + 1),
-                mode: 'lines',
-                line: { width: 4, color: 'red' },
-                name: 'Highlight Range',
-                showlegend: false,
-              })
-              setSelectedPoints(selectedPoints)
-              handleSetDatasetSelected(p1.dataset)
-            }
+            const [s, e] = [Math.min(p1.index, p2.index), Math.max(p1.index, p2.index)]
+            toAdd.push({
+              x: xs.slice(s, e + 1),
+              y: ys.slice(s, e + 1),
+              mode: 'lines',
+              line: { width: 4, color: 'red' },
+              name: 'Highlight Range',
+              showlegend: false,
+            })
+            setSelectedPoints(selectedPoints)
+            handleSetDatasetSelected(p1.dataset)
+          }
         }
-        if(toAdd.length)
-          Plotly.addTraces(bodeAngRef.current,toAdd)
+        if (toAdd.length) Plotly.addTraces(bodeAngRef.current, toAdd)
       }
 
       // Nyquist (realZ vs imagZ)
@@ -226,7 +223,7 @@ export const useSelectionRenderer = (
               type: 'scatterpolar'
             })
           } else {
-            // Retangular: x/y
+            // Rectangular: x/y
             const x_ = selectedPoints.map(pt => datasets[pt.dataset]?.data[0]?.realZ?.[pt.index])
             const y_ = selectedPoints.map(pt => datasets[pt.dataset]?.data[0]?.imagZ?.[pt.index])
             toAdd.push({
@@ -284,10 +281,9 @@ export const useSelectionRenderer = (
             }
           }
         }
-        if(toAdd.length)
-          Plotly.addTraces(nyquistRef.current,toAdd)
+        if (toAdd.length) Plotly.addTraces(nyquistRef.current, toAdd)
       }
     }
-    
-  }, [chartRefs, datasets, selectedPoints, setSelectedPoints, handleSetDatasetSelected])
+
+  }, [chartRefs, datasets, selectedPoints, setSelectedPoints, handleSetDatasetSelected, isPolar, isDb])
 }

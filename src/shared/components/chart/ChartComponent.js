@@ -61,6 +61,7 @@ export const ChartComponent = ({
   const prevLengths = useRef({})
 
   const [isPolar, setIsPolar] = useState(false)
+  const [isDb, setIsDb] = useState(true)
 
   const eisDatasets = datasets.filter(ds => ds.visible && ds.type === 'EIS')
 
@@ -71,14 +72,14 @@ export const ChartComponent = ({
       ? eisDatasets.map(ds => ({
           ...ds,
           data: [{ 
-            x: ds.data[0].omega, 
-            y: ds.data[0].modZ.map(v => 20 * Math.log10(v > 0 ? v : 1e-12))
+            x: ds.data[0].omega,
+            y: isDb ? ds.data[0].modZ.map(v => 20 * Math.log10(v > 0 ? v : 1e-12)) : ds.data[0].modZ
           }]
         }))
       : [],
     theme,
     'Frequency (Hz)',
-    '|Z| (dB)', // eixo Y
+    isDb ? '|Z| (dB)' : '|Z| (Ohm)', // eixo Y
     true, // islogX
   )
   useResizeHandler(bodeModRef)
@@ -127,7 +128,7 @@ export const ChartComponent = ({
     ? [bodeModRef, bodeAngRef, nyquistRef]
     : [chartRef]
   const previewDatasets = experimentType === 'EIS' ? eisDatasets : datasets
-  usePreviewAndInterpolations(previewRefs, previewDatasets, previewData, theme, prevLengths, isPolar)
+  usePreviewAndInterpolations(previewRefs, previewDatasets, previewData, theme, prevLengths, isPolar, isDb)
 
   //Clicks
   let clickRefs = experimentType === 'EIS'
@@ -144,7 +145,8 @@ export const ChartComponent = ({
     previewRefs,
     datasets, handleSetDatasetSelected,
     selectedPoints, setSelectedPoints,
-    isPolar
+    isPolar,
+    isDb
   )
 
   useEffect(() => {
@@ -206,7 +208,32 @@ export const ChartComponent = ({
         </Box>
 
         <Box height="97%" width="50%" display="flex" flexDirection="column">
-          <Box flex={1} p={1}>
+          <Box flex={1} p={1} position="relative">
+            <Box position="absolute" top={8} right={8} zIndex={11}>
+              <Paper elevation={4} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+                <ToggleButtonGroup
+                  size="small"
+                  exclusive
+                  value={isDb ? 'db' : 'linear'}
+                  onChange={(_, val) => val !== null && setIsDb(val === 'db')}
+                  sx={{
+                    '& .MuiToggleButton-root': { px: 1, py: 0.4, border: 'none' },
+                    '& .MuiToggleButton-root.Mui-selected': {
+                      bgcolor: 'primary.main',
+                      color: 'primary.contrastText',
+                      '&:hover': { bgcolor: 'primary.dark' }
+                    }
+                  }}
+                >
+                  <ToggleButton value="linear">
+                    <Typography variant="caption">Linear</Typography>
+                  </ToggleButton>
+                  <ToggleButton value="db">
+                    <Typography variant="caption">dB</Typography>
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Paper>
+            </Box>
             <div
               ref={bodeModRef}
               data-plotly

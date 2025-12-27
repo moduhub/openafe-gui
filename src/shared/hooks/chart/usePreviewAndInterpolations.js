@@ -24,7 +24,8 @@ export const usePreviewAndInterpolations = (
   previewData,
   theme,
   prevLengthsRef,
-  isPolar
+  isPolar,
+  isDb
 ) => {
 
   const getLine = (line, theme) => ({
@@ -57,7 +58,7 @@ export const usePreviewAndInterpolations = (
           // Bode magnitude
           data.push({
             x: ds.data[0].omega,
-            y: ds.data[0].modZ.map(v => 20 * Math.log10(Math.max(v, 1e-12))),
+            y: isDb ? ds.data[0].modZ.map(v => 20 * Math.log10(Math.max(v, 1e-12))) : ds.data[0].modZ,
             mode: ds.data[0].mode ?? 'lines',
             name: key,
             line: getLine(ds.data[0].line, theme)
@@ -84,7 +85,8 @@ export const usePreviewAndInterpolations = (
           ds.areas?.filter(a => a.isVisible && a.ref === 'bodeMod')
             .forEach((a, idx) => {
               const x = ds.data[0].omega.slice(a.start, a.end + 1)
-              const y = ds.data[0].modZ.slice(a.start, a.end + 1).map(v => 20 * Math.log10(Math.max(v, 1e-12)))
+              const ySlice = ds.data[0].modZ.slice(a.start, a.end + 1)
+              const y = isDb ? ySlice.map(v => 20 * Math.log10(Math.max(v, 1e-12))) : ySlice
               data.push({ 
                 x, y, mode: 'lines', fill: 'tozeroy',  line: { color: a.color || null },
                 name: a.label || `Área ${idx+1}`, showlegend: false 
@@ -95,7 +97,7 @@ export const usePreviewAndInterpolations = (
           if (previewData?.bodeMod?.x && previewData?.bodeMod?.y) {
             data.push({
               x: previewData.bodeMod.x,
-              y: previewData.bodeMod.y,
+              y: isDb ? previewData.bodeMod.y.map(v => 20 * Math.log10(Math.max(v, 1e-12))) : previewData.bodeMod.y,
               mode: 'lines',
               name: 'Preview',
               line: { color: theme.palette.secondary.main, dash: 'dot', width: 2 }
@@ -382,7 +384,7 @@ export const usePreviewAndInterpolations = (
             automargin: true
           }
           layout.yaxis = {
-            title: { text: currentName === 'bodeMod' ? '|Z| (dB)' : 'Phase (°)', standoff: 15 },
+            title: { text: currentName === 'bodeMod' ? (isDb ? '|Z| (dB)' : '|Z| (Ohm)') : 'Phase (°)', standoff: 15 },
             mirror: true,
             linecolor: theme.palette.text.primary,
             gridcolor: theme.palette.divider,
@@ -439,5 +441,5 @@ export const usePreviewAndInterpolations = (
         }, {})
       }
     })
-  }, [chartRefs, datasets, previewData, theme, prevLengthsRef, isPolar])
+  }, [chartRefs, datasets, previewData, theme, prevLengthsRef, isPolar, isDb])
 }
