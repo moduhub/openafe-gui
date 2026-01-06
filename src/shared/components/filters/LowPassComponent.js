@@ -29,33 +29,39 @@ export const LowPass = ({ setPreviewFilter, dataType = "cvw" }) => {
   const visible = useMemo(() => {
     const ds = datasets.find(d => d.visible)?.data?.[0]
     if (!ds) return { x: [], y: [] }
-    switch (dataType) {
-      case "cvw":
-        return { x: ds.x || [], y: ds.y || [] }
-      case "bodeMod":
-        return { x: ds.omega || [], y: (ds.modZ || []).map(v => 20 * Math.log10(Math.max(v, 1e-12))) }
-      case "bodeAng":
-        return { x: ds.omega || [], y: ds.angZ || [] }
-      case "nyquist":
-        return {
-          x: ds.omega || [],
-          y: ds.realZ && ds.imagZ ? ds.realZ.map((_, i) => ({ re: ds.realZ[i], im: ds.imagZ[i] })) : []
-        }
-      default:
-        return { x: [], y: [] }
-    }
+    if (dataType === "cvw") return { x: ds.x || [], y: ds.y || [] }
+    if (dataType === "bodeMod") return { x: ds.omega || [], y: (ds.modZ || []).map(v => 20 * Math.log10(Math.max(v, 1e-12))) }
+    if (dataType === "bodeAng") return { x: ds.omega || [], y: ds.angZ || [] }
+    if (dataType === "nyquist") return { x: ds.realZ || [], y: ds.imagZ || [] }
+    return { x: [], y: [] }
   }, [datasets, dataType])
 
-  function rcFilter(data, xAxis, cutoff) {
-    if (!data || data.length < 2) return []
-    let filtered = [data[0]]
-    for (let i = 1; i < data.length; i++) {
-      const dt = xAxis[i] - xAxis[i - 1]
-      const RC = 1 / (2 * Math.PI * cutoff)
-      const alpha = dt / (RC + dt)
-      filtered[i] = filtered[i - 1] + alpha * (data[i] - filtered[i - 1])
+  function estimateFs(x) {
+    if (!x || x.length < 2) return 1
+    let diffs = []
+    for (let i = 1; i < x.length; i++) {
+      diffs.push(Math.abs(x[i] - x[i - 1]))
     }
-    return filtered
+    const meanStep = diffs.reduce((a, b) => a + b, 0) / diffs.length
+    return meanStep > 0 ? 1 / meanStep : 1
+  }
+
+  function rcFilter(y, xAxis, cutoff, fs = 1, order = 1) {
+    if (!y || y.length < 2) return []
+    let resultY = [...y]
+    const RC = 1 / (2 * Math.PI * cutoff)
+    const dt = fs > 0 ? 1 / fs : 1
+    const alpha = dt / (RC + dt)
+
+    for (let k = 0; k < Math.max(1, order); k++) {
+      let filtered = []
+      filtered[0] = resultY[0]
+      for (let i = 1; i < resultY.length; i++) {
+        filtered[i] = filtered[i - 1] + alpha * (resultY[i] - filtered[i - 1])
+      }
+      resultY = filtered
+    }
+    return resultY
   }
 
   useEffect(() => {
@@ -64,53 +70,41 @@ export const LowPass = ({ setPreviewFilter, dataType = "cvw" }) => {
       return
     }
 
-    let xOut = [...visible.x]
-    let yOut = []
-
+    let fs = 1
     if (dataType === "cvw") {
       const ds = datasets.find(d => d.visible)
       const { scanRate, step } = ds?.params || {}
-      if (!scanRate || !step) return
-      const fs = scanRate / step
-      const xTime = visible.x.map((_, i) => i / fs)
-      
-      yOut = [...visible.y]
-      for (let n = 0; n < order; n++) {
-        yOut = rcFilter(yOut, xTime, cutoffFrequency)
-      }
-
+      if (scanRate && step) fs = scanRate / step
     } else if (dataType === "bodeMod" || dataType === "bodeAng") {
-      
-      yOut = [...visible.y]
-      for (let n = 0; n < order; n++) {
-        yOut = rcFilter(yOut, visible.x, cutoffFrequency)
-      }
-
+      fs = estimateFs(visible.x)
     } else if (dataType === "nyquist") {
-      
-      const reArr = visible.y.map(pt => pt.re)
-      const imArr = visible.y.map(pt => pt.im)
-      let reFilt = [...reArr]
-      let imFilt = [...imArr]
-      for (let n = 0; n < order; n++) {
-        reFilt = rcFilter(reFilt, visible.x, cutoffFrequency)
-        imFilt = rcFilter(imFilt, visible.x, cutoffFrequency)
-      }
-      xOut = reFilt
-      yOut = imFilt
+      const ds = datasets.find(d => d.visible)?.data?.[0]
+      if (ds?.omega?.length > 1) fs = estimateFs(ds.omega)
+      else fs = 1
     }
 
-    setPreviewFilter({ x: xOut, y: yOut })
+    let resultY
+    if (dataType === "nyquist") {
+      const realFiltered = rcFilter(visible.x, visible.x, cutoffFrequency, fs, order)
+      const imagFiltered = rcFilter(visible.y, visible.y, cutoffFrequency, fs, order)
+      setPreviewFilter({ x: realFiltered, y: imagFiltered })
+    } else {
+      resultY = rcFilter(visible.y, visible.x, cutoffFrequency, fs, order)
+      setPreviewFilter({ x: [...visible.x], y: resultY })
+    }
   }, [cutoffFrequency, order, visible, setPreviewFilter, datasets, dataType])
 
-  const handleCutoffChange = (_evt, newValue) => {
-    const val = Array.isArray(newValue) ? newValue[0] : newValue
-    setCutoffFrequency(val)
-  }
   const handleOrderChange = (_evt, newValue) => {
     const val = Array.isArray(newValue) ? newValue[0] : newValue
     setOrder(Math.max(1, val))
   }
+
+  const handleSliderChange = (_evt, newValue) => {
+    const value = Array.isArray(newValue) ? newValue[0] : newValue
+    setCutoffFrequency(value)
+  }
+
+  const isEIS = dataType !== 'cvw'
 
   return (
     <Box>
@@ -121,37 +115,49 @@ export const LowPass = ({ setPreviewFilter, dataType = "cvw" }) => {
           </Typography>
 
           {/* Cutoff Frequency Slider */}
-          <Box>
+          <Box width='98%'>
             <Typography variant="body2">Cutoff Frequency (Hz):</Typography>
             <Slider
               value={cutoffFrequency}
-              onChange={handleCutoffChange}
-              min={dataType === 'cvw' ? 1 : 0.1}
-              max={dataType === 'cvw' ? 100 : (visible.x.length ? Math.max(...visible.x) : 100)}
-              step={dataType === 'cvw' ? 1 : 0.1}
+              onChange={handleSliderChange}
+              min={isEIS ? 0.1 : 1}
+              max={isEIS ? 10000 : 100}
+              step={isEIS ? 0.1 : 1}
               valueLabelDisplay="auto"
             />
-            <TextField
-              label="Cutoff"
-              type="number"
-              value={cutoffFrequency}
-              onChange={(e) => setCutoffFrequency(parseFloat(e.target.value) || 0.1)}
-              InputProps={{ endAdornment: <InputAdornment position="end">Hz</InputAdornment> }}
-              size="small"
-              fullWidth
-            />
           </Box>
+          <TextField
+            label="Cutoff Frequency"
+            type="number"
+            value={cutoffFrequency}
+            onChange={(e) => {
+              const value = Math.max(isEIS ? 0.1 : 1, Number(e.target.value))
+              setCutoffFrequency(value)
+            }}
+            InputProps={{
+              endAdornment: <InputAdornment position="end">Hz</InputAdornment>,
+              inputProps: { min: isEIS ? 0.1 : 1 }
+            }}
+            size="small"
+            fullWidth
+          />
 
           {/* Order Slider */}
           <Box>
-            <Typography variant="body2">Ordem do filtro (n):</Typography>
+            <Typography variant="body2">
+              Filter order:
+            </Typography>
             <Slider
               value={order}
               onChange={handleOrderChange}
               min={1}
               max={10}
               step={1}
-              marks={[{ value: 1, label: '1' }, { value: 5, label: '5' }, { value: 10, label: '10' }]}
+              marks={[
+                { value: 1, label: '1' },
+                { value: 5, label: '5' },
+                { value: 10, label: '10' },
+              ]}
               valueLabelDisplay="auto"
             />
           </Box>
