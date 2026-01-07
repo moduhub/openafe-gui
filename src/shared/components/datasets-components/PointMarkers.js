@@ -142,7 +142,37 @@ export const PointMarkers = ({ points, datasetIndex }) => {
                   startIcon={<DeleteIcon />}
                 ></Button>
               </Box>
-              <Typography variant='caption'>Point: [{point.x}; {point.y}]</Typography>
+              <Typography variant='caption'>
+                Point: [{
+                  (() => {
+                    const ds = datasets[datasetIndex]
+                    if (point.index !== undefined && ds?.data?.[0]) {
+                      const d0 = ds.data[0]
+                      if (ds.type === 'EIS') {
+                        if (point.ref === 'bodeMod') return d0.omega?.[point.index]
+                        if (point.ref === 'bodeAng') return d0.omega?.[point.index]
+                        if (point.ref === 'nyquist') return d0.realZ?.[point.index]
+                      }
+                      return d0.x?.[point.index] ?? point.x
+                    }
+                    return point.x
+                  })()
+                }; {
+                  (() => {
+                    const ds = datasets[datasetIndex]
+                    if (point.index !== undefined && ds?.data?.[0]) {
+                      const d0 = ds.data[0]
+                      if (ds.type === 'EIS') {
+                        if (point.ref === 'bodeMod') return d0.modZ?.[point.index]
+                        if (point.ref === 'bodeAng') return d0.angZ?.[point.index]
+                        if (point.ref === 'nyquist') return d0.imagZ?.[point.index]
+                      }
+                      return d0.y?.[point.index] ?? point.y
+                    }
+                    return point.y
+                  })()
+                }]
+              </Typography>
             </Box>
           ))}
         </Stack>

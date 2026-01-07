@@ -47,36 +47,42 @@ export const AddMarkDialog = ({ open, onClose, point }) => {
   const [color, setColor] = useState('#000000')
   const [size, setSize] = useState(12)
 
-  const isVoltammetry = (point.type === "CVW", point.type === "DPV", point.type === "SWV")
+  const isVoltammetry = (point.type === "CVW" || point.type === "DPV" || point.type === "SWV")
   const isEIS = (point.type === "EIS")
 
-  //console.log(point)
   let posPoint = []
-  if(point && point.dataset !== undefined && point.index !== undefined && datasets?.[point.dataset]?.data?.[0]){
+  if (point && point.dataset !== undefined && point.index !== undefined && datasets?.[point.dataset]?.data?.[0]) {
 
-    if(isVoltammetry){
-      posPoint = { 
-        x : datasets[point.dataset].data[0].x[point.index], 
-        y : datasets[point.dataset].data[0].y[point.index] 
-      }
-    }
-    else if(isEIS){
-      if(point.ref === "bodeMod"){
+    if (point.x !== undefined && point.y !== undefined) {
+      posPoint = { x: point.x, y: point.y }
+    } else if (point.theta !== undefined && point.r !== undefined) {
+      // Polar selection: keep theta/r as stored values for dialogs that
+      // expect them; fall back to dataset values where necessary
+      posPoint = { theta: point.theta, r: point.r }
+    } else {
+      // Fallback: compute from raw dataset arrays (used when point object
+      // doesn't include x/y, e.g., some programmatic selections)
+      if (isVoltammetry) {
         posPoint = {
-          x : datasets[point.dataset].data[0].omega[point.index],
-          y : 20 * Math.log10(datasets[point.dataset].data[0].modZ[point.index])
+          x: datasets[point.dataset].data[0].x[point.index],
+          y: datasets[point.dataset].data[0].y[point.index],
         }
-      }
-      else if(point.ref === "bodeAng"){
-        posPoint = {
-          x : datasets[point.dataset].data[0].omega[point.index],
-          y : datasets[point.dataset].data[0].angZ[point.index]
-        }
-      }
-      else if(point.ref === "nyquist"){
-        posPoint = {
-          x : datasets[point.dataset].data[0].realZ[point.index],
-          y : datasets[point.dataset].data[0].imagZ[point.index]
+      } else if (isEIS) {
+        if (point.ref === 'bodeMod') {
+          posPoint = {
+            x: datasets[point.dataset].data[0].omega[point.index],
+            y: datasets[point.dataset].data[0].modZ[point.index],
+          }
+        } else if (point.ref === 'bodeAng') {
+          posPoint = {
+            x: datasets[point.dataset].data[0].omega[point.index],
+            y: datasets[point.dataset].data[0].angZ[point.index],
+          }
+        } else if (point.ref === 'nyquist') {
+          posPoint = {
+            x: datasets[point.dataset].data[0].realZ[point.index],
+            y: datasets[point.dataset].data[0].imagZ[point.index],
+          }
         }
       }
     }
@@ -91,7 +97,9 @@ export const AddMarkDialog = ({ open, onClose, point }) => {
       color, 
       size,
       isVisible: true,
-      ref: point.ref
+      ref: point.ref,
+      index: point.index,
+      dataset: point.dataset
     }
 
     datasets[datasetSelected]?.addPointMarker(newMarker)

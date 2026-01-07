@@ -76,10 +76,16 @@ export const usePreviewAndInterpolations = (
 
           // markers
           ds.markers?.filter(m => m.isVisible && m.ref === 'bodeMod')
-            .forEach(m => data.push({
-              x: [m.x], y: [m.y], mode: 'markers', showlegend: false,
-              marker: { color: m.color, symbol: m.symbol, size: m.size }, name: m.label
-            }))
+            .forEach(m => {
+              const idx = m.index
+              const xVal = idx !== undefined ? ds.data[0]?.omega?.[idx] : m.x
+              const rawY = idx !== undefined ? ds.data[0]?.modZ?.[idx] : m.y
+              const yVal = isDb && rawY !== undefined ? 20 * Math.log10(Math.max(rawY, 1e-12)) : rawY
+              data.push({
+                x: [xVal], y: [yVal], mode: 'markers', showlegend: false,
+                marker: { color: m.color, symbol: m.symbol, size: m.size }, name: m.label
+              })
+            })
 
           // Areas
           ds.areas?.filter(a => a.isVisible && a.ref === 'bodeMod')
@@ -126,10 +132,15 @@ export const usePreviewAndInterpolations = (
 
           // Markers
           ds.markers?.filter(m => m.isVisible && m.ref === 'bodeAng')
-            .forEach(m => data.push({
-              x: [m.x], y: [m.y], mode: 'markers', showlegend: false,
-              marker: { color: m.color, symbol: m.symbol, size: m.size }, name: m.label
-            }))
+            .forEach(m => {
+              const idx = m.index
+              const xVal = idx !== undefined ? ds.data[0]?.omega?.[idx] : m.x
+              const yVal = idx !== undefined ? ds.data[0]?.angZ?.[idx] : m.y
+              data.push({
+                x: [xVal], y: [yVal], mode: 'markers', showlegend: false,
+                marker: { color: m.color, symbol: m.symbol, size: m.size }, name: m.label
+              })
+            })
           
           // Areas
           ds.areas?.filter(a => a.isVisible && a.ref === 'bodeAng')
@@ -211,17 +222,22 @@ export const usePreviewAndInterpolations = (
           // Markers
           ds.markers?.filter(m => m.isVisible && m.ref === 'nyquist')
             .forEach(m => {
+              const idx = m.index
+              const real = idx !== undefined ? ds.data[0]?.realZ?.[idx] : m.x
+              const imag = idx !== undefined ? ds.data[0]?.imagZ?.[idx] : m.y
               if (isPolar) {
-                const r = Math.sqrt(m.x * m.x + m.y * m.y)
-                const theta = Math.atan2(m.y, m.x) * 180 / Math.PI
-                data.push({
-                  r: [r], theta: [theta], mode: 'markers', showlegend: false,
-                  marker: { color: m.color, symbol: m.symbol, size: m.size }, name: m.label,
-                  type: 'scatterpolar'
-                })
+                if (real !== undefined && imag !== undefined) {
+                  const r = Math.sqrt(real * real + imag * imag)
+                  const theta = Math.atan2(imag, real) * 180 / Math.PI
+                  data.push({
+                    r: [r], theta: [theta], mode: 'markers', showlegend: false,
+                    marker: { color: m.color, symbol: m.symbol, size: m.size }, name: m.label,
+                    type: 'scatterpolar'
+                  })
+                }
               } else {
                 data.push({
-                  x: [m.x], y: [m.y], mode: 'markers', showlegend: false,
+                  x: [real], y: [imag], mode: 'markers', showlegend: false,
                   marker: { color: m.color, symbol: m.symbol, size: m.size }, name: m.label
                 })
               }
@@ -306,11 +322,15 @@ export const usePreviewAndInterpolations = (
 
           // Markers
           ds.markers?.filter(m => m.isVisible && m.ref === 'cvChart')
-            .forEach(m => data.push({
-              x: [m.x], y: [m.y], mode: 'markers', showlegend: false,
-              marker: { color: m.color, symbol: m.symbol, size: m.size }, name: m.label
-            }))
-
+            .forEach(m => {
+              const idx = m.index
+              const xVal = idx !== undefined ? ds.data[0]?.x?.[idx] : m.x
+              const yVal = idx !== undefined ? ds.data[0]?.y?.[idx] : m.y
+              data.push({
+                x: [xVal], y: [yVal], mode: 'markers', showlegend: false,
+                marker: { color: m.color, symbol: m.symbol, size: m.size }, name: m.label
+              })
+            })
           
           // Areas
           ds.areas?.filter(a => a.isVisible)
