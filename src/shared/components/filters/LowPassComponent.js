@@ -21,8 +21,12 @@ import { useDatasetsContext } from '../../contexts'
  */
 export const LowPass = ({ setPreviewFilter, dataType = "cvw" }) => {
   const { datasets } = useDatasetsContext()
-  const [cutoffFrequency, setCutoffFrequency] = useState(50)
-  const [order, setOrder] = useState(1)
+  const [passbandFrequency, setPassbandFrequency] = useState(50) // fp (Hz)
+  const [filterType, setFilterType] = useState('Butterworth')
+  const [gain, setGain] = useState(1)
+  const [allowablePassbandRipple, setAllowablePassbandRipple] = useState(0.5) // Ap (dB)
+  const [stopbandFrequency, setStopbandFrequency] = useState(100) // fs (Hz)
+  const [stopbandAttenuation, setStopbandAttenuation] = useState(20) // As (dB)
 
   const visible = useMemo(() => {
     const ds = datasets.find(d => d.visible)?.data?.[0]
@@ -108,6 +112,25 @@ export const LowPass = ({ setPreviewFilter, dataType = "cvw" }) => {
     <Box>
       <Box sx={{ mt: 1, p: 2, borderRadius: 1, backgroundColor: 'white', height: '100%' }}>
         <Stack spacing={3}>
+          {/* Filter Type Selector */}
+          <Box>
+            <FormControl fullWidth size="small">
+              <InputLabel id="lp-filter-type-label">Type of filter</InputLabel>
+              <Select
+                labelId="lp-filter-type-label"
+                value={filterType}
+                label="Type of filter"
+                onChange={(e) => setFilterType(e.target.value)}
+              >
+                <MenuItem value="Butterworth">Butterworth</MenuItem>
+                <MenuItem value="Chebyshev I">Chebyshev (Type I)</MenuItem>
+                <MenuItem value="Chebyshev II">Chebyshev (Type II)</MenuItem>
+                <MenuItem value="Bessel">Bessel</MenuItem>
+                <MenuItem value="Gaussian">Gaussian</MenuItem>
+                <MenuItem value="Cauer">Cauer</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
 
           {/* Gain */}
           <Box>
