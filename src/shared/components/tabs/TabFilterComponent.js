@@ -36,7 +36,7 @@ export const TabFilter = ({
   const [selectedFilterBodeAng, setSelectedFilterBodeAng] = useState('')
   const [selectedFilterNyquist, setSelectedFilterNyquist] = useState('')
 
-  const [previewCVW, setPreviewCVW] = useState({ x: [], y: [] })
+  const [previewVoltammetry, setpreviewVoltammetry] = useState({ x: [], y: [] })
   const [previewBodeMod, setPreviewBodeMod] = useState({ x: [], y: [] })
   const [previewBodeAng, setPreviewBodeAng] = useState({ x: [], y: [] })
   const [previewNyquist, setPreviewNyquist] = useState({ x: [], y: [] })
@@ -57,7 +57,7 @@ export const TabFilter = ({
 
   useEffect(() => {
     if (type === 'CVW' || type === 'DPV' || type === 'SWV') {
-      setPreviewData(previewCVW)
+      setPreviewData(previewVoltammetry)
     } else if (type === 'EIS') {
       setPreviewData({
         bodeMod: previewBodeMod,
@@ -66,7 +66,7 @@ export const TabFilter = ({
       })
     }
     // eslint-disable-next-line
-  }, [previewCVW, previewBodeMod, previewBodeAng, previewNyquist, type])
+  }, [previewVoltammetry, previewBodeMod, previewBodeAng, previewNyquist, type])
 
 
   const filtersConfig = [
@@ -125,10 +125,10 @@ export const TabFilter = ({
     handleNewDataset(
       `${selectedFilterCVW} de ${datasetFiltered.name}`,
       datasetFiltered.params,
-      previewCVW,
+      previewVoltammetry,
       datasetFiltered.type
     )
-    setPreviewCVW({ x: [], y: [] })
+    setpreviewVoltammetry({ x: [], y: [] })
   }
 
   const handleSaveFilterEIS = () => {
@@ -140,12 +140,12 @@ export const TabFilter = ({
       previewBodeAng.x.length !== n ||
       previewNyquist.x.length !== n
     ) {
-      alert('Todos os filtros EIS devem estar aplicados e com o mesmo tamanho!')
+      alert('All EIS filters must be applied and of the same size!')
       return
     }
 
     const omega = [...previewBodeMod.x]
-    const modZ = [...previewBodeMod.y].map(v => Math.pow(10, v / 20))
+    const modZ = [...previewBodeMod.y]
     const angZ = [...previewBodeAng.y]
     const realZ = [...previewNyquist.x]
     const imagZ = [...previewNyquist.y]
@@ -206,7 +206,7 @@ export const TabFilter = ({
             </Box>
 
             {(type === 'CVW' || type === 'DPV' || type === 'SWV') && (
-              renderFilterBlock("CVW", selectedFilterCVW, setSelectedFilterCVW, previewCVW, setPreviewCVW, "filtro-cvw-label", "cvw")
+              renderFilterBlock(type, selectedFilterCVW, setSelectedFilterCVW, previewVoltammetry, setpreviewVoltammetry, "filtro-cvw-label", "cvw")
             )}
 
             {type === 'EIS' && (

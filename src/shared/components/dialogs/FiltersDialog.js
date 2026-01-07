@@ -31,29 +31,27 @@ export const FiltersDialog = ({ open, onClose }) => {
     setType(datasets[datasetSelected]?.type || 'CVW')
   }, [datasetSelected, datasets])
 
-  // Estados de filtros e previews (igual ao TabFilterComponent)
   const [selectedFilterCVW, setSelectedFilterCVW] = useState('')
   const [selectedFilterBodeMod, setSelectedFilterBodeMod] = useState('')
   const [selectedFilterBodeAng, setSelectedFilterBodeAng] = useState('')
   const [selectedFilterNyquist, setSelectedFilterNyquist] = useState('')
 
-  const [previewCVW, setPreviewCVW] = useState({ x: [], y: [] })
+  const [previewVoltammetry, setpreviewVoltammetry] = useState({ x: [], y: [] })
   const [previewBodeMod, setPreviewBodeMod] = useState({ x: [], y: [] })
   const [previewBodeAng, setPreviewBodeAng] = useState({ x: [], y: [] })
   const [previewNyquist, setPreviewNyquist] = useState({ x: [], y: [] })
 
   const chartAreaRef = useRef(null)
 
-  // Atualiza previewData conforme o tipo
   const [previewData, setPreviewData] = useState({ x: [], y: [] })
   useEffect(() => {
-    if (type === 'CVW' || type === 'DPV' || type === 'SWV') setPreviewData(previewCVW)
+    if (type === 'CVW' || type === 'DPV' || type === 'SWV') setPreviewData(previewVoltammetry)
     else if (type === 'EIS') setPreviewData({
       bodeMod: previewBodeMod,
       bodeAng: previewBodeAng,
       nyquist: previewNyquist,
     })
-  }, [type, previewCVW, previewBodeMod, previewBodeAng, previewNyquist])
+  }, [type, previewVoltammetry, previewBodeMod, previewBodeAng, previewNyquist])
 
   const filtersConfig = [
     { label: "MA", tooltip: "Moving Average", component: MovingAverage },
@@ -75,7 +73,7 @@ export const FiltersDialog = ({ open, onClose }) => {
         value={selectedFilter}
         onChange={e => setSelectedFilter(e.target.value)}
         renderValue={value => {
-          if (!value) return <>Selecione um filtro</>
+          if (!value) return <>Select a filter</>
           const { tooltip } = filtersConfig.find(f => f.label === value) || {}
           return tooltip || ''
         }}
@@ -83,7 +81,7 @@ export const FiltersDialog = ({ open, onClose }) => {
         displayEmpty
       >
         <MenuItem value="" disabled>
-          Selecione um filtro
+          Select a filter
         </MenuItem>
         {filtersConfig.map((filter) => (
           <MenuItem key={filter.label} value={filter.label}>
@@ -102,7 +100,6 @@ export const FiltersDialog = ({ open, onClose }) => {
     </Box>
   )
 
-  // Salvar filtro (igual TabFilterComponent)
   const handleSaveFilter = () => {
     const datasetFiltered = datasets[datasetSelected]
     if (!datasetFiltered) return
@@ -111,10 +108,10 @@ export const FiltersDialog = ({ open, onClose }) => {
       handleNewDataset(
         `${selectedFilterCVW} de ${datasetFiltered.name}`,
         datasetFiltered.params,
-        previewCVW,
+        previewVoltammetry,
         datasetFiltered.type
       )
-      setPreviewCVW({ x: [], y: [] })
+      setpreviewVoltammetry({ x: [], y: [] })
     } else if (type === 'EIS') {
       const n = previewBodeMod.x.length
       if (
@@ -122,11 +119,11 @@ export const FiltersDialog = ({ open, onClose }) => {
         previewBodeAng.x.length !== n ||
         previewNyquist.x.length !== n
       ) {
-        alert('Todos os filtros EIS devem estar aplicados e com o mesmo tamanho!')
+        alert('All EIS filters must be applied and of the same size!')
         return
       }
       const omega = [...previewBodeMod.x]
-      const modZ = [...previewBodeMod.y].map(v => Math.pow(10, v / 20))
+      const modZ = [...previewBodeMod.y]
       const angZ = [...previewBodeAng.y]
       const realZ = [...previewNyquist.x]
       const imagZ = [...previewNyquist.y]
@@ -177,7 +174,7 @@ export const FiltersDialog = ({ open, onClose }) => {
           }}
           >
             {(type === 'CVW' || type === 'DPV' || type === 'SWV') && (
-              renderFilterBlock("CVW", selectedFilterCVW, setSelectedFilterCVW, previewCVW, setPreviewCVW, "filtro-cvw-label", "cvw")
+              renderFilterBlock(type, selectedFilterCVW, setSelectedFilterCVW, previewVoltammetry, setpreviewVoltammetry, "filtro-cvw-label", "cvw")
             )}
             {type === 'EIS' && (
               <>
