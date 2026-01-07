@@ -2,10 +2,8 @@ import { useEffect, useState, useMemo } from "react"
 import {
   Box,
   Stack,
-  Typography,
-  Slider,
   TextField,
-  InputAdornment
+  InputAdornment, Select, MenuItem, FormControl, InputLabel
 } from '@mui/material'
 
 import { useDatasetsContext } from '../../contexts'
@@ -110,55 +108,83 @@ export const LowPass = ({ setPreviewFilter, dataType = "cvw" }) => {
     <Box>
       <Box sx={{ mt: 1, p: 2, borderRadius: 1, backgroundColor: 'white', height: '100%' }}>
         <Stack spacing={3}>
-          <Typography variant="h6" sx={{ fontSize: '1.125rem' }}>
-            LowPass RC Filter
-          </Typography>
 
-          {/* Cutoff Frequency Slider */}
-          <Box width='98%'>
-            <Typography variant="body2">Cutoff Frequency (Hz):</Typography>
-            <Slider
-              value={cutoffFrequency}
-              onChange={handleSliderChange}
-              min={isEIS ? 0.1 : 1}
-              max={isEIS ? 10000 : 100}
-              step={isEIS ? 0.1 : 1}
-              valueLabelDisplay="auto"
+          {/* Gain */}
+          <Box>
+            <TextField
+              label="Gain"
+              type="number"
+              value={gain}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value)
+                setGain(isNaN(val) ? 1 : Math.max(0, val))
+              }}
+              size="small"
+              fullWidth
             />
           </Box>
-          <TextField
-            label="Cutoff Frequency"
-            type="number"
-            value={cutoffFrequency}
-            onChange={(e) => {
-              const value = Math.max(isEIS ? 0.1 : 1, Number(e.target.value))
-              setCutoffFrequency(value)
-            }}
-            InputProps={{
-              endAdornment: <InputAdornment position="end">Hz</InputAdornment>,
-              inputProps: { min: isEIS ? 0.1 : 1 }
-            }}
-            size="small"
-            fullWidth
-          />
 
-          {/* Order Slider */}
+          {/* Passband Frequency */}
           <Box>
-            <Typography variant="body2">
-              Filter order:
-            </Typography>
-            <Slider
-              value={order}
-              onChange={handleOrderChange}
-              min={1}
-              max={10}
-              step={1}
-              marks={[
-                { value: 1, label: '1' },
-                { value: 5, label: '5' },
-                { value: 10, label: '10' },
-              ]}
-              valueLabelDisplay="auto"
+            <TextField
+              label="Passband Frequency (fp)"
+              type="number"
+              value={passbandFrequency}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value)
+                setPassbandFrequency(isNaN(val) ? 0.1 : Math.max(0.1, val))
+              }}
+              InputProps={{ endAdornment: <InputAdornment position="end">Hz</InputAdornment> }}
+              size="small"
+              fullWidth
+            />
+          </Box>
+
+          {/* Allowable Passband Ripple */}
+          <Box>
+            <TextField
+              label="Allowable Passband Ripple (Ap)"
+              type="number"
+              value={allowablePassbandRipple}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value)
+                setAllowablePassbandRipple(isNaN(val) ? 0.5 : Math.max(0, val))
+              }}
+              InputProps={{ endAdornment: <InputAdornment position="end">dB</InputAdornment> }}
+              size="small"
+              fullWidth
+            />
+          </Box>
+
+          {/* Stopband Frequency */}
+          <Box>
+            <TextField
+              label="Stopband Frequency (fs)"
+              type="number"
+              value={stopbandFrequency}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value)
+                setStopbandFrequency(isNaN(val) ? 100 : Math.max(passbandFrequency + 1e-6, val))
+              }}
+              InputProps={{ endAdornment: <InputAdornment position="end">Hz</InputAdornment> }}
+              size="small"
+              fullWidth
+            />
+          </Box>
+
+          {/* Stopband Attenuation */}
+          <Box>
+            <TextField
+              label="Stopband Attenuation (As)"
+              type="number"
+              value={stopbandAttenuation}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value)
+                setStopbandAttenuation(isNaN(val) ? 40 : Math.max(0, val))
+              }}
+              InputProps={{ endAdornment: <InputAdornment position="end">dB</InputAdornment> }}
+              size="small"
+              fullWidth
             />
           </Box>
 
