@@ -28,7 +28,7 @@ export const MovingAverage = ({ setPreviewFilter, dataType = "cvw" }) => {
     const ds = datasets.find(d => d.visible)?.data?.[0]
     if (!ds) return { x: [], y: [] }
     if (dataType === "cvw") return { x: ds.x || [], y: ds.y || [] }
-    if (dataType === "bodeMod") return { x: ds.omega || [], y: (ds.modZ || []).map(v => 20 * Math.log10(Math.max(v, 1e-12))) }
+    if (dataType === "bodeMod") return { x: ds.omega || [], y: ds.modZ || [] }
     if (dataType === "bodeAng") return { x: ds.omega || [], y: ds.angZ || [] }
     if (dataType === "nyquist") return { x: ds.realZ || [], y: ds.imagZ || [] }
     return { x: [], y: [] }
