@@ -52,7 +52,7 @@ export const ChartComponent = ({
   onContextMenu
 }) => {
   const { theme } = useContext(ThemeContext)
-  const { datasets, handleSetDatasetSelected, experimentType } = useDatasetsContext()
+  const { datasets, handleSetDatasetSelected, handleSetIsDatasetSelected, experimentType } = useDatasetsContext()
 
   const bodeModRef = useRef(null)
   const bodeAngRef = useRef(null)
@@ -61,7 +61,7 @@ export const ChartComponent = ({
   const prevLengths = useRef({})
 
   const [isPolar, setIsPolar] = useState(false)
-  const [isDb, setIsDb] = useState(true)
+  const [isDb, setIsDb] = useState(false)
 
   const eisDatasets = datasets.filter(ds => ds.visible && ds.type === 'EIS')
 
@@ -149,11 +149,14 @@ export const ChartComponent = ({
     isDb
   )
 
-  useEffect(() => {
+  useEffect(() => {    
     if (selectedPoints.length) {
       handleSetDatasetSelected(selectedPoints[0].dataset)
+      handleSetIsDatasetSelected(true)
+    } else {
+      handleSetIsDatasetSelected(false)
     }
-  }, [selectedPoints, handleSetDatasetSelected])
+  }, [selectedPoints, handleSetDatasetSelected, handleSetIsDatasetSelected])
 
   const commonProps = {
     position: 'absolute',

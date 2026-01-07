@@ -26,9 +26,7 @@ export const useClickHandler = (
   isPolar
 ) => {
   const {
-    datasets,
-    handleSetDatasetSelected,
-    handleSetIsDatasetSelected
+    datasets
   } = useDatasetsContext()
 
   useEffect(() => {
@@ -64,7 +62,7 @@ export const useClickHandler = (
             if (index === -1) return
 
             const pointData = {
-              dataset: datasets.findIndex(ds => ds.name === datasetIndex.name), // índice real no array global
+              dataset: datasets.findIndex(ds => ds.name === datasetIndex.name),
               type: datasetIndex.type,
               color: pt.fullData.line?.color || theme.palette.secondary.main,
               index,
@@ -90,8 +88,7 @@ export const useClickHandler = (
               }
             }
 
-            handleSetDatasetSelected(pointData.dataset)
-            handleSetIsDatasetSelected(true)
+            // context updates moved to ChartComponent to avoid setState during render
 
             return newPoints
           })
@@ -110,7 +107,5 @@ export const useClickHandler = (
     chartRefsWithNames,
     setSelectedPoints,
     theme,
-    handleSetDatasetSelected,
-    handleSetIsDatasetSelected
   ])
 }

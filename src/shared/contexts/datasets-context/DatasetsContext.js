@@ -588,8 +588,6 @@ export const DataSetsProvider = ({ children }) => {
         // Data end
         else if(msg.startsWith('MSG,END')){
           handleSetIsReading(false)
-          if(isDatasetsMinimized) setIsDatasetsMinimized()
-          setpendingReset(true)
         }
       }
       
