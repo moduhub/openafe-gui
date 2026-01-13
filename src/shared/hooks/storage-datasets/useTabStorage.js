@@ -57,7 +57,7 @@ export const useTabStorage = (setTabIndex) => {
 
   const [datasetSelectorOpen, setDatasetSelectorOpen] = useState(false)
 
-  const datasetTypes = ['CVW', 'EIS']
+  const datasetTypes = ['CVW', 'DPV', 'SWV', 'EIS']
   const [filterType, setFilterType] = useState('ALL')
   const [showOnlyVisible, setShowOnlyVisible] = useState(false)
   const [showOnlyHidden, setShowOnlyHidden] = useState(false)
