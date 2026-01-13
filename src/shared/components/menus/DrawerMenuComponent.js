@@ -63,6 +63,7 @@ export const DrawerMenu = ({ children }) => {
               </List>
             </Box>
 
+            {/* [Removed in the latest versions]
             <Box>
               <List component="nav">
                 <ListItemButton onClick={() => navigate('/data-processing')}>
@@ -73,6 +74,7 @@ export const DrawerMenu = ({ children }) => {
                 </ListItemButton>
               </List>
             </Box>
+            */}
 
           </Box>
 
