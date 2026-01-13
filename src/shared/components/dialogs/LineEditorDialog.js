@@ -52,7 +52,7 @@ export const LineEditorDialog = ({ open, onClose, initialLine, onSave }) => {
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>Editar Linha</DialogTitle>
+      <DialogTitle>Edit Line</DialogTitle>
       <DialogContent>
         <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
           <FormControl fullWidth>
@@ -60,7 +60,7 @@ export const LineEditorDialog = ({ open, onClose, initialLine, onSave }) => {
             <Select
               labelId="line-style-label"
               value={style}
-              label="Estilo"
+              label="Style"
               onChange={e => setStyle(e.target.value)}
             >
               {LINE_STYLES.map(opt => (
@@ -75,7 +75,7 @@ export const LineEditorDialog = ({ open, onClose, initialLine, onSave }) => {
         <Box sx={{ mt: 2 }}>
           <TextField
             fullWidth
-            label="Espessura"
+            label="Thickness"
             type="number"
             inputProps={{ min: 0.5, step: 0.5 }}
             value={width}
