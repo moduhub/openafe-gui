@@ -70,9 +70,9 @@ export const MovingAverage = ({ setPreviewFilter, dataType = "cvw" }) => {
 
   return (
     <Box>
-      <Box sx={{ mt: 1, p: 2, borderRadius: 1, backgroundColor: 'white', height: '100%' }}>
+      <Box sx={{ mt: 1, p: 2, borderRadius: 1, backgroundColor: 'background.paper', color: 'text.primary', height: '100%' }}>
         <Stack spacing={2}>
-          <Typography variant="h6" sx={{ fontSize: '1.125rem' }}>
+          <Typography variant="h6" sx={{ fontSize: '1.125rem', color: 'text.primary' }}>
             MovingAverage Filter
           </Typography>
 

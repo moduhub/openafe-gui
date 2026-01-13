@@ -388,7 +388,7 @@ export const LowPass = ({ setPreviewFilter, dataType = "cvw" }) => {
 
   return (
     <Box>
-      <Box sx={{ mt: 1, p: 2, borderRadius: 1, backgroundColor: 'white', height: '100%' }}>
+      <Box sx={{ mt: 1, p: 2, borderRadius: 1, backgroundColor: 'background.paper', color: 'text.primary', height: '100%' }}>
         <Stack spacing={3}>
           {/* Filter Type Selector */}
           <Box>
@@ -399,6 +399,8 @@ export const LowPass = ({ setPreviewFilter, dataType = "cvw" }) => {
                 value={filterType}
                 label="Type of filter"
                 onChange={(e) => setFilterType(e.target.value)}
+                sx={{ color: 'text.primary', '& .MuiSelect-icon': { color: 'text.primary' } }}
+                MenuProps={{ PaperProps: { sx: { bgcolor: 'background.paper' } } }}
               >
                 <MenuItem value="Butterworth">Butterworth</MenuItem>
                 <MenuItem value="Chebyshev I">Chebyshev (Type I)</MenuItem>

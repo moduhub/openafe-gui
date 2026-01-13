@@ -407,7 +407,7 @@ export const BandStop = ({ setPreviewFilter, dataType = "cvw" }) => {
 
   return (
     <Box>
-      <Box sx={{ mt:1,p:2, borderRadius:1, backgroundColor:'white' }}>
+      <Box sx={{ mt:1, p:2, borderRadius:1, backgroundColor: 'background.paper', color: 'text.primary', height: '100%' }}>
         <Stack spacing={2}>
           <FormControl fullWidth size="small">
             <InputLabel id="bs-filter-type-label">Type of filter</InputLabel>
@@ -416,6 +416,8 @@ export const BandStop = ({ setPreviewFilter, dataType = "cvw" }) => {
               value={filterType}
               label="Type of filter"
               onChange={(e) => setFilterType(e.target.value)}
+              sx={{ color: 'text.primary', '& .MuiSelect-icon': { color: 'text.primary' } }}
+              MenuProps={{ PaperProps: { sx: { bgcolor: 'background.paper' } } }}
             >
               <MenuItem value="Butterworth">Butterworth</MenuItem>
               <MenuItem value="Chebyshev I">Chebyshev (Type I)</MenuItem>

@@ -81,8 +81,8 @@ export const TabFilter = ({
     title, selectedFilter, setSelectedFilter, 
     preview, setPreview, labelId, dataType
   ) => (
-    <Box sx={{ mt: 2, px: 2 }}>
-      <Typography variant="subtitle1">{title}</Typography>
+    <Box sx={{ mt: 2, px: 2, backgroundColor: 'background.paper', color: 'text.primary', borderRadius: 1, py: 1 }}>
+      <Typography variant="subtitle1" sx={{ color: 'text.primary' }}>{title}</Typography>
       <Select
         size="small"
         fullWidth
@@ -95,6 +95,8 @@ export const TabFilter = ({
         }}
         labelId={labelId}
         displayEmpty
+        sx={{ color: 'text.primary', '& .MuiSelect-icon': { color: 'text.primary' } }}
+        MenuProps={{ PaperProps: { sx: { bgcolor: 'background.paper' } } }}
       >
         <MenuItem value="" disabled>
           Select a filter

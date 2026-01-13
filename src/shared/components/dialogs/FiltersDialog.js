@@ -66,7 +66,7 @@ export const FiltersDialog = ({ open, onClose }) => {
     preview, setPreview, labelId, dataType
   ) => (
     <Box sx={{ mt: 2 }}>
-      <Typography variant="subtitle1">{title}</Typography>
+      <Typography variant="subtitle1" sx={{ color: 'text.primary' }}>{title}</Typography>
       <Select
         size="small"
         fullWidth
@@ -79,12 +79,18 @@ export const FiltersDialog = ({ open, onClose }) => {
         }}
         labelId={labelId}
         displayEmpty
+        sx={{
+          color: 'text.primary',
+          '& .MuiSelect-icon': { color: 'text.primary' },
+          backgroundColor: 'transparent'
+        }}
+        MenuProps={{ PaperProps: { sx: { bgcolor: 'background.paper' } } }}
       >
-        <MenuItem value="" disabled>
+        <MenuItem value="" disabled sx={{ color: 'text.primary' }}>
           Select a filter
         </MenuItem>
         {filtersConfig.map((filter) => (
-          <MenuItem key={filter.label} value={filter.label}>
+          <MenuItem key={filter.label} value={filter.label} sx={{ color: 'text.primary' }}>
             {filter.label} - {filter.tooltip}
           </MenuItem>
         ))}
@@ -162,6 +168,9 @@ export const FiltersDialog = ({ open, onClose }) => {
         <Box sx={{ 
           width: 300, height: '100%',
           display: 'flex', flexDirection: 'column',
+          backgroundColor: 'background.paper',   // changed: use theme-aware background
+          color: 'text.primary',
+          p: 2
         }}>
 
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
