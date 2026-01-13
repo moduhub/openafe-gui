@@ -13,6 +13,7 @@ import {
   FormControl,
   Divider,
 } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
 
 import { useAppThemeContext, useSettingsContext } from '../../shared/contexts'
 
@@ -37,6 +38,7 @@ import { useAppThemeContext, useSettingsContext } from '../../shared/contexts'
  */
 export const Settings = () => {
   const { toggleTheme, themeName } = useAppThemeContext()
+  const theme = useTheme()
   const {
     priorityMode, handleSetPriorityMode,
     autoConnect, handleSetAutoConnect,
@@ -61,29 +63,41 @@ export const Settings = () => {
         </Tabs>
         {tabIndex === 0 && (
           <Box padding={4}>
-            <Typography variant="h5" gutterBottom>
+            <Typography variant="h5" gutterBottom sx={{ color: 'text.primary' }}>
               General Settings
             </Typography>
             <Box marginBottom={2} marginTop={2}><Divider/></Box>
             <FormControlLabel margin="dense"
+              sx={{ color: 'text.primary' }}
               control={<Switch checked={priorityMode} onChange={()=>handleSetPriorityMode(!priorityMode)} />}
               label="Priority mode(focus on reading current data)"
             /> <br/>
             <FormControlLabel margin="dense"
+              sx={{ color: 'text.primary' }}
               control={<Switch checked={themeName == 'dark'} onChange={toggleTheme} />}
-              label="Dark theme (unstable)"
+              label="Dark theme"
             /> <br/>
             <FormControlLabel margin="dense"
+              sx={{ color: 'text.primary' }}
               control={<Switch checked={autoConnect} onChange={(e) => handleSetAutoConnect(e.target.checked)} />}
               label="Automatic connection with Arduino (not working)"
             />
             <FormControl fullWidth margin="dense" size='small'>
-              <Typography variant="h7">
+              <Typography variant="subtitle2" sx={{ color: 'text.primary' }}>
                 Unit System:
               </Typography>
-              <Select value={unitSystem} onChange={(e) => handleSetUnitSystem(e.target.value)}>
+              <Select
+                value={unitSystem}
+                onChange={(e) => handleSetUnitSystem(e.target.value)}
+                sx={{
+                  color: 'text.primary',
+                  '& .MuiSelect-icon': { color: 'text.primary' },
+                  backgroundColor: 'transparent'
+                }}
+                MenuProps={{ PaperProps: { sx: { bgcolor: 'background.paper' } } }}
+              >
                 {unitOptions.map((option) => (
-                  <MenuItem key={option} value={option}>{option}</MenuItem>
+                  <MenuItem key={option} value={option} sx={{ color: 'text.primary' }}>{option}</MenuItem>
                 ))}
               </Select>
             </FormControl >
@@ -91,11 +105,11 @@ export const Settings = () => {
         )}
         {tabIndex === 1 && (
           <Box padding={4}>
-            <Typography variant="h5" gutterBottom>
+            <Typography variant="h5" gutterBottom sx={{ color: 'text.primary' }}>
               Data Management
             </Typography>
             <Box marginBottom={2} marginTop={2}><Divider/></Box>
-            <Typography variant="h7">
+            <Typography variant="subtitle2" sx={{ color: 'text.primary' }}>
               Default name for new datasets:
             </Typography>
             <TextField
@@ -104,8 +118,14 @@ export const Settings = () => {
               fullWidth
               margin="dense"
               size='small'
+              sx={{
+                color: 'text.primary',
+                '& .MuiInputBase-input': { color: 'text.primary' },
+                '& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
+                backgroundColor: 'transparent'
+              }}
             />
-            <Typography variant="h7">
+            <Typography variant="subtitle2" sx={{ color: 'text.primary' }}>
               Maximum number of datasets stored in cache:
             </Typography>
             <TextField
@@ -115,14 +135,29 @@ export const Settings = () => {
               fullWidth
               margin="dense"
               size='small'
+              sx={{
+                color: 'text.primary',
+                '& .MuiInputBase-input': { color: 'text.primary' },
+                '& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
+                backgroundColor: 'transparent'
+              }}
             />
-            <Typography variant="h7">
+            <Typography variant="subtitle2" sx={{ color: 'text.primary' }}>
               Cache deletion order:
             </Typography>
             <FormControl fullWidth margin="dense" size='small'>
-              <Select value={deleteCache} onChange={(e) => handleSetDeleteCache(e.target.value)}>
+              <Select
+                value={deleteCache}
+                onChange={(e) => handleSetDeleteCache(e.target.value)}
+                sx={{
+                  color: 'text.primary',
+                  '& .MuiSelect-icon': { color: 'text.primary' },
+                  backgroundColor: 'transparent'
+                }}
+                MenuProps={{ PaperProps: { sx: { bgcolor: 'background.paper' } } }}
+              >
                 {deleteCacheOptions.map((option) => (
-                  <MenuItem key={option} value={option}>{option}</MenuItem>
+                  <MenuItem key={option} value={option} sx={{ color: 'text.primary' }}>{option}</MenuItem>
                 ))}
               </Select>
             </FormControl>
