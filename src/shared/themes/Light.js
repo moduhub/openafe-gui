@@ -23,6 +23,28 @@ export const LightTheme = createTheme({
     background:{
       paper:"#fff",
       default:"#f7f6f3"
+    },
+    text: {
+      primary: '#000',                 // garante texto visível no modo claro
+      secondary: 'rgba(0,0,0,0.7)'
+    },
+    divider: 'rgba(0,0,0,0.12)'
+  },
+  components: {
+    MuiOutlinedInput: {
+      styleOverrides: {
+        input: {
+          color: '#000'
+        },
+        root: {
+          '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(0,0,0,0.23)' }
+        }
+      }
+    },
+    MuiInputLabel: {
+      styleOverrides: {
+        root: { color: 'rgba(0,0,0,0.6)' }
+      }
     }
   }
 })

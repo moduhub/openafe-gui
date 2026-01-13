@@ -21,11 +21,43 @@ export const DarkTheme = createTheme({
     background: {
       paper: '#303134',
       default: '#202124',
-    }
+    },
+    text: {
+      primary: '#ffffff',              // garante texto branco em inputs/selects
+      secondary: 'rgba(255,255,255,0.7)'
+    },
+    divider: 'rgba(255,255,255,0.12)'
   },
   typography: {
     allVariants: {
       color: 'white',
+    }
+  },
+  components: {
+    MuiOutlinedInput: {
+      styleOverrides: {
+        input: {
+          color: '#fff'
+        },
+        root: {
+          '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.23)' }
+        }
+      }
+    },
+    MuiInputLabel: {
+      styleOverrides: {
+        root: { color: 'rgba(255,255,255,0.7)' }
+      }
+    },
+    MuiSelect: {
+      styleOverrides: {
+        select: {
+          color: '#fff'
+        },
+        icon: {
+          color: '#fff'
+        }
+      }
     }
   }
 });
