@@ -6,7 +6,6 @@ import {
   useDashboardContext
 } from '..'
 
-import { calculateChecksum } from '../../math-functions'
 import { FinishReading } from '../../../arduino'
 
 const DatasetsContext = createContext({})
@@ -573,9 +572,17 @@ export const DataSetsProvider = ({ children }) => {
           if(isArduinoMinimized) setIsArduinoMinimized()
         } 
 
+        // Calibration Voltammetry
+        else if (msg.startsWith('MSG,VCS')) { 
+          handleSetIsReading(true)
+          setSnackbar({ open: true, message: 'Calibrating...', severity: 'info' })
+        }
+        else if (msg.startsWith('MSG,VCE')) { 
+          setSnackbar({ open: true, message: 'Successfully calibrated', severity: 'success' })
+        }
+
         // Voltammetry start
         else if (msg.startsWith('MSG,CVS')) { 
-          handleSetIsReading(true)
           setNewDataSet(currentName, currentParams, experimentType)
         }
 
@@ -588,6 +595,9 @@ export const DataSetsProvider = ({ children }) => {
         // Data end
         else if(msg.startsWith('MSG,END')){
           handleSetIsReading(false)
+          // ! There is no need to force a high-level reset; 
+          // The AFE library itself already adjusts the necessary settings for multiple sequential readings.
+          // setpendingReset(true) 
         }
       }
       
@@ -654,7 +664,7 @@ export const DataSetsProvider = ({ children }) => {
     if (pendingReset){
       setpendingReset(false)
       setSnackbar({ open: true, message: 'Restarting Arduino...', severity: 'info' })
-      setTimeout(() => {FinishReading()}, 50)
+      setTimeout(() => {FinishReading()}, 100)
     }
   }, [pendingReset])
 
