@@ -239,6 +239,33 @@ export const ArduinoReadingComponent = () => {
                 </ListItem>
               )
             ))}
+          {experimentType === 'EIS' && (
+            <ListItem>
+              <FormControl fullWidth size="small" error={!!errors['Rtia']}>
+                <InputLabel>Rtia</InputLabel>
+                <Select
+                  value={currentParams['Rtia']}
+                  onChange={(e) => {
+                    handleCurrentParams((prevState) => ({
+                      ...prevState,
+                      ['Rtia']: e.target.value,
+                    }))
+                    setErrors((prevErrors) => ({
+                      ...prevErrors,
+                      ['Rtia']: "",
+                    }))
+                  }}
+                  label="Rtia"
+                >
+                  {Object.entries(HSRTIA_OPTION).map(([key, value]) => (
+                    <MenuItem key={key} value={value}>
+                      {formatRtia(value)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </ListItem>
+          )}
         </List>
       </Box>
 
