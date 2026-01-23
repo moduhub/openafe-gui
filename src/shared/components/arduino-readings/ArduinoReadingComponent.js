@@ -59,6 +59,12 @@ export const ArduinoReadingComponent = () => {
     return `FS: ${formatWithPrefix(iFS, 'A')} | Gtia: ${resistance}`
   }
 
+  const formatRtia = (value) => {
+    const iFS = 0.025 / value
+    const resistance = value >= 1000 ? `${(value / 1000).toFixed(0)} kΩ` : `${value} Ω`
+    return `FS: ${formatWithPrefix(iFS, 'A')} | Rtia: ${resistance}`
+  }
+
   const validateField = (field, value) => {
     if (field === "name" && !value.trim())
       return "Name cannot be empty."
