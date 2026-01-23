@@ -93,7 +93,7 @@ export const TabDataset = ({ setPreviewData , previewData }) => {
       alignItems="start"
       justifyContent="end"
       position="absolute"
-      top={theme.spacing(16)}
+      top="calc((100vh - 640px) / 2)"
       right={0}
       zIndex={2}
     >

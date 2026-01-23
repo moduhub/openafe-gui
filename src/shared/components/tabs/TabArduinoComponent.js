@@ -59,7 +59,7 @@ export const TabArduino = () => {
       transition="width 0.3s ease"
       alignItems="start"
       position="absolute"
-      top={theme.spacing(15)}
+      top="calc((100vh - 640px) / 2)"
       left={0}
       zIndex={2}
     >
