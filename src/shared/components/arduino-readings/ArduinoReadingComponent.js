@@ -1,4 +1,7 @@
-import { TextField, Box, List, ListItem, Button } from '@mui/material'
+import { 
+  TextField, Box, List, ListItem, Button, 
+  FormControl, InputLabel, Select, MenuItem
+} from '@mui/material'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import StopIcon from '@mui/icons-material/Stop'
 import { useState } from "react"
@@ -8,6 +11,8 @@ import {
   useDatasetsContext,
   useDashboardContext,
 } from '../../contexts'
+
+import { TIAGAIN_OPTION, HSRTIA_OPTION } from '../../math-functions/tia/tiaUtils'
 
 /**
  * @brief Component responsible for receiving user inputs 
@@ -175,7 +180,7 @@ export const ArduinoReadingComponent = () => {
   }
 
   return ( // Small Windows: 440px
-    <Box display="flex" flexDirection="column" height="440px">
+    <Box display="flex" flexDirection="column" height="560px">
       
       <Box flex="1" overflow="auto">
         <List>
@@ -190,20 +195,50 @@ export const ArduinoReadingComponent = () => {
               helperText={errors.name}
             />
           </ListItem>
-          {Object.keys(currentParams).map((field) => (
-            <ListItem key={field}>
-              <TextField
-                label={field.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}
-                value={currentParams[field]}
-                onChange={handleChange(field)}
-                type="number"
-                size="small"
-                fullWidth
-                error={!!errors[field]}
-                helperText={errors[field]}
-              />
-            </ListItem>
-          ))}
+          {Object.keys(currentParams)
+            .filter((field) => (field !== 'TIAGain' || experimentType !== 'EIS') && (field !== 'Rtia' || experimentType !== 'EIS'))
+            .map((field) => (
+              field === 'TIAGain' ? (
+                <ListItem key={field}>
+                  <FormControl fullWidth size="small" error={!!errors[field]}>
+                    <InputLabel>{field.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}</InputLabel>
+                    <Select
+                      value={currentParams[field]}
+                      onChange={(e) => {
+                        handleCurrentParams((prevState) => ({
+                          ...prevState,
+                          [field]: e.target.value,
+                        }))
+                        setErrors((prevErrors) => ({
+                          ...prevErrors,
+                          [field]: "",
+                        }))
+                      }}
+                      label={field.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}
+                    >
+                      {Object.entries(TIAGAIN_OPTION).map(([key, value]) => (
+                        <MenuItem key={key} value={value}>
+                          {formatOhms(value)}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </ListItem>
+              ) : (
+                <ListItem key={field}>
+                  <TextField
+                    label={field.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}
+                    value={currentParams[field]}
+                    onChange={handleChange(field)}
+                    type="number"
+                    size="small"
+                    fullWidth
+                    error={!!errors[field]}
+                    helperText={errors[field]}
+                  />
+                </ListItem>
+              )
+            ))}
         </List>
       </Box>
 
