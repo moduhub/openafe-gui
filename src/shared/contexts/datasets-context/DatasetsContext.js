@@ -17,6 +17,7 @@ const defaultCVParams = {
   scanRate: 1000,
   stepPotential: 100,
   cycles: 1,
+  TIAGain: 3000,
 }
 
 const defaultDPVParams = {
@@ -26,7 +27,8 @@ const defaultDPVParams = {
   scanRate: 1000,
   stepPotential: 100,
   pulsePotential: 50,
-  dutyCycle: 10
+  dutyCycle: 10,
+  TIAGain: 3000,
 }
 
 const defaultSWVParams = {
@@ -36,7 +38,8 @@ const defaultSWVParams = {
   scanRate: 1000,
   stepPotential: 100,
   pulsePotential: 50,
-  dutyCycle: 50
+  dutyCycle: 50,
+  TIAGain: 3000,
 }
 
 const defaultEISParams = {
