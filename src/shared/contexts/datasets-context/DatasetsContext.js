@@ -46,7 +46,8 @@ const defaultEISParams = {
   settlingTime: 1000,
   startOmega: 100, // Hz
   endOmega: 10000, // Hz
-  stepForADecade: 10
+  stepForADecade: 10,
+  Rtia: 10000,
 }
 
 /**
