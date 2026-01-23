@@ -41,6 +41,18 @@ export const ArduinoReadingComponent = () => {
 
   const [errors, setErrors] = useState({})
 
+  const formatWithPrefix = (value, unit = '') => {
+    if (value === null) return 'N/A'
+    const abs = Math.abs(value)
+    
+    if (abs >= 1) return `${value.toFixed(3)} ${unit}`
+    if (abs >= 1e-3) return `${(value * 1e3).toFixed(1)} m${unit}`
+    if (abs >= 1e-6) return `${(value * 1e6).toFixed(1)} µ${unit}`
+    if (abs >= 1e-9) return `${(value * 1e9).toFixed(1)} n${unit}`
+    if (abs >= 1e-12) return `${(value * 1e12).toFixed(1)} p${unit}`
+    return `${value} ${unit}`
+  }
+
   const validateField = (field, value) => {
     if (field === "name" && !value.trim())
       return "Name cannot be empty."
