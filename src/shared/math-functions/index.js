@@ -1,3 +1,5 @@
+export * from './tia/tiaUtils'
+
 export * from './interpolation/Polinomial'
 export * from './interpolation/GaussianRBF'
 export * from './interpolation/GaussianLS'
