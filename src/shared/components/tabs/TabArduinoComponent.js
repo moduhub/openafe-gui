@@ -50,7 +50,7 @@ export const TabArduino = () => {
     <Box
       width={theme.spacing(35)}
       minWidth={theme.spacing(35)}
-      height={530}
+      height={640}
       minHeight={530}
       display="flex"
       flexShrink={0}

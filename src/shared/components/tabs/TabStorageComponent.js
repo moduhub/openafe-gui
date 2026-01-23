@@ -101,7 +101,7 @@ export const TabStorage = ({ setTabIndex }) => {
 
       <Box
         sx={{
-          height: 440, width: 248,
+          height: 550, width: 248,
           overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
