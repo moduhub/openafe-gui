@@ -9,7 +9,13 @@ let isDev = false
 
 let buffer = Buffer.alloc(0)
 
-// 
+// Auto-connect configuration
+let autoConnectEnabled = false
+let portMonitorInterval = null
+let lastKnownPorts = new Set()
+const PORT_MONITOR_INTERVAL_MS = 1000 // Check ports every 1 second
+
+// Arduino data queue
 let arduinoQueue = []
 let queueTimer = null
 const SEND_INTERVAL_MS = 500
@@ -30,6 +36,70 @@ function enqueueArduinoData(msg){
 
 
 /**
+ * Monitors available ports and automatically connects to Arduino when one appears
+ * Only connects if autoConnectEnabled is true and no port is currently connected
+ */
+async function monitorArduinoPorts() {
+  try {
+    const ports = await SerialPort.list()
+    const currentPorts = new Set()
+
+    // Filter for Arduino ports (vendorId '2341')
+    const arduinoPorts = ports.filter((port) => 
+      port.vendorId === '2341' && 
+      (port.productId === '0043' || port.productId === '0001')
+    )
+
+    for (const port of arduinoPorts) {
+      currentPorts.add(port.path)
+    }
+
+    // Detect new ports
+    const newPorts = Array.from(currentPorts).filter(p => !lastKnownPorts.has(p))
+
+    if (newPorts.length > 0 && autoConnectEnabled && !port) {
+      // Auto-connect to the first newly detected Arduino port
+      const portToConnect = newPorts[0]
+      console.log(`Auto-connecting to Arduino at ${portToConnect}`)
+      setupSerialPort(portToConnect)
+      if (mainWindow) {
+        mainWindow.webContents.send('auto-connect-event', { 
+          status: 'connecting', 
+          port: portToConnect 
+        })
+      }
+    }
+
+    // Update the set of known ports
+    lastKnownPorts = currentPorts
+  } catch (error) {
+    console.error('Error monitoring Arduino ports:', error)
+  }
+}
+
+/**
+ * Starts the port monitoring interval for auto-connect
+ */
+function startPortMonitoring() {
+  if (!portMonitorInterval) {
+    console.log('Starting Arduino port monitoring')
+    monitorArduinoPorts() // Initial check
+    portMonitorInterval = setInterval(monitorArduinoPorts, PORT_MONITOR_INTERVAL_MS)
+  }
+}
+
+/**
+ * Stops the port monitoring interval
+ */
+function stopPortMonitoring() {
+  if (portMonitorInterval) {
+    console.log('Stopping Arduino port monitoring')
+    clearInterval(portMonitorInterval)
+    portMonitorInterval = null
+  }
+}
+
+/**
  * Initializes and configures the serial port communication with the Arduino
  * 
  * @param {String} selectedPort - The path of the serial port selected by the user (e.g., 'COM3')
@@ -40,8 +110,10 @@ function setupSerialPort(selectedPort) {
   port = new SerialPort({ path: selectedPort, baudRate: 115200 })
 
   port.on('open', () => {
-    if (mainWindow) 
+    if (mainWindow) {
       mainWindow.webContents.send('serial-port-opened', 'Serial port opened successfully!')
+      mainWindow.webContents.send('port-connected', selectedPort)
+    }
   })
 
   port.on('data', (chunk) => {
@@ -117,6 +189,7 @@ function createWindow() {
       clearInterval(queueTimer)
       queueTimer = null
     }
+    stopPortMonitoring()
     if (port) 
       port.close((err) => {
         if (err)
@@ -189,6 +262,26 @@ ipcMain.on('disconnect-port', () => {
       else 
         if (mainWindow) mainWindow.webContents.send('serial-port-disconnected', 'Successfully disconnected from the serial port!')
     })
+  }
+})
+
+/**
+ * Handles request to enable/disable auto-connect feature
+ * 
+ * @param {Boolean} enabled - Whether to enable or disable auto-connect
+ */
+ipcMain.on('set-auto-connect', (event, enabled) => {
+  autoConnectEnabled = enabled
+  console.log(`Auto-connect ${enabled ? 'enabled' : 'disabled'}`)
+  
+  if (enabled) {
+    startPortMonitoring()
+  } else {
+    stopPortMonitoring()
+  }
+  
+  if (mainWindow) {
+    mainWindow.webContents.send('auto-connect-status', enabled)
   }
 })
 

@@ -12,8 +12,10 @@ const { contextBridge, ipcRenderer } = require('electron')
  * - `onArduinoData(callback)`: Registers a listener to receive incoming data from the Arduino
  * - `onSerialPortOpened(callback)`: Registers a listener for serial port connection status messages
  * - `onSerialPortDisconnected(callback)`: Registers a listener for serial port disconnection messages
- * - `openSettingsWindow(datasets)`: Sends a request to open the settings window with the provided datasets
- * - `onSettingsData(callback)`: Registers a listener to receive settings data from the main process
+ * - `setAutoConnect(enabled)`: Enables or disables the auto-connect feature
+ * - `onAutoConnectEvent(callback)`: Registers a listener for auto-connect events (when Arduino is auto-detected)
+ * - `onAutoConnectStatus(callback)`: Registers a listener for auto-connect status changes
+ * - `onPortConnected(callback)`: Registers a listener for when a port is successfully connected
  * 
  * This layer ensures the renderer process has controlled, secure access to privileged operations
  */
@@ -32,8 +34,36 @@ contextBridge.exposeInMainWorld('electron', {
     ipcRenderer.on('arduino-data', listener)
     return () => ipcRenderer.removeListener('arduino-data', listener)
   },
-  onSerialPortOpened: (callback) => 
-    ipcRenderer.on('serial-port-opened', (event, message) => callback(message)),
-  onSerialPortDisconnected: (callback) => 
-    ipcRenderer.on('serial-port-disconnected', (event, message) => callback(message)),
+  onSerialPortOpened: (callback) => {
+    if (typeof callback !== 'function') return () => {}
+    const listener = (event, message) => callback(message)
+    ipcRenderer.on('serial-port-opened', listener)
+    return () => ipcRenderer.removeListener('serial-port-opened', listener)
+  },
+  onSerialPortDisconnected: (callback) => {
+    if (typeof callback !== 'function') return () => {}
+    const listener = (event, message) => callback(message)
+    ipcRenderer.on('serial-port-disconnected', listener)
+    return () => ipcRenderer.removeListener('serial-port-disconnected', listener)
+  },
+  setAutoConnect: (enabled) =>
+    ipcRenderer.send('set-auto-connect', enabled),
+  onAutoConnectEvent: (callback) => {
+    if (typeof callback !== 'function') return () => {}
+    const listener = (event, data) => callback(data)
+    ipcRenderer.on('auto-connect-event', listener)
+    return () => ipcRenderer.removeListener('auto-connect-event', listener)
+  },
+  onAutoConnectStatus: (callback) => {
+    if (typeof callback !== 'function') return () => {}
+    const listener = (event, enabled) => callback(enabled)
+    ipcRenderer.on('auto-connect-status', listener)
+    return () => ipcRenderer.removeListener('auto-connect-status', listener)
+  },
+  onPortConnected: (callback) => {
+    if (typeof callback !== 'function') return () => {}
+    const listener = (event, port) => callback(port)
+    ipcRenderer.on('port-connected', listener)
+    return () => ipcRenderer.removeListener('port-connected', listener)
+  },
 })

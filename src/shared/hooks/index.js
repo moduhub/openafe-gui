@@ -6,3 +6,4 @@ export * from './chart/useClickHandler'
 export * from './chart/useSelectionRenderer'
 
 export * from './storage-datasets/useTabStorage'
+export * from './useAutoConnect'

@@ -587,6 +587,7 @@ export const DataSetsProvider = ({ children }) => {
 
         // Voltammetry start
         else if (msg.startsWith('MSG,CVS')) { 
+          setSnackbar({ open: true, message: 'Voltammetry in progress...', severity: 'info' }) 
           setNewDataSet(currentName, currentParams, experimentType)
         }
 
@@ -598,6 +599,7 @@ export const DataSetsProvider = ({ children }) => {
         
         // Data end
         else if(msg.startsWith('MSG,END')){
+          setSnackbar({ open: true, message: 'Voltammetry completed successfully', severity: 'success' })
           handleSetIsReading(false)
           // ! There is no need to force a high-level reset; 
           // The AFE library itself already adjusts the necessary settings for multiple sequential readings.

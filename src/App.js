@@ -18,8 +18,11 @@ import {
   SettingsProvider, 
   DashboardProvider 
 } from './shared/contexts'
+import { useAutoConnect } from './shared/hooks'
 
 const AppContent = () => {
+  // Initialize auto-connect functionality
+  useAutoConnect()
 
   const location = useLocation()
   const isFiltersRoute = location.pathname === "/filters"

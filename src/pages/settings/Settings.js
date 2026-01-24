@@ -80,7 +80,8 @@ export const Settings = () => {
             <FormControlLabel margin="dense"
               sx={{ color: 'text.primary' }}
               control={<Switch checked={autoConnect} onChange={(e) => handleSetAutoConnect(e.target.checked)} />}
-              label="Automatic connection with Arduino (not working)"
+              label="Automatic connection with Arduino (in progress)"
+              disabled
             />
             <FormControl fullWidth margin="dense" size='small'>
               <Typography variant="subtitle2" sx={{ color: 'text.primary' }}>
