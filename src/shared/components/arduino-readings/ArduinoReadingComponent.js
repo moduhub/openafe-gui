@@ -61,7 +61,7 @@ export const ArduinoReadingComponent = () => {
   const formatOhms = (value) => {
     const iFS = 0.9 / value
     const resistance = value >= 1000 ? `${(value / 1000).toFixed(0)} kΩ` : `${value} Ω`
-    return `FS: ${formatWithPrefix(iFS, 'A')} | Gtia: ${resistance}`
+    return `FS: ${formatWithPrefix(iFS, 'A')} | Rtia: ${resistance}`
   }
 
   const formatRtia = (value) => {
